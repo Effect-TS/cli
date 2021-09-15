@@ -1,0 +1,56 @@
+{
+  "name": "@effect-ts/cli",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": "https://github.com/Effect-TS/cli.git",
+  "homepage": "https://www.matechs.com",
+  "private": false,
+  "scripts": {
+    "clean": "rimraf build tsbuildinfo",
+    "build:lib": "ttsc --build  tsconfig.build.json && build-utils package",
+    "build:es6": "ttsc --build  tsconfig.es6.json && babel build/esm/ -d build/esm/ -s --plugins annotate-pure-calls && build-utils package-esm",
+    "build:post-process": "build-utils rewrite-source-maps && build-utils rewrite-locals && yarn prettier:lib",
+    "build": "yarn run build:lib && yarn run build:es6 && yarn run build:post-process",
+    "lint": "eslint . --ext .ts,.tsx",
+    "autofix": "yarn prettier && yarn lint --fix && yarn prettier",
+    "prettier": "prettier --write \"./{src,test,demo}/**/*.ts\"",
+    "prettier:lib": "prettier --write \"./build/**/*.js\"",
+    "tc": "tsc --noEmit",
+    "demo": "ts-node --compiler ttypescript --project tsconfig.build.json",
+    "circular": "madge --circular --ts-config ./tsconfig.build.json --extensions ts ./src"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "build"
+  },
+  "sideEffects": false,
+  "peerDependencies": {
+    "@effect-ts/core": "^0.44.4",
+    "@effect-ts/node": "^0.29.0",
+    "@effect-ts/printer": "^0.11.0"
+  },
+  "config": {
+    "side": [],
+    "modules": [
+      "Args",
+      "AutoCorrect",
+      "BuiltInOption",
+      "CliApp",
+      "CliConfig",
+      "Command",
+      "CommandDirective",
+      "Exists",
+      "Help",
+      "Internal",
+      "Internal/Console",
+      "Internal/FileSystem",
+      "Internal/NewType",
+      "Options",
+      "PathType",
+      "PrimType",
+      "ShellType",
+      "UsageSynopsis",
+      "Validation"
+    ]
+  }
+}

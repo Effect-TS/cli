@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "ts-node": {
+    "compiler": "ttypescript"
+  },
+  "compilerOptions": {
+    "strict": true,
+    "removeComments": false,
+    "plugins": [
+      {
+        "transform": "@effect-ts/tracing-plugin"
+      }
+    ]
+  }
+}
