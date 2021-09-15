@@ -26,7 +26,6 @@
   "sideEffects": false,
   "peerDependencies": {
     "@effect-ts/core": "^0.44.4",
-    "@effect-ts/node": "^0.29.0",
     "@effect-ts/printer": "^0.11.0"
   },
   "config": {
