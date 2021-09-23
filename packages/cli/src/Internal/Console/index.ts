@@ -1,7 +1,7 @@
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
-import type { Has } from "@effect-ts/system/Has"
-import { tag } from "@effect-ts/system/Has"
+import type { Has } from "@effect-ts/core/Has"
+import { tag } from "@effect-ts/core/Has"
 
 // -----------------------------------------------------------------------------
 // Model

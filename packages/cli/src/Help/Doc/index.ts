@@ -1,11 +1,11 @@
 // ets_tracing: off
 
+import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
+import type { Lazy } from "@effect-ts/core/Function"
 import * as Identity from "@effect-ts/core/Identity"
 import * as IO from "@effect-ts/core/IO"
-import type { Array } from "@effect-ts/system/Collections/Immutable/Array"
-import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
-import type { Lazy } from "@effect-ts/system/Function"
 
 // -----------------------------------------------------------------------------
 // Model

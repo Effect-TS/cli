@@ -2,10 +2,10 @@
 
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import type { NonEmptyArray } from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
+import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as E from "@effect-ts/core/Either"
 import * as O from "@effect-ts/core/Option"
-import type { NonEmptyArray } from "@effect-ts/system/Collections/Immutable/NonEmptyArray"
-import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
 
 import type { Exists } from "../Exists"
 import * as Exist from "../Exists"

@@ -1,9 +1,9 @@
 // ets_tracing: off
 
+import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
+import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import type { IO } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
-import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
-import * as Tp from "@effect-ts/system/Collections/Immutable/Tuple"
 
 import type { CliConfig } from "../../CliConfig"
 import * as Config from "../../CliConfig"

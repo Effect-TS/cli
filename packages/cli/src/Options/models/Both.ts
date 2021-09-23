@@ -1,11 +1,11 @@
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
+import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import type { IO } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
-import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
-import * as Tp from "@effect-ts/system/Collections/Immutable/Tuple"
 
 import type { CliConfig } from "../../CliConfig"
 import * as Config from "../../CliConfig"

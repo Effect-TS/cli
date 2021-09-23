@@ -1,13 +1,13 @@
 // ets_tracing: off
 
+import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
 import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
+import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
+import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import type { IO } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import * as O from "@effect-ts/core/Option"
-import type { Array } from "@effect-ts/system/Collections/Immutable/Array"
-import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
-import * as Tp from "@effect-ts/system/Collections/Immutable/Tuple"
 
 import * as BuiltIns from "../../BuiltInOption"
 import type { CliConfig } from "../../CliConfig"

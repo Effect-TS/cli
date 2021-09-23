@@ -2,9 +2,9 @@
 
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 import type { Either } from "@effect-ts/core/Either"
 import * as E from "@effect-ts/core/Either"
-import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
 
 import type { Args } from "../Args"
 import type { HelpDoc } from "../Help"

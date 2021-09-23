@@ -1,9 +1,9 @@
 // ets_tracing: off
 
+import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
 import type { IO } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
-import type { Array } from "@effect-ts/system/Collections/Immutable/Array"
 
 import type { CliConfig } from "../../CliConfig"
 import * as Config from "../../CliConfig"

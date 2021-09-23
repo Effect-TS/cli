@@ -8,7 +8,7 @@ import type { IO } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
-import { matchTag_ } from "@effect-ts/system/Utils"
+import { matchTag_ } from "@effect-ts/core/Utils"
 
 import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"

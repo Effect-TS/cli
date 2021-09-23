@@ -1,11 +1,11 @@
 // ets_tracing: off
 
+import { Tagged } from "@effect-ts/core/Case"
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import { makeShow } from "@effect-ts/core/Show"
-import { Tagged } from "@effect-ts/system/Case"
 
 import type { HelpDoc } from "../Help"
 import type { Options } from "../Options"
