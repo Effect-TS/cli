@@ -25,6 +25,7 @@ import * as Command from "../../src/Command"
 import * as Exists from "../../src/Exists"
 import * as Help from "../../src/Help"
 import { putStrLn } from "../../src/Internal/Console"
+import { splitLines, utf8Decode } from "../../src/Internal/Transducers"
 import type { Options } from "../../src/Options"
 import * as Opts from "../../src/Options"
 import * as Transducers from "../shared/transducers"
@@ -120,7 +121,7 @@ const args = Args.repeat1(Args.namedFile("files", Exists.yes))
 // Commands
 // -----------------------------------------------------------------------------
 
-const wc = Command.command("wc", options, args)
+const wc = Command.command("wc * %", options, args)
 
 // -----------------------------------------------------------------------------
 // Command-Line Application
@@ -150,15 +151,15 @@ function execute(options: WcOptions, paths: NonEmptyArray<string>) {
           const lineCount = handleOption(
             options.lines,
             pipe(
-              Transducers.utf8Decode,
-              Transducer.then(Transducers.splitLines),
+              utf8Decode,
+              Transducer.then(splitLines),
               Transducers.composeSink(Sink.count)
             )
           )
           const wordCount = handleOption(
             options.words,
             pipe(
-              Transducers.utf8Decode,
+              utf8Decode,
               Transducer.then(Transducers.splitOn(" ")),
               Transducers.composeSink(Sink.count)
             )
@@ -166,7 +167,7 @@ function execute(options: WcOptions, paths: NonEmptyArray<string>) {
           const charCount = handleOption(
             options.chars,
             pipe(
-              Transducers.utf8Decode,
+              utf8Decode,
               Transducers.composeSink(Sink.reduceLeft(0)((s, e) => s + e.length))
             )
           )

@@ -2,6 +2,10 @@ import * as T from "@effect-ts/core/Effect"
 
 import type { FileSystem } from "../src/Internal/FileSystem"
 
+// -----------------------------------------------------------------------------
+// Mock FileSystem
+// -----------------------------------------------------------------------------
+
 export interface MockFileSystemOptions {
   readonly pathExists: boolean
   readonly pathIsDirectory: boolean
