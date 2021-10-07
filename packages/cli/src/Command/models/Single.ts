@@ -12,6 +12,7 @@ import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
 import type { Option } from "@effect-ts/system/Option"
 
 import type { Args } from "../../Args"
+import * as Arguments from "../../Args"
 import type { BuiltInOption } from "../../BuiltInOption"
 import * as BuiltIns from "../../BuiltInOption"
 import type { CliConfig } from "../../CliConfig"
@@ -67,9 +68,10 @@ export class Single<OptionsType, ArgsType>
       ? Help.empty
       : Help.sequence_(Help.h1("DESCRIPTION"), this.description)
 
-    const argumentsSection = Help.isEmpty(this.args.helpDoc)
+    const argsHelp = Arguments.helpDoc(this.args)
+    const argumentsSection = Help.isEmpty(argsHelp)
       ? Help.empty
-      : Help.sequence_(Help.h1("ARGUMENTS"), this.args.helpDoc)
+      : Help.sequence_(Help.h1("ARGUMENTS"), argsHelp)
 
     const optionsSection = Help.isEmpty(opts.helpDoc)
       ? Help.empty
@@ -87,7 +89,7 @@ export class Single<OptionsType, ArgsType>
     return Synopsis.concatsT(
       Synopsis.named(this.name, O.none),
       this.options.synopsis,
-      this.args.synopsis
+      Arguments.synopsis(this.args)
     )
   }
 
@@ -153,7 +155,7 @@ export class Single<OptionsType, ArgsType>
       (args2) =>
         T.chain_(this.options.validate(args2, config), ({ tuple: [args1, opts1] }) => {
           return T.map_(
-            T.mapError_(this.args.validate(args1, config), (helpDoc) =>
+            T.mapError_(Arguments.validate_(this.args, args1, config), (helpDoc) =>
               Validation.invalidArgumentError(helpDoc)
             ),
             ({ tuple: [args2, opts2] }) =>

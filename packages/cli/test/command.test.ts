@@ -204,7 +204,7 @@ describe("Command", () => {
         Command.command(
           "rebase",
           Options.boolean("i", true),
-          Args.cons_(Args.text, Args.text)
+          Args.both_(Args.text, Args.text)
         )
       )
     )
