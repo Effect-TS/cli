@@ -7,6 +7,7 @@ module.exports = {
   collectCoverage: false,
   coverageDirectory: "coverage",
   collectCoverageFrom: ["packages/**/src/**/*.ts"],
+  setupFilesAfterEnv: ["<rootDir>/scripts/jest-setup-after-env.ts"],
   setupFiles: ["./scripts/jest-setup.ts"],
   modulePathIgnorePatterns: [
     "<rootDir>/packages/.*/build",
