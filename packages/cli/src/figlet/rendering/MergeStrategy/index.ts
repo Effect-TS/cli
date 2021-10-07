@@ -268,9 +268,14 @@ function mergeOnLeftBorder(
       section,
       MA.Applicative
     )((_) =>
-      _ === " "
-        ? mergeStrategy(options)(state)(options.font.header.hardblank, " ")
-        : new MA.Stop()
+      C.forEachF_(
+        C.from(_.split("")),
+        MA.Applicative
+      )((_) =>
+        _ === " "
+          ? mergeStrategy(options)(state)(options.font.header.hardblank, " ")
+          : new MA.Stop()
+      )
     ),
     constVoid
   )

@@ -52,17 +52,20 @@ export const makeFigletClient = T.gen(function* (_) {
     [FigletClientSymbol]: FigletClientSymbol,
     defaultFont: "standard",
     defaultMaxWidth: 80,
-    internalFonts: T.effectAsync((cb) => {
-      NodeJSFileSystem.readdir(
-        NodeJSPath.join(__dirname, "../..", "fonts"),
-        (err, files) => {
-          if (err) {
-            cb(T.fail(new FigletFileError({ message: err.message })))
+    internalFonts: T.map_(
+      T.effectAsync<unknown, FigletException, Chunk<string>>((cb) => {
+        NodeJSFileSystem.readdir(
+          NodeJSPath.join(__dirname, "../..", "fonts"),
+          (err, files) => {
+            if (err) {
+              cb(T.fail(new FigletFileError({ message: err.message })))
+            }
+            cb(T.succeed(C.from(files)))
           }
-          cb(T.succeed(C.from(files)))
-        }
-      )
-    }),
+        )
+      }),
+      C.map((_) => _.replace(".flf", ""))
+    ),
     loadFont: (path) => read(path, createFigFont),
     loadFontInternal: (name) =>
       read(NodeJSPath.join(__dirname, "../..", "fonts", `${name}.flf`), createFigFont),
