@@ -75,13 +75,16 @@ export class Single<A> implements Options<A> {
 
     return Help.descriptionList(
       A.single(
-        Tp.tuple(names, Help.sequence_(Help.p(this.primType.helpDoc), this.description))
+        Tp.tuple(
+          names,
+          Help.sequence_(Help.p(Primitive.helpDoc(this.primType)), this.description)
+        )
       )
     )
   }
 
   get synopsis(): UsageSynopsis {
-    return Synopsis.named(this.fullName, this.primType.choices)
+    return Synopsis.named(this.fullName, Primitive.choices(this.primType))
   }
 
   validate(
@@ -99,23 +102,22 @@ export class Single<A> implements Options<A> {
         ),
       (head, tail) => {
         if (this.supports(head, names, config)) {
-          if (this.primType instanceof Primitive.Bool) {
+          const PrimitiveInstruction = Primitive.instruction(this.primType)
+          if (PrimitiveInstruction._tag === "Bool")
             return T.bimap_(
-              this.primType.validate(O.none, config),
+              Primitive.validate_(this.primType as PrimType<A>, O.none, config),
               (e) => Validation.invalidValueError(Help.p(e)),
               (a) => Tp.tuple(tail, a)
             )
-          } else {
-            return T.bimap_(
-              A.foldLeft_(
-                tail,
-                () => this.primType.validate(O.none, config),
-                (head) => this.primType.validate(O.some(head), config)
-              ),
-              (e) => Validation.invalidValueError(Help.p(e)),
-              (a) => Tp.tuple(A.dropLeft_(tail, 1), a)
-            )
-          }
+          return T.bimap_(
+            A.foldLeft_(
+              tail,
+              () => Primitive.validate_(this.primType, O.none, config),
+              (head) => Primitive.validate_(this.primType, O.some(head), config)
+            ),
+            (e) => Validation.invalidValueError(Help.p(e)),
+            (a) => Tp.tuple(A.dropLeft_(tail, 1), a)
+          )
         }
         if (
           this.name.length > config.autoCorrectLimit + 1 &&

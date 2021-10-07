@@ -10,6 +10,7 @@ import * as O from "@effect-ts/core/Option"
 import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { PrimType } from "../PrimType"
+import * as Primitive from "../PrimType"
 
 // -----------------------------------------------------------------------------
 // Model
@@ -63,7 +64,7 @@ export class Single<A> extends Base<A> {
   }
 
   get name(): string {
-    return `<${O.getOrElse_(this.pseudoName, () => this.primType.typeName)}>`
+    return `<${O.getOrElse_(this.pseudoName, () => Primitive.typeName(this.primType))}>`
   }
 }
 

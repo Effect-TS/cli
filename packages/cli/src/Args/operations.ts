@@ -197,7 +197,7 @@ export function helpDoc<A>(self: Args<A>): HelpDoc {
         A.single(
           Tp.tuple(
             Help.text(_.name),
-            Help.orElse_(_.description, () => Help.p(_.primType.helpDoc))
+            Help.orElse_(_.description, () => Help.p(Primitive.helpDoc(_.primType)))
           )
         )
       ),
@@ -239,7 +239,7 @@ export function helpDoc<A>(self: Args<A>): HelpDoc {
 export function synopsis<A>(self: Args<A>): UsageSynopsis {
   return matchTag_(instruction(self), {
     None: () => Synopsis.none,
-    Single: (_) => Synopsis.named(_.name, _.primType.choices),
+    Single: (_) => Synopsis.named(_.name, Primitive.choices(_.primType)),
     Map: (_) => synopsis(_.value),
     Both: (_) => Synopsis.concat_(synopsis(_.head), synopsis(_.tail)),
     Variadic: (_) => Synopsis.repeated(synopsis(_.value))
@@ -288,11 +288,11 @@ export function validate_<A>(
           T.fail(
             Help.p(
               `Missing argument ${_.name} with values ` +
-                `${O.getOrElse_(_.primType.choices, () => "")}`
+                `${O.getOrElse_(Primitive.choices(_.primType), () => "")}`
             )
           ),
         (head, tail) =>
-          T.bimap_(_.primType.validate(O.some(head), config), Help.p, (a) =>
+          T.bimap_(Primitive.validate_(_.primType, O.some(head), config), Help.p, (a) =>
             Tp.tuple(tail, a)
           )
       ),
