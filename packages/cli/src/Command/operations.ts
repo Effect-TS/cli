@@ -2,16 +2,27 @@
 
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
+import * as S from "@effect-ts/core/Collections/Immutable/Set"
+import type * as T from "@effect-ts/core/Effect"
 import type { Either } from "@effect-ts/core/Either"
 import * as E from "@effect-ts/core/Either"
+import * as Equal from "@effect-ts/core/Equal"
 import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
+import { matchTag_ } from "@effect-ts/system/Utils"
 
 import type { Args } from "../Args"
+import type { CliConfig } from "../CliConfig"
+import * as Config from "../CliConfig"
+import type { CommandDirective } from "../CommandDirective"
 import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { Options } from "../Options"
-import type { Command } from "./definition"
-import { Map, OrElse, Single, Subcommands } from "./models"
+import type { UsageSynopsis } from "../UsageSynopsis"
+import * as Synopsis from "../UsageSynopsis"
+import type { ValidationError } from "../Validation"
+import * as Commands from "./_internal"
+import type { Command, Instruction } from "./definition"
 
 // -----------------------------------------------------------------------------
 // Constructors
@@ -31,7 +42,7 @@ export function command<OptionsType, ArgsType>(
   args: Args<ArgsType>,
   helpDoc: HelpDoc = Help.empty
 ): Command<Tuple<[OptionsType, ArgsType]>> {
-  return new Single(name, helpDoc, options, args)
+  return new Commands.Single(name, helpDoc, options, args)
 }
 
 // -----------------------------------------------------------------------------
@@ -45,9 +56,12 @@ export function subcommands_<A, B>(
 ): Command<Tuple<[A, B]>> {
   return A.foldLeft_(
     subcommands,
-    () => new Subcommands(self, subcommand),
+    () => new Commands.Subcommands(self, subcommand),
     (head, tail) =>
-      new Subcommands(self, A.reduce_(tail, orElse_(subcommand, head), orElse_))
+      new Commands.Subcommands(
+        self,
+        A.reduce_(tail, orElse_(subcommand, head), orElse_)
+      )
   )
 }
 
@@ -63,8 +77,16 @@ export function subcommands<B>(
 // Operations
 // -----------------------------------------------------------------------------
 
+/**
+ * @ets_tagtimize identity
+ */
+export function instruction<A>(self: Command<A>): Instruction {
+  // @ts-expect-error
+  return self
+}
+
 export function map_<A, B>(self: Command<A>, f: (a: A) => B): Command<B> {
-  return new Map(self, f)
+  return new Commands.Map(self, f)
 }
 
 /**
@@ -75,7 +97,7 @@ export function map<A, B>(f: (a: A) => B) {
 }
 
 export function orElse_<A>(self: Command<A>, that: Command<A>): Command<A> {
-  return new OrElse(self, that)
+  return new Commands.OrElse(self, that)
 }
 
 /**
@@ -97,4 +119,72 @@ export function orElseEither_<A, B>(
  */
 export function orElseEither<B>(that: Command<B>) {
   return <A>(self: Command<A>): Command<Either<A, B>> => orElseEither_(self, that)
+}
+
+/**
+ * Return the names that can be use to invoke a command from the command-line.
+ */
+export function names<A>(self: Command<A>): Set<string> {
+  return matchTag_(instruction(self), {
+    Single: (_) => S.singleton(_.name),
+    Map: (_) => names(_.command),
+    OrElse: (_) => S.union_(Equal.string)(names(_.left), names(_.right)),
+    Subcommands: (_) => names(_.parent)
+  })
+}
+
+/**
+ * Return the `HelpDoc` for a command.
+ */
+export function helpDoc<A>(self: Command<A>): HelpDoc {
+  return matchTag_(instruction(self), {
+    Single: Commands.getSingleHelpDoc,
+    Map: (_) => helpDoc(_.command),
+    OrElse: (_) => Help.sequence_(helpDoc(_.left), helpDoc(_.right)),
+    Subcommands: (_) => Commands.getSubcommandsHelpDoc_(_, helpDoc)
+  })
+}
+
+/**
+ * Return the `UsageSynopsis` for a command.
+ */
+export function synopsis<A>(self: Command<A>): UsageSynopsis {
+  return matchTag_(instruction(self), {
+    Single: Commands.getSingleUsageSynopsis,
+    Map: (_) => synopsis(_.command),
+    OrElse: (_) => Synopsis.mixed,
+    Subcommands: (_) => Synopsis.concat_(synopsis(_.parent), synopsis(_.child))
+  })
+}
+
+/**
+ * Parses the command from the provided command-line arguments.
+ *
+ * @param self The command to attempt.
+ * @param args The command-line arguments to parse.
+ * @param config The `CliConfig` to use for validation.
+ */
+export function parse_<A>(
+  self: Command<A>,
+  args: Array<string>,
+  config: CliConfig = Config.defaultConfig
+): T.IO<ValidationError, CommandDirective<A>> {
+  return matchTag_(instruction(self), {
+    Single: Commands.parseSingle(args, config),
+    Map: (_) => Commands.parseMap_(_, args, parse_, config),
+    OrElse: (_) => Commands.parseOrElse_(_, args, parse_, config),
+    Subcommands: (_) => Commands.parseSubcommands_(_, args, parse_, helpDoc)
+  })
+}
+
+/**
+ * Parses the command from the provided command-line arguments.
+ *
+ * @ets_data_first parse_
+ * @param args The command-line arguments to parse.
+ * @param config The `CliConfig` to use for validation.
+ */
+export function parse(args: Array<string>, config: CliConfig = Config.defaultConfig) {
+  return <A>(self: Command<A>): T.IO<ValidationError, CommandDirective<A>> =>
+    parse_(self, args, config)
 }
