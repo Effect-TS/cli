@@ -18,7 +18,7 @@ describe("Args", () => {
     T.gen(function* (_) {
       const arg = Args.repeat(Args.file(Exists.yes))
 
-      const result = yield* _(arg.validate(A.single(argsFile)))
+      const result = yield* _(Args.validate_(arg, A.single(argsFile)))
 
       expect(result).toEqual(Tp.tuple(A.empty, A.single(argsFile)))
     }))
@@ -27,7 +27,7 @@ describe("Args", () => {
     T.gen(function* (_) {
       const arg = Args.repeat(Args.file(Exists.yes))
 
-      const result = yield* _(T.result(arg.validate(A.single("notFound.file"))))
+      const result = yield* _(T.result(Args.validate_(arg, A.single("notFound.file"))))
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(Help.p("Path 'notFound.file' must exist."))
@@ -38,7 +38,7 @@ describe("Args", () => {
     T.gen(function* (_) {
       const arg = Args.repeat(Args.file(Exists.no))
 
-      const result = yield* _(arg.validate(A.single("doesNotExist.file")))
+      const result = yield* _(Args.validate_(arg, A.single("doesNotExist.file")))
 
       expect(result).toEqual(Tp.tuple(A.empty, A.single("doesNotExist.file")))
     }))
@@ -47,7 +47,9 @@ describe("Args", () => {
     T.gen(function* (_) {
       const arg = Args.repeat(Args.file())
 
-      const result = yield* _(T.result(arg.validate(A.single("notRegular.file"))))
+      const result = yield* _(
+        T.result(Args.validate_(arg, A.single("notRegular.file")))
+      )
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(Help.p("Expected path 'notRegular.file' to be a regular file."))
@@ -58,7 +60,7 @@ describe("Args", () => {
     T.gen(function* (_) {
       const arg = Args.repeat(Args.file())
 
-      const result = yield* _(arg.validate([argsFile, argsFile]))
+      const result = yield* _(Args.validate_(arg, [argsFile, argsFile]))
 
       expect(result).toEqual(Tp.tuple(A.empty, [argsFile, argsFile]))
     }))
@@ -67,7 +69,9 @@ describe("Args", () => {
     T.gen(function* (_) {
       const arg = Args.repeat(Args.file())
 
-      const result = yield* _(T.result(arg.validate(A.single("nonExistent.file"))))
+      const result = yield* _(
+        T.result(Args.validate_(arg, A.single("nonExistent.file")))
+      )
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(Help.p("Expected path 'nonExistent.file' to be a regular file."))

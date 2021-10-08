@@ -62,24 +62,32 @@ describe("Command", () => {
 
   it("should validate a command with options followed by args", () =>
     T.gen(function* (_) {
-      expect(yield* _(tailCommand.parse(["tail", "-n", "100", "foo.log"]))).toEqual(
-        CommandDirective.userDefined(A.empty, Tp.tuple(100, "foo.log"))
-      )
       expect(
-        yield* _(agCommand.parse(["grep", "--after", "2", "--before", "3", "fooBar"]))
+        yield* _(Command.parse_(tailCommand, ["tail", "-n", "100", "foo.log"]))
+      ).toEqual(CommandDirective.userDefined(A.empty, Tp.tuple(100, "foo.log")))
+      expect(
+        yield* _(
+          Command.parse_(agCommand, ["grep", "--after", "2", "--before", "3", "fooBar"])
+        )
       ).toEqual(CommandDirective.userDefined(A.empty, Tp.tuple([2, 3], "fooBar")))
     }))
 
   it("should provide correct suggestions for misspelled options", () =>
     T.gen(function* (_) {
       const r1 = yield* _(
-        T.result(agCommand.parse(["grep", "--afte", "2", "--before", "3", "fooBar"]))
+        T.result(
+          Command.parse_(agCommand, ["grep", "--afte", "2", "--before", "3", "fooBar"])
+        )
       )
       const r2 = yield* _(
-        T.result(agCommand.parse(["grep", "--after", "2", "--efore", "3", "fooBar"]))
+        T.result(
+          Command.parse_(agCommand, ["grep", "--after", "2", "--efore", "3", "fooBar"])
+        )
       )
       const r3 = yield* _(
-        T.result(agCommand.parse(["grep", "--afte", "2", "--efore", "3", "fooBar"]))
+        T.result(
+          Command.parse_(agCommand, ["grep", "--afte", "2", "--efore", "3", "fooBar"])
+        )
       )
 
       expect(Ex.untraced(r1)).toEqual(
@@ -125,7 +133,9 @@ describe("Command", () => {
   it("should show an error if an option is missing", () =>
     T.gen(function* (_) {
       const result = yield* _(
-        T.result(agCommand.parse(["grep", "--a", "2", "--before", "3", "fooBar"]))
+        T.result(
+          Command.parse_(agCommand, ["grep", "--a", "2", "--before", "3", "fooBar"])
+        )
       )
 
       expect(Ex.untraced(result)).toEqual(
@@ -144,7 +154,7 @@ describe("Command", () => {
         Command.orElse(Command.command("log", Options.none, Args.none))
       )
 
-      const result = yield* _(orElseCommand.parse(["log"]))
+      const result = yield* _(Command.parse_(orElseCommand, ["log"]))
 
       expect(result).toEqual(
         CommandDirective.userDefined(A.empty, Tp.tuple(undefined, undefined))
@@ -162,7 +172,7 @@ describe("Command", () => {
 
     it("should match the first subcommand without any surplus options", () =>
       T.gen(function* (_) {
-        const result = yield* _(git.parse(["git", "remote"]))
+        const result = yield* _(Command.parse_(git, ["git", "remote"]))
 
         expect(result).toEqual(
           CommandDirective.userDefined(
@@ -174,7 +184,7 @@ describe("Command", () => {
 
     it("should match the first subcommand with surplus options", () =>
       T.gen(function* (_) {
-        const result = yield* _(git.parse(["git", "remote", "-v"]))
+        const result = yield* _(Command.parse_(git, ["git", "remote", "-v"]))
 
         expect(result).toEqual(
           CommandDirective.userDefined(
@@ -186,7 +196,7 @@ describe("Command", () => {
 
     it("should match the second subcommand without any surplus options", () =>
       T.gen(function* (_) {
-        const result = yield* _(git.parse(["git", "log"]))
+        const result = yield* _(Command.parse_(git, ["git", "log"]))
 
         expect(result).toEqual(
           CommandDirective.userDefined(
@@ -204,7 +214,7 @@ describe("Command", () => {
         Command.command(
           "rebase",
           Options.boolean("i", true),
-          Args.cons_(Args.text, Args.text)
+          Args.both_(Args.text, Args.text)
         )
       )
     )
@@ -212,7 +222,7 @@ describe("Command", () => {
     it("should handle subcommands with options and arguments", () =>
       T.gen(function* (_) {
         const result = yield* _(
-          git.parse(["git", "rebase", "-i", "upstream", "branch"])
+          Command.parse_(git, ["git", "rebase", "-i", "upstream", "branch"])
         )
 
         expect(result).toEqual(
@@ -228,7 +238,7 @@ describe("Command", () => {
 
     it("should reject an unknown subcommand", () =>
       T.gen(function* (_) {
-        const result = yield* _(T.result(git.parse(["git", "abc"])))
+        const result = yield* _(T.result(Command.parse_(git, ["git", "abc"])))
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(
@@ -239,7 +249,7 @@ describe("Command", () => {
 
     it("should reject a command without specifying the subcommand", () =>
       T.gen(function* (_) {
-        const result = yield* _(T.result(git.parse(["git"])))
+        const result = yield* _(T.result(Command.parse_(git, ["git"])))
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(Validation.missingSubcommandError(Help.p("Missing subcommand.")))
@@ -263,7 +273,7 @@ describe("Command", () => {
     it("should handle a subcommand nested two levels deep with options and arguments", () =>
       T.gen(function* (_) {
         const result = yield* _(
-          command.parse(["command", "sub", "subsub", "-i", "text"])
+          Command.parse_(command, ["command", "sub", "subsub", "-i", "text"])
         )
 
         expect(result).toEqual(

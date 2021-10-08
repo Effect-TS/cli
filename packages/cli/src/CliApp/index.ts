@@ -137,7 +137,7 @@ export function executeBuiltIn_<A>(
 
       const synopsis = Help.blocksT(
         Help.h1("SYNOPSIS"),
-        Help.p(Synopsis.render(self.command.synopsis), 4),
+        Help.p(Synopsis.render(Cmd.synopsis(self.command)), 4),
         Help.empty
       )
 
@@ -180,7 +180,11 @@ export function run_<R, E, A>(
   execute: (a: A) => Effect<R & HasConsole, E, void>
 ): Effect<R, E, void> {
   return T.foldM_(
-    self.command.parse(A.concat_(prefixCommandName(self.command), args), self.config),
+    Cmd.parse_(
+      self.command,
+      A.concat_(prefixCommandName(self.command), args),
+      self.config
+    ),
     (e) => T.provideLayer_(printDocs_(e.error), L.pure(Console)(self.console)),
     (directive) => {
       switch (directive._tag) {

@@ -1,7 +1,6 @@
-// codegen:start { preset: barrel, include: ./**/*.ts, exclude: ./models/!(index.ts) }
+// codegen:start { preset: barrel, include: ./*.ts }
 export * from "./definition"
 export * from "./dsl"
 export * from "./instances"
-export * from "./models/index"
 export * from "./operations"
 // codegen:end
