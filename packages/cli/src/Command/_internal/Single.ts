@@ -68,7 +68,7 @@ export class Single<OptionsType, ArgsType> extends Base<
 export function getSingleHelpDoc<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>
 ): HelpDoc {
-  const opts = Help.isEmpty(self.options.helpDoc)
+  const opts = Help.isEmpty(Opts.helpDoc(self.options))
     ? BuiltIns.builtInOptions
     : Opts.zip_(self.options, BuiltIns.builtInOptions)
 
@@ -81,9 +81,9 @@ export function getSingleHelpDoc<OptionsType, ArgsType>(
     ? Help.empty
     : Help.sequence_(Help.h1("ARGUMENTS"), argsHelp)
 
-  const optionsSection = Help.isEmpty(opts.helpDoc)
+  const optionsSection = Help.isEmpty(Opts.helpDoc(opts as Options<any>))
     ? Help.empty
-    : Help.sequence_(Help.h1("OPTIONS"), opts.helpDoc)
+    : Help.sequence_(Help.h1("OPTIONS"), Opts.helpDoc(opts as Options<any>))
 
   return Help.blocks(
     A.filter_([descriptionSection, argumentsSection, optionsSection], not(Help.isEmpty))
@@ -99,7 +99,7 @@ export function getSingleUsageSynopsis<OptionsType, ArgsType>(
 ): UsageSynopsis {
   return Synopsis.concatsT(
     Synopsis.named(self.name, O.none),
-    self.options.synopsis,
+    Opts.synopsis(self.options),
     Arguments.synopsis(self.args)
   )
 }
@@ -133,7 +133,9 @@ export function parseSingle(
 export function completions<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>
 ): () => Set<Array<string>> {
-  throw new Error("Not implemented!")
+  return () => {
+    throw new Error("Not implemented!")
+  }
 }
 
 export function builtInOptions<OptionsType, ArgsType>(
@@ -150,7 +152,7 @@ export function builtIn_<OptionsType, ArgsType>(
   return T.map_(
     T.some(
       T.bimap_(
-        builtInOptions(self).validate(args, config),
+        Opts.validate_(builtInOptions(self), args, config),
         (e) => e.error,
         ({ tuple: [_, builtInOption] }) => builtInOption
       )
@@ -192,15 +194,18 @@ export function userDefined_<OptionsType, ArgsType>(
       }
     ),
     (args2) =>
-      T.chain_(self.options.validate(args2, config), ({ tuple: [args1, opts1] }) => {
-        return T.map_(
-          T.mapError_(Arguments.validate_(self.args, args1, config), (helpDoc) =>
-            Validation.invalidArgumentError(helpDoc)
-          ),
-          ({ tuple: [args2, opts2] }) =>
-            Directive.userDefined(args2, Tp.tuple(opts1, opts2))
-        )
-      })
+      T.chain_(
+        Opts.validate_(self.options, args2, config),
+        ({ tuple: [args1, opts1] }) => {
+          return T.map_(
+            T.mapError_(Arguments.validate_(self.args, args1, config), (helpDoc) =>
+              Validation.invalidArgumentError(helpDoc)
+            ),
+            ({ tuple: [args2, opts2] }) =>
+              Directive.userDefined(args2, Tp.tuple(opts1, opts2))
+          )
+        }
+      )
   )
 }
 

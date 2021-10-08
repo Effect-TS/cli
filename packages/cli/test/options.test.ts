@@ -26,7 +26,7 @@ describe("Options", () => {
 
   it("should validate a boolean option without a value", () =>
     T.gen(function* (_) {
-      const result = yield* _(b.validate(["--verbose"]))
+      const result = yield* _(Options.validate_(b, ["--verbose"]))
 
       expect(result).toEqual(Tp.tuple(A.empty, true))
     }))
@@ -35,9 +35,9 @@ describe("Options", () => {
     T.gen(function* (_) {
       const o = Options.tuple(Options.boolean("help", true), Options.boolean("v", true))
 
-      const v1 = yield* _(o.validate(A.empty))
-      const v2 = yield* _(o.validate(["--help"]))
-      const v3 = yield* _(o.validate(["--help", "-v"]))
+      const v1 = yield* _(Options.validate_(o, A.empty))
+      const v2 = yield* _(Options.validate_(o, ["--help"]))
+      const v3 = yield* _(Options.validate_(o, ["--help", "-v"]))
 
       expect(v1).toEqual(Tp.tuple(A.empty, [false, false]))
       expect(v2).toEqual(Tp.tuple(A.empty, [true, false]))
@@ -51,15 +51,17 @@ describe("Options", () => {
         Options.alias("v")
       )
 
-      const v1 = yield* _(bNegation.validate(A.empty))
-      const v2 = yield* _(bNegation.validate(["--verbose"]))
-      const v3 = yield* _(bNegation.validate(["-v"]))
-      const v4 = yield* _(bNegation.validate(["--silent"]))
-      const v5 = yield* _(bNegation.validate(["-s"]))
+      const v1 = yield* _(Options.validate_(bNegation, A.empty))
+      const v2 = yield* _(Options.validate_(bNegation, ["--verbose"]))
+      const v3 = yield* _(Options.validate_(bNegation, ["-v"]))
+      const v4 = yield* _(Options.validate_(bNegation, ["--silent"]))
+      const v5 = yield* _(Options.validate_(bNegation, ["-s"]))
 
       // Colliding Options
-      const v6 = yield* _(T.flip(bNegation.validate(["--silent", "--verbose"])))
-      const v7 = yield* _(T.flip(bNegation.validate(["-s", "-v"])))
+      const v6 = yield* _(
+        T.flip(Options.validate_(bNegation, ["--silent", "--verbose"]))
+      )
+      const v7 = yield* _(T.flip(Options.validate_(bNegation, ["-s", "-v"])))
 
       expect(v1).toEqual(Tp.tuple(A.empty, false))
       expect(v2).toEqual(Tp.tuple(A.empty, true))
@@ -90,28 +92,30 @@ describe("Options", () => {
 
   it("should validate a text option", () =>
     T.gen(function* (_) {
-      const result = yield* _(f.validate(["--firstname", "John"]))
+      const result = yield* _(Options.validate_(f, ["--firstname", "John"]))
 
       expect(result).toEqual(Tp.tuple(A.empty, "John"))
     }))
 
   it("should validate a text option with an alias", () =>
     T.gen(function* (_) {
-      const result = yield* _(f.validate(["-f", "John"]))
+      const result = yield* _(Options.validate_(f, ["-f", "John"]))
 
       expect(result).toEqual(Tp.tuple(A.empty, "John"))
     }))
 
   it("should validate an option and get the remaining args", () =>
     T.gen(function* (_) {
-      const result = yield* _(f.validate(["--firstname", "John", "--lastname", "Doe"]))
+      const result = yield* _(
+        Options.validate_(f, ["--firstname", "John", "--lastname", "Doe"])
+      )
 
       expect(result).toEqual(Tp.tuple(["--lastname", "Doe"], "John"))
     }))
 
   it("should fail to validate when no valid values are passed", () =>
     T.gen(function* (_) {
-      const result = yield* _(T.result(f.validate(["--lastname", "Doe"])))
+      const result = yield* _(T.result(Options.validate_(f, ["--lastname", "Doe"])))
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
@@ -124,7 +128,7 @@ describe("Options", () => {
 
   it("should validate an integer option", () =>
     T.gen(function* (_) {
-      const result = yield* _(a.validate(["--age", "100"]))
+      const result = yield* _(Options.validate_(a, ["--age", "100"]))
 
       expect(result).toEqual(Tp.tuple(A.empty, 100))
     }))
@@ -133,7 +137,7 @@ describe("Options", () => {
     T.gen(function* (_) {
       const intOption = Options.integer("t")
 
-      const result = yield* _(T.result(intOption.validate(A.empty)))
+      const result = yield* _(T.result(Options.validate_(intOption, A.empty)))
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
@@ -148,7 +152,7 @@ describe("Options", () => {
     T.gen(function* (_) {
       const intOption = Options.integer("t")
 
-      const result = yield* _(T.result(intOption.validate(["-t", "abc"])))
+      const result = yield* _(T.result(Options.validate_(intOption, ["-t", "abc"])))
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(Validation.invalidValueError(Help.p("'abc' is not a integer")))
@@ -162,7 +166,7 @@ describe("Options", () => {
         Options.withDefault(0 as Integer, "0 as default", Show.number)
       )
 
-      const result = yield* _(T.result(o.validate(["--integer", "abc"])))
+      const result = yield* _(T.result(Options.validate_(o, ["--integer", "abc"])))
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(Validation.invalidValueError(Help.p("'abc' is not a integer")))
@@ -173,7 +177,7 @@ describe("Options", () => {
     T.gen(function* (_) {
       const bNegation = Options.negatableBoolean("v", true, "s")
 
-      const result = yield* _(T.result(bNegation.validate(["-v", "-s"])))
+      const result = yield* _(T.result(Options.validate_(bNegation, ["-v", "-s"])))
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
@@ -193,10 +197,10 @@ describe("Options", () => {
       const config = Config.make(false, 2)
       const f = pipe(Options.text("FirstName"), Options.alias("F"))
 
-      const r1 = yield* _(f.validate(["--FirstName", "John"], config))
-      const r2 = yield* _(f.validate(["-F", "John"], config))
-      const r3 = yield* _(T.flip(f.validate(["--firstname", "John"])))
-      const r4 = yield* _(T.flip(f.validate(["-f", "John"])))
+      const r1 = yield* _(Options.validate_(f, ["--FirstName", "John"], config))
+      const r2 = yield* _(Options.validate_(f, ["-F", "John"], config))
+      const r3 = yield* _(T.flip(Options.validate_(f, ["--firstname", "John"])))
+      const r4 = yield* _(T.flip(Options.validate_(f, ["-f", "John"])))
 
       expect(r1).toEqual(Tp.tuple(A.empty, "John"))
       expect(r2).toEqual(Tp.tuple(A.empty, "John"))
@@ -219,7 +223,14 @@ describe("Options", () => {
   it("should validate options for cons", () =>
     T.gen(function* (_) {
       const result = yield* _(
-        options.validate(["--firstname", "John", "--lastname", "Doe", "--age", "100"])
+        Options.validate_(options, [
+          "--firstname",
+          "John",
+          "--lastname",
+          "Doe",
+          "--age",
+          "100"
+        ])
       )
 
       expect(result).toEqual(Tp.tuple(A.empty, ["John", "Doe", 100]))
@@ -228,7 +239,7 @@ describe("Options", () => {
   it("should validate options for cons with remainder", () =>
     T.gen(function* (_) {
       const result = yield* _(
-        options.validate([
+        Options.validate_(options, [
           "--firstname",
           "John",
           "--lastname",
@@ -245,21 +256,21 @@ describe("Options", () => {
 
   it("should validate an optional option when a valud is not supplied", () =>
     T.gen(function* (_) {
-      const result = yield* _(aOpt.validate([]))
+      const result = yield* _(Options.validate_(aOpt, []))
 
       expect(result).toEqual(Tp.tuple(A.empty, O.none))
     }))
 
   it("should validate an optional option when a value is supplied", () =>
     T.gen(function* (_) {
-      const result = yield* _(aOpt.validate(["--age", "20"]))
+      const result = yield* _(Options.validate_(aOpt, ["--age", "20"]))
 
       expect(result).toEqual(Tp.tuple(A.empty, O.some(20)))
     }))
 
   it("should validate non supplied optional option with remainder", () =>
     T.gen(function* (_) {
-      const result = yield* _(aOpt.validate(["--bar", "baz"]))
+      const result = yield* _(Options.validate_(aOpt, ["--bar", "baz"]))
 
       expect(result).toEqual(Tp.tuple(["--bar", "baz"], O.none))
     }))
@@ -267,7 +278,14 @@ describe("Options", () => {
   it("should validate supplied optional option with remainder", () =>
     T.gen(function* (_) {
       const result = yield* _(
-        aOpt.validate(["--firstname", "John", "--age", "100", "--lastname", "Doe"])
+        Options.validate_(aOpt, [
+          "--firstname",
+          "John",
+          "--age",
+          "100",
+          "--lastname",
+          "Doe"
+        ])
       )
 
       expect(result).toEqual(
@@ -277,7 +295,7 @@ describe("Options", () => {
 
   it("should return a HelpDoc for invalid option similar to existing", () =>
     T.gen(function* (_) {
-      const result = yield* _(T.result(f.validate(["--firstme", "Alice"])))
+      const result = yield* _(T.result(Options.validate_(f, ["--firstme", "Alice"])))
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
@@ -294,7 +312,7 @@ describe("Options", () => {
 
   it("should return a HelpDoc if an option is not an exact match and is a short option", () =>
     T.gen(function* (_) {
-      const result = yield* _(T.result(a.validate(["--ag", "20"])))
+      const result = yield* _(T.result(Options.validate_(a, ["--ag", "20"])))
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
@@ -314,8 +332,8 @@ describe("Options", () => {
           Options.orElse(pipe(Options.integer("integer"), Options.map(E.right)))
         )
 
-        const i = yield* _(o.validate(["--integer", "2"]))
-        const s = yield* _(o.validate(["--string", "two"]))
+        const i = yield* _(Options.validate_(o, ["--integer", "2"]))
+        const s = yield* _(Options.validate_(o, ["--string", "two"]))
 
         expect(i).toEqual(Tp.tuple(A.empty, E.right(2)))
         expect(s).toEqual(Tp.tuple(A.empty, E.left("two")))
@@ -329,7 +347,7 @@ describe("Options", () => {
         )
 
         const result = yield* _(
-          T.result(o.validate(["--integer", "2", "--string", "two"]))
+          T.result(Options.validate_(o, ["--integer", "2", "--string", "two"]))
         )
 
         expect(Ex.untraced(result)).toEqual(
@@ -353,7 +371,7 @@ describe("Options", () => {
           Options.orElse(Options.integer("integer"))
         )
 
-        const result = yield* _(T.result(o.validate(A.empty)))
+        const result = yield* _(T.result(Options.validate_(o, A.empty)))
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(
@@ -375,7 +393,7 @@ describe("Options", () => {
           Options.withDefault(0 as Integer, "0 as default", Show.number)
         )
 
-        const result = yield* _(T.result(o.validate(["--min", "abc"])))
+        const result = yield* _(T.result(Options.validate_(o, ["--min", "abc"])))
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(
