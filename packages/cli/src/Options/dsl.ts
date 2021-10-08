@@ -1,3 +1,5 @@
+// ets_tracing: off
+
 import * as DSL from "@effect-ts/core/Prelude/DSL"
 
 import { Applicative, Covariant } from "./instances"
