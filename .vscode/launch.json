@@ -32,7 +32,7 @@
       "request": "launch",
       "name": "Effect-TS - CLI Current File",
       "runtimeArgs": ["-r", "ts-node/register"],
-      "args": ["${file}", "git", "remote"],
+      "args": ["${file}"],
       "env": {
         "TS_NODE_PROJECT": "${workspaceFolder}/packages/cli/tsconfig.debug.json"
       }

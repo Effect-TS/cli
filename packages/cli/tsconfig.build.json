@@ -7,7 +7,14 @@
     "incremental": true,
     "tsBuildInfoFile": "tsbuildinfo/build.tsbuildinfo",
     "removeComments": false,
-    "plugins": []
+    "plugins": [
+      {
+        "transform": "@effect-ts/tracing-plugin",
+        "moduleMap": {
+          "^src/(.*)": "(@effect-ts/cli): _src/$1"
+        }
+      }
+    ]
   },
   "include": ["src/**/*"],
   "exclude": ["test", "node_modules"]

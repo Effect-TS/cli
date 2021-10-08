@@ -8,6 +8,7 @@ import * as T from "@effect-ts/core/Effect"
 import * as S from "@effect-ts/core/Effect/Stream"
 import * as Sink from "@effect-ts/core/Effect/Stream/Sink"
 import * as Transducer from "@effect-ts/core/Effect/Stream/Transducer"
+import { pipe } from "@effect-ts/core/Function"
 import * as Identity from "@effect-ts/core/Identity"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
@@ -15,7 +16,6 @@ import * as Show from "@effect-ts/core/Show"
 import type { Byte } from "@effect-ts/node/Byte"
 import * as R from "@effect-ts/node/Runtime"
 import * as NS from "@effect-ts/node/Stream"
-import { pipe } from "@effect-ts/system/Function"
 import * as FileSystem from "fs"
 import * as Path from "path"
 
@@ -25,6 +25,7 @@ import * as Command from "../../src/Command"
 import * as Exists from "../../src/Exists"
 import * as Help from "../../src/Help"
 import { putStrLn } from "../../src/Internal/Console"
+import { splitLines, utf8Decode } from "../../src/Internal/Transducers"
 import type { Options } from "../../src/Options"
 import * as Opts from "../../src/Options"
 import * as Transducers from "../shared/transducers"
@@ -150,15 +151,15 @@ function execute(options: WcOptions, paths: NonEmptyArray<string>) {
           const lineCount = handleOption(
             options.lines,
             pipe(
-              Transducers.utf8Decode,
-              Transducer.then(Transducers.splitLines),
+              utf8Decode,
+              Transducer.then(splitLines),
               Transducers.composeSink(Sink.count)
             )
           )
           const wordCount = handleOption(
             options.words,
             pipe(
-              Transducers.utf8Decode,
+              utf8Decode,
               Transducer.then(Transducers.splitOn(" ")),
               Transducers.composeSink(Sink.count)
             )
@@ -166,7 +167,7 @@ function execute(options: WcOptions, paths: NonEmptyArray<string>) {
           const charCount = handleOption(
             options.chars,
             pipe(
-              Transducers.utf8Decode,
+              utf8Decode,
               Transducers.composeSink(Sink.reduceLeft(0)((s, e) => s + e.length))
             )
           )

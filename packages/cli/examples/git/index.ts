@@ -1,8 +1,8 @@
 import { Tagged } from "@effect-ts/core/Case"
 import * as T from "@effect-ts/core/Effect"
+import { pipe } from "@effect-ts/core/Function"
+import { matchTag } from "@effect-ts/core/Utils"
 import * as R from "@effect-ts/node/Runtime"
-import { pipe } from "@effect-ts/system/Function"
-import { matchTag } from "@effect-ts/system/Utils"
 
 import * as Args from "../../src/Args"
 import * as CliApp from "../../src/CliApp"

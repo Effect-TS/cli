@@ -2,6 +2,7 @@
 
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import type { NonEmptyArray } from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
 import * as Set from "@effect-ts/core/Collections/Immutable/Set"
 import type { Effect } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
@@ -15,6 +16,10 @@ import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
 import type { Command } from "../Command"
 import * as Cmd from "../Command"
+import * as FigletClient from "../figlet/client/FigletClient"
+import * as FontFileReader from "../figlet/client/FontFileReader"
+import * as OptionsBuilder from "../figlet/client/OptionsBuilder"
+import type { FigletException } from "../figlet/error/FigletException"
 import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { HasConsole } from "../Internal/Console"
@@ -114,63 +119,74 @@ export function printDocs(mode: Help.RenderMode = Help.plainMode()) {
 export function executeBuiltIn_<A>(
   self: CliApp<A>,
   builtInOption: BuiltInOption
-): T.RIO<HasConsole, void> {
-  switch (builtInOption._tag) {
-    case "ShowHelp": {
-      const header = Help.blocksT(
-        Help.h1(Help.text(`${self.name} (v${self.version})`)),
-        Help.p(self.summary, 4),
-        Help.empty
-      )
+): Effect<HasConsole, NonEmptyArray<FigletException>, void> {
+  return T.gen(function* (_) {
+    switch (builtInOption._tag) {
+      case "ShowHelp": {
+        const names = Cmd.names(self.command)
 
-      // TODO: enable if/when we begin supporting Figlet fonts
-      // const fancyName = Help.sequence_(
-      //   Help.p(
-      //     Help.code(
-      //       self.command.names.size >= 1
-      //         ? Set.toArray_(self.command.names, Ord.string)[0]
-      //         : self.name
-      //     )
-      //   ),
-      //   Help.empty
-      // )
-
-      const synopsis = Help.blocksT(
-        Help.h1("SYNOPSIS"),
-        Help.p(Synopsis.render(Cmd.synopsis(self.command)), 4),
-        Help.empty
-      )
-
-      const help = Help.blocksT(
-        header,
-        // fancyName,
-        synopsis,
-        builtInOption.helpDoc,
-        Help.empty,
-        self.footer
-      )
-
-      return putStrLn(Help.render_(help, Help.plainMode(80)))
-    }
-    case "ShowCompletions": {
-      return putStrLn(
-        A.join_(
-          Set.toArray_(
-            Set.map_(Equal.string)(builtInOption.completions, A.join(" ")),
-            Ord.string
-          ),
-          "\n"
+        const fancyName = yield* _(
+          T.map_(
+            T.provideSomeLayer_(
+              OptionsBuilder.print(
+                OptionsBuilder.withInternalFont_(
+                  OptionsBuilder.text_(
+                    OptionsBuilder.builder(),
+                    names.size >= 1 ? Set.toArray_(names, Ord.string)[0] : self.name
+                  ),
+                  "slant"
+                )
+              ),
+              FontFileReader.LiveFontFileReader[">>>"](FigletClient.LiveFigletClient)
+            ),
+            (name) => Help.code(name)
+          )
         )
-      )
+
+        const header = Help.blocksT(
+          Help.spansT(
+            Help.strong(`${self.name} (v${self.version})`),
+            Help.text(" - "),
+            self.summary
+          ),
+          fancyName,
+          Help.empty
+        )
+
+        const synopsis = Help.blocksT(
+          Help.h1("SYNOPSIS"),
+          Help.p(Synopsis.render(Cmd.synopsis(self.command)), 4),
+          Help.empty
+        )
+
+        const help = Help.blocksT(header, synopsis, builtInOption.helpDoc, self.footer)
+
+        return yield* _(putStrLn(Help.render_(help, Help.plainMode(80))))
+      }
+      case "ShowCompletions": {
+        return yield* _(
+          putStrLn(
+            A.join_(
+              Set.toArray_(
+                Set.map_(Equal.string)(builtInOption.completions, A.join(" ")),
+                Ord.string
+              ),
+              "\n"
+            )
+          )
+        )
+      }
     }
-  }
+  })
 }
 
 /**
  * @ets_data_first executeBuiltIn_
  */
 export function executeBuiltIn(builtInOption: BuiltInOption) {
-  return <A>(self: CliApp<A>): T.RIO<HasConsole, void> =>
+  return <A>(
+    self: CliApp<A>
+  ): Effect<HasConsole, NonEmptyArray<FigletException>, void> =>
     executeBuiltIn_(self, builtInOption)
 }
 
@@ -178,7 +194,7 @@ export function run_<R, E, A>(
   self: CliApp<A>,
   args: Array<string>,
   execute: (a: A) => Effect<R & HasConsole, E, void>
-): Effect<R, E, void> {
+): Effect<R, E | NonEmptyArray<FigletException>, void> {
   return T.foldM_(
     Cmd.parse_(
       self.command,
@@ -189,15 +205,22 @@ export function run_<R, E, A>(
     (directive) => {
       switch (directive._tag) {
         case "BuiltIn":
-          return T.provideLayer_(
-            executeBuiltIn_(self, directive.option),
-            L.pure(Console)(self.console)
-          )
+          return T.provideLayer_<
+            unknown,
+            never,
+            HasConsole,
+            E | NonEmptyArray<FigletException>,
+            void
+          >(executeBuiltIn_(self, directive.option), L.pure(Console)(self.console))
         case "UserDefined":
-          return T.provideSomeLayer_<R, E, void, unknown, never, HasConsole>(
-            execute(directive.value),
-            L.pure(Console)(self.console)
-          )
+          return T.provideSomeLayer_<
+            R,
+            E | NonEmptyArray<FigletException>,
+            void,
+            unknown,
+            never,
+            HasConsole
+          >(execute(directive.value), L.pure(Console)(self.console))
       }
     }
   )
@@ -210,7 +233,8 @@ export function run<R, E, A>(
   args: Array<string>,
   execute: (a: A) => Effect<R & HasConsole, E, void>
 ) {
-  return (self: CliApp<A>): Effect<R, E, void> => run_(self, args, execute)
+  return (self: CliApp<A>): Effect<R, E | NonEmptyArray<FigletException>, void> =>
+    run_(self, args, execute)
 }
 
 // -----------------------------------------------------------------------------
