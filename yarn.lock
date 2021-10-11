@@ -387,11 +387,11 @@
   integrity sha512-Dx3TRGm2M1+8VqOfKm8BN4Kt8xpkDnjmpnqigcG/PPXMf1tS6HL9gyHEfMSnsNn99obIMjb4rgYxgNV7FNfpOQ==
 
 "@effect-ts/core@^0.44.13":
-  version "0.44.13"
-  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.44.13.tgz#f0d89c36105804804a22e927372b4912d0e523a3"
-  integrity sha512-0Fstrjoe3p0VTpvvHtGNhqk8mxzKOnHdlNc01ZqRChwlvB/hbpTcYyRz3bssbt7PCnhuyMnb92Muja++SGKPNQ==
+  version "0.44.15"
+  resolved "https://registry.yarnpkg.com/@effect-ts/core/-/core-0.44.15.tgz#33928e99badf39fe4489c47515b8c8b5b8307da9"
+  integrity sha512-eZcPOObIjz+L9iWSMD9yhI8Spubontu+8sda+bzKManXkQBmF2wOOd8OLD4J0Xn503L0Bj4VhalAewVscWvmPQ==
   dependencies:
-    "@effect-ts/system" "^0.41.11"
+    "@effect-ts/system" "^0.41.13"
 
 "@effect-ts/jest@^0.30.1":
   version "0.30.1"
@@ -408,10 +408,10 @@
   resolved "https://registry.yarnpkg.com/@effect-ts/printer/-/printer-0.11.1.tgz#6a451ea3ed0c2380504402cc3f34bf66e53958fd"
   integrity sha512-xXIHyNIcCCpMapEHf/zZzZCd0r4J0ty6193Vdy7WnNbkw+F9IMxng9vCYQduRkMnDyxWiAltNyxmfHvd7xDpSg==
 
-"@effect-ts/system@^0.41.11":
-  version "0.41.11"
-  resolved "https://registry.yarnpkg.com/@effect-ts/system/-/system-0.41.11.tgz#7f004f55ac12655dbb8fc2b5a8cdbd9c87138ed2"
-  integrity sha512-BhAkYXxtt52hvX+tmrxCirn5O2v6KfU9pLO8FZyoMTaxp6YqVRZhhb4Ai56BzgiQ5uLhLmc3ASWKTJ6zwbqyoQ==
+"@effect-ts/system@^0.41.13":
+  version "0.41.13"
+  resolved "https://registry.yarnpkg.com/@effect-ts/system/-/system-0.41.13.tgz#d3592b15a4fefe9beb280e33594bb0998832e6d8"
+  integrity sha512-39YY+SueSdx6rzoFaeg6J3HGKMb/I7T/f799XIO2z/No9g00sIMHH/qzrfPUhG6an0URRZWPBI3LBjeoK1bvFQ==
 
 "@effect-ts/tracing-plugin@^0.14.12":
   version "0.14.12"
