@@ -44,7 +44,7 @@ export class Map<A, B> extends Base<B> {
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateMap_<A, B>(
+export function validate_<A, B>(
   self: Map<A, B>,
   args: Array<string>,
   cont: (
@@ -64,9 +64,9 @@ export function validateMap_<A, B>(
 }
 
 /**
- * @ets_data_first validateMap_
+ * @ets_data_first validate_
  */
-export function validateMap<A, B>(
+export function validate<A, B>(
   self: Map<A, B>,
   args: Array<string>,
   cont: (
@@ -77,14 +77,14 @@ export function validateMap<A, B>(
   config: CliConfig = Config.defaultConfig
 ) {
   return <A, B>(self: Map<A, B>): T.IO<ValidationError, Tuple<[Array<string>, B]>> =>
-    validateMap_(self, args, cont, config)
+    validate_(self, args, cont, config)
 }
 
 // -----------------------------------------------------------------------------
 // Modification
 // -----------------------------------------------------------------------------
 
-export function modifyMap_<A, B>(
+export function modifySingle_<A, B>(
   self: Map<A, B>,
   modifier: SingleModifier,
   cont: (a: Options<any>, modifier: SingleModifier) => Options<any>
@@ -93,11 +93,11 @@ export function modifyMap_<A, B>(
 }
 
 /**
- * @ets_data_first modifyMap_
+ * @ets_data_first modifySingle_
  */
-export function modifyMap(
+export function modifySingle(
   modifier: SingleModifier,
   cont: (a: Options<any>, modifier: SingleModifier) => Options<any>
 ) {
-  return <A, B>(self: Map<A, B>): Options<B> => modifyMap_(self, modifier, cont)
+  return <A, B>(self: Map<A, B>): Options<B> => modifySingle_(self, modifier, cont)
 }

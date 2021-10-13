@@ -1,15 +1,12 @@
 // ets_tracing: off
 
-import {
-  Base,
-  Both,
-  Map,
-  None,
-  Options,
-  OrElse,
-  Single,
-  WithDefault
-} from "./_internal"
+import { Options } from "./_internal/Base"
+import { Both } from "./_internal/Both"
+import { Map } from "./_internal/Map"
+import { None } from "./_internal/None"
+import { OrElse } from "./_internal/OrElse"
+import { Single, SingleModifier } from "./_internal/Single"
+import { WithDefault } from "./_internal/WithDefault"
 
 // -----------------------------------------------------------------------------
 // Model
@@ -23,7 +20,7 @@ export type Instruction =
   | Single<any>
   | WithDefault<any>
 
-export { Base, Both, Map, None, Options, OrElse, Single, WithDefault }
+export { Both, Map, None, Options, OrElse, Single, SingleModifier, WithDefault }
 
 // -----------------------------------------------------------------------------
 // HKT

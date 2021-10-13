@@ -54,7 +54,7 @@ export class WithDefault<A> extends Base<A> {
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getWithDefaultHelpDoc_<A>(
+export function helpDoc_<A>(
   self: WithDefault<A>,
   cont: (a: Options<any>) => HelpDoc
 ): HelpDoc {
@@ -76,17 +76,17 @@ export function getWithDefaultHelpDoc_<A>(
 }
 
 /**
- * @ets_data_first getWithDefaultHelpDoc_
+ * @ets_data_first helpDoc_
  */
-export function getWithDefaultHelpDoc(cont: (a: Options<any>) => HelpDoc) {
-  return <A>(self: WithDefault<A>): HelpDoc => getWithDefaultHelpDoc_(self, cont)
+export function helpDoc(cont: (a: Options<any>) => HelpDoc) {
+  return <A>(self: WithDefault<A>): HelpDoc => helpDoc_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateWithDefault_<A>(
+export function validate_<A>(
   self: WithDefault<A>,
   args: Array<string>,
   cont: (
@@ -107,9 +107,9 @@ export function validateWithDefault_<A>(
 }
 
 /**
- * @ets_data_first validateWithDefault_
+ * @ets_data_first validate_
  */
-export function validateWithDefault(
+export function validate(
   args: Array<string>,
   cont: (
     a: Options<any>,
@@ -119,14 +119,14 @@ export function validateWithDefault(
   config: CliConfig = Config.defaultConfig
 ) {
   return <A>(self: WithDefault<A>): T.IO<ValidationError, Tuple<[Array<string>, A]>> =>
-    validateWithDefault_(self, args, cont, config)
+    validate_(self, args, cont, config)
 }
 
 // -----------------------------------------------------------------------------
 // Modification
 // -----------------------------------------------------------------------------
 
-export function modifyWithDefault_<A>(
+export function modifySingle_<A>(
   self: WithDefault<A>,
   modifier: SingleModifier,
   cont: (a: Options<any>, modifier: SingleModifier) => Options<any>
@@ -140,12 +140,11 @@ export function modifyWithDefault_<A>(
 }
 
 /**
- * @ets_data_first modifyWithDefault_
+ * @ets_data_first modifySingle_
  */
-export function modifyWithDefault(
+export function modifySingle(
   modifier: SingleModifier,
   cont: (a: Options<any>) => Options<any>
 ) {
-  return <A>(self: WithDefault<A>): Options<A> =>
-    modifyWithDefault_(self, modifier, cont)
+  return <A>(self: WithDefault<A>): Options<A> => modifySingle_(self, modifier, cont)
 }
