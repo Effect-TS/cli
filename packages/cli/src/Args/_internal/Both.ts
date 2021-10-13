@@ -44,7 +44,7 @@ export class Both<A, B> extends Base<Tuple<[A, B]>> {
 // Minimum Size
 // -----------------------------------------------------------------------------
 
-export function getBothMinSize_<A, B>(
+export function minSize_<A, B>(
   self: Both<A, B>,
   cont: (a: Args<any>) => number
 ): number {
@@ -52,17 +52,17 @@ export function getBothMinSize_<A, B>(
 }
 
 /**
- * @ets_data_first getBothMinSize_
+ * @ets_data_first minSize_
  */
-export function getBothMinSize(cont: (a: Args<any>) => number) {
-  return <A, B>(self: Both<A, B>): number => getBothMinSize_(self, cont)
+export function minSize(cont: (a: Args<any>) => number) {
+  return <A, B>(self: Both<A, B>): number => minSize_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Maximum Size
 // -----------------------------------------------------------------------------
 
-export function getBothMaxSize_<A, B>(
+export function maxSize_<A, B>(
   self: Both<A, B>,
   cont: (a: Args<any>) => number
 ): number {
@@ -70,17 +70,17 @@ export function getBothMaxSize_<A, B>(
 }
 
 /**
- * @ets_data_first getBothMaxSize_
+ * @ets_data_first maxSize_
  */
-export function getBothMaxSize(cont: (a: Args<any>) => number) {
-  return <A, B>(self: Both<A, B>): number => getBothMaxSize_(self, cont)
+export function maxSize(cont: (a: Args<any>) => number) {
+  return <A, B>(self: Both<A, B>): number => maxSize_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getBothHelpDoc_<A, B>(
+export function helpDoc_<A, B>(
   self: Both<A, B>,
   cont: (a: Args<any>) => HelpDoc
 ): HelpDoc {
@@ -88,17 +88,17 @@ export function getBothHelpDoc_<A, B>(
 }
 
 /**
- * @ets_data_first getBothHelpDoc_
+ * @ets_data_first helpDoc_
  */
-export function getBothHelpDoc(cont: (a: Args<any>) => HelpDoc) {
-  return <A, B>(self: Both<A, B>): HelpDoc => getBothHelpDoc_(self, cont)
+export function helpDoc(cont: (a: Args<any>) => HelpDoc) {
+  return <A, B>(self: Both<A, B>): HelpDoc => helpDoc_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // UsageSynopsis
 // -----------------------------------------------------------------------------
 
-export function getBothUsageSynopsis_<A, B>(
+export function synopsis_<A, B>(
   self: Both<A, B>,
   cont: (a: Args<any>) => UsageSynopsis
 ): UsageSynopsis {
@@ -106,17 +106,17 @@ export function getBothUsageSynopsis_<A, B>(
 }
 
 /**
- * @ets_data_first getBothUsageSynopsis_
+ * @ets_data_first synopsis_
  */
-export function getBothUsageSynopsis(cont: (a: Args<any>) => UsageSynopsis) {
-  return <A, B>(self: Both<A, B>): UsageSynopsis => getBothUsageSynopsis_(self, cont)
+export function synopsis(cont: (a: Args<any>) => UsageSynopsis) {
+  return <A, B>(self: Both<A, B>): UsageSynopsis => synopsis_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Description
 // -----------------------------------------------------------------------------
 
-export function addBothDescription_<A, B>(
+export function addDescription_<A, B>(
   self: Both<A, B>,
   text: string,
   cont: (a: Args<any>, text: string) => Args<any>
@@ -125,21 +125,21 @@ export function addBothDescription_<A, B>(
 }
 
 /**
- * @ets_data_first addBothDescription_
+ * @ets_data_first addDescription_
  */
-export function addBothDescription(
+export function addDescription(
   text: string,
   cont: (a: Args<any>, text: string) => Args<any>
 ) {
   return <A, B>(self: Both<A, B>): Args<Tuple<[A, B]>> =>
-    addBothDescription_(self, text, cont)
+    addDescription_(self, text, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateBoth_<A, B>(
+export function validate_<A, B>(
   self: Both<A, B>,
   args: Array<string>,
   config: CliConfig = Config.defaultConfig,
@@ -157,9 +157,9 @@ export function validateBoth_<A, B>(
 }
 
 /**
- * @ets_data_first validateBoth_
+ * @ets_data_first validate_
  */
-export function validateBoth(
+export function validate(
   args: Array<string>,
   config: CliConfig = Config.defaultConfig,
   cont: (
@@ -171,5 +171,5 @@ export function validateBoth(
   return <A, B>(
     self: Both<A, B>
   ): T.IO<HelpDoc, Tuple<[Array<string>, Tuple<[A, B]>]>> =>
-    validateBoth_(self, args, config, cont)
+    validate_(self, args, config, cont)
 }

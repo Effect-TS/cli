@@ -20,17 +20,21 @@ import type { Float, Integer } from "../Internal/NewType"
 import * as PathType from "../PathType"
 import * as Primitive from "../PrimType"
 import type { UsageSynopsis } from "../UsageSynopsis"
-import * as Arguments from "./_internal"
+import * as Both from "./_internal/Both"
+import * as Map from "./_internal/Map"
+import * as None from "./_internal/None"
+import * as Single from "./_internal/Single"
+import * as Variadic from "./_internal/Variadic"
 import type { Args, Instruction } from "./definition"
 
 // -----------------------------------------------------------------------------
 // Constructors
 // -----------------------------------------------------------------------------
 
-export const none: Args<void> = new Arguments.None()
+export const none: Args<void> = new None.None()
 
 export function both_<A, B>(self: Args<A>, that: Args<B>): Args<Tuple<[A, B]>> {
-  return new Arguments.Both(self, that)
+  return new Both.Both(self, that)
 }
 
 /**
@@ -44,16 +48,13 @@ export function both<B>(that: Args<B>) {
  * Creates a boolean argument with a custom argument name.
  */
 export function namedBool(name: string): Args<boolean> {
-  return new Arguments.Single(O.some(name), new Primitive.Bool(O.none))
+  return new Single.Single(O.some(name), new Primitive.Bool(O.none))
 }
 
 /**
  * Creates a boolean argument with `"boolean"` as the argument name.
  */
-export const bool: Args<boolean> = new Arguments.Single(
-  O.none,
-  new Primitive.Bool(O.none)
-)
+export const bool: Args<boolean> = new Single.Single(O.none, new Primitive.Bool(O.none))
 
 /**
  * Creates an enumeration argument with a custom argument name.
@@ -63,7 +64,7 @@ export function namedEnumeration<A>(
   case0: Tuple<[string, A]>,
   ...cases: Array<Tuple<[string, A]>>
 ): Args<A> {
-  return new Arguments.Single(
+  return new Single.Single(
     O.some(name),
     new Primitive.Enumeration(A.cons_(cases, case0))
   )
@@ -76,21 +77,21 @@ export function enumeration<A>(
   case0: Tuple<[string, A]>,
   ...cases: Array<Tuple<[string, A]>>
 ): Args<A> {
-  return new Arguments.Single(O.none, new Primitive.Enumeration(A.cons_(cases, case0)))
+  return new Single.Single(O.none, new Primitive.Enumeration(A.cons_(cases, case0)))
 }
 
 /**
  * Creates a file argument with a custom argument name.
  */
 export function namedFile(name: string, exists: Exists = Exist.either): Args<string> {
-  return new Arguments.Single(O.some(name), new Primitive.Path(PathType.file, exists))
+  return new Single.Single(O.some(name), new Primitive.Path(PathType.file, exists))
 }
 
 /**
  * Creates a file argument with `"file"` as the argument name.
  */
 export function file(exists: Exists = Exist.either): Args<string> {
-  return new Arguments.Single(O.none, new Primitive.Path(PathType.file, exists))
+  return new Single.Single(O.none, new Primitive.Path(PathType.file, exists))
 }
 
 /**
@@ -100,69 +101,63 @@ export function namedDirectory(
   name: string,
   exists: Exists = Exist.either
 ): Args<string> {
-  return new Arguments.Single(
-    O.some(name),
-    new Primitive.Path(PathType.directory, exists)
-  )
+  return new Single.Single(O.some(name), new Primitive.Path(PathType.directory, exists))
 }
 
 /**
  * Creates a directory argument with `"directory"` as the argument name.
  */
 export function directory(exists: Exists = Exist.either): Args<string> {
-  return new Arguments.Single(O.none, new Primitive.Path(PathType.directory, exists))
+  return new Single.Single(O.none, new Primitive.Path(PathType.directory, exists))
 }
 
 /**
  * Creates a text argument with a custom argument name.
  */
 export function namedText(name: string): Args<string> {
-  return new Arguments.Single(O.some(name), new Primitive.Text())
+  return new Single.Single(O.some(name), new Primitive.Text())
 }
 
 /**
  * Creates a text argument with `"text"` as the argument name.
  */
-export const text: Args<string> = new Arguments.Single(O.none, new Primitive.Text())
+export const text: Args<string> = new Single.Single(O.none, new Primitive.Text())
 
 /**
  * Creates a float argument with a custom argument name.
  */
 export function namedFloat(name: string): Args<Float> {
-  return new Arguments.Single(O.some(name), new Primitive.Float())
+  return new Single.Single(O.some(name), new Primitive.Float())
 }
 
 /**
  * Creates a float argument with `"float"` as the argument name.
  */
-export const float: Args<Float> = new Arguments.Single(O.none, new Primitive.Float())
+export const float: Args<Float> = new Single.Single(O.none, new Primitive.Float())
 
 /**
  * Creates an integer argument with a custom argument name.
  */
 export function namedInteger(name: string): Args<Integer> {
-  return new Arguments.Single(O.some(name), new Primitive.Integer())
+  return new Single.Single(O.some(name), new Primitive.Integer())
 }
 
 /**
  * Creates an integer argument with `"integer"` as the argument name.
  */
-export const integer: Args<Integer> = new Arguments.Single(
-  O.none,
-  new Primitive.Integer()
-)
+export const integer: Args<Integer> = new Single.Single(O.none, new Primitive.Integer())
 
 /**
  * Creates a date argument with a custom argument name.
  */
 export function namedDate(name: string): Args<Date> {
-  return new Arguments.Single(O.some(name), new Primitive.Date())
+  return new Single.Single(O.some(name), new Primitive.Date())
 }
 
 /**
  * Creates a date argument with `"date"` as the argument name.
  */
-export const date: Args<Date> = new Arguments.Single(O.none, new Primitive.Date())
+export const date: Args<Date> = new Single.Single(O.none, new Primitive.Date())
 
 // -----------------------------------------------------------------------------
 // Operations
@@ -181,11 +176,11 @@ export function instruction<A>(self: Args<A>): Instruction {
  */
 export function minSize<A>(self: Args<A>): number {
   return matchTag_(instruction(self), {
-    None: () => Arguments.noneMinSize,
-    Single: () => Arguments.singleMinSize,
-    Map: (_) => Arguments.getMapMinSize_(_, minSize),
-    Both: (_) => Arguments.getBothMinSize_(_, minSize),
-    Variadic: (_) => Arguments.getVariadicMinSize_(_, minSize)
+    Both: (_) => Both.minSize_(_, minSize),
+    Map: (_) => Map.minSize_(_, minSize),
+    None: () => None.minSize,
+    Single: () => Single.minSize,
+    Variadic: (_) => Variadic.minSize_(_, minSize)
   })
 }
 
@@ -194,11 +189,11 @@ export function minSize<A>(self: Args<A>): number {
  */
 export function maxSize<A>(self: Args<A>): number {
   return matchTag_(instruction(self), {
-    None: () => Arguments.noneMaxSize,
-    Single: () => Arguments.singleMaxSize,
-    Map: (_) => Arguments.getMapMaxSize_(_, maxSize),
-    Both: (_) => Arguments.getBothMaxSize_(_, maxSize),
-    Variadic: (_) => Arguments.getVariadicMaxSize_(_, maxSize)
+    Both: (_) => Both.maxSize_(_, maxSize),
+    Map: (_) => Map.maxSize_(_, maxSize),
+    None: () => None.maxSize,
+    Single: () => Single.maxSize,
+    Variadic: (_) => Variadic.maxSize_(_, maxSize)
   })
 }
 
@@ -207,11 +202,11 @@ export function maxSize<A>(self: Args<A>): number {
  */
 export function helpDoc<A>(self: Args<A>): HelpDoc {
   return matchTag_(instruction(self), {
-    None: () => Arguments.noneHelpDoc,
-    Single: Arguments.getSingleHelpDoc,
-    Map: (_) => Arguments.getMapHelpDoc_(_, helpDoc),
-    Both: (_) => Arguments.getBothHelpDoc_(_, helpDoc),
-    Variadic: (_) => Arguments.getVariadicHelpDoc_(_, helpDoc, minSize, maxSize)
+    Both: (_) => Both.helpDoc_(_, helpDoc),
+    Map: (_) => Map.helpDoc_(_, helpDoc),
+    None: () => None.helpDoc,
+    Single: (_) => Single.helpDoc(_),
+    Variadic: (_) => Variadic.helpDoc_(_, helpDoc, minSize, maxSize)
   })
 }
 
@@ -220,21 +215,21 @@ export function helpDoc<A>(self: Args<A>): HelpDoc {
  */
 export function synopsis<A>(self: Args<A>): UsageSynopsis {
   return matchTag_(instruction(self), {
-    None: () => Arguments.noneUsageSynopsis,
-    Single: Arguments.getSingleUsageSynopsis,
-    Map: (_) => Arguments.getMapUsageSynopsis_(_, synopsis),
-    Both: (_) => Arguments.getBothUsageSynopsis_(_, synopsis),
-    Variadic: (_) => Arguments.getVariadicUsageSynopsis_(_, synopsis)
+    Both: (_) => Both.synopsis_(_, synopsis),
+    Map: (_) => Map.synopsis_(_, synopsis),
+    None: () => None.synopsis,
+    Single: (_) => Single.synopsis(_),
+    Variadic: (_) => Variadic.synopsis_(_, synopsis)
   })
 }
 
 export function addDescription_<A>(self: Args<A>, text: string): Args<A> {
   return matchTag_(instruction(self), {
+    Both: (_) => Both.addDescription_(_, text, addDescription(text)),
+    Map: (_) => Map.addDescription_(_, text, addDescription(text)),
     None: identity,
-    Single: Arguments.addSingleDescription(text),
-    Map: (_) => Arguments.addMapDescription_(_, text, addDescription(text)),
-    Both: (_) => Arguments.addBothDescription_(_, text, addDescription(text)),
-    Variadic: (_) => Arguments.addVariadicDescription_(_, text, addDescription(text))
+    Single: (_) => Single.addDescription_(_, text),
+    Variadic: (_) => Variadic.addDescription_(_, text, addDescription(text))
   }) as Args<A>
 }
 
@@ -260,16 +255,16 @@ export function validate_<A>(
   config: CliConfig = Config.defaultConfig
 ): T.IO<HelpDoc, Tuple<[Array<string>, A]>> {
   return matchTag_(instruction(self), {
-    None: () => Arguments.validateNone(args),
-    Single: Arguments.validateSingle(args, config),
-    Map: (_) => Arguments.validateMap_(_, args, config, validate_),
-    Both: (_) => Arguments.validateBoth_(_, args, config, validate_),
-    Variadic: (_) => Arguments.validateVariadic_(_, args, config, validate_)
+    Both: (_) => Both.validate_(_, args, config, validate_),
+    Map: (_) => Map.validate_(_, args, config, validate_),
+    None: () => None.validate(args),
+    Single: (_) => Single.validate_(_, args, config),
+    Variadic: (_) => Variadic.validate_(_, args, config, validate_)
   })
 }
 
 export function map_<A, B>(self: Args<A>, f: (a: A) => B): Args<B> {
-  return new Arguments.Map(self, (a) => E.right(f(a)))
+  return new Map.Map(self, (a) => E.right(f(a)))
 }
 
 /**
@@ -284,7 +279,7 @@ export function map<A, B>(f: (a: A) => B) {
 // -----------------------------------------------------------------------------
 
 export function atLeast_<A>(self: Args<A>, min: number): Args<Array<A>> {
-  return new Arguments.Variadic(self, O.some(min), O.none)
+  return new Variadic.Variadic(self, O.some(min), O.none)
 }
 
 /**
@@ -295,7 +290,7 @@ export function atLeast(min: number) {
 }
 
 export function atMost_<A>(self: Args<A>, max: number): Args<Array<A>> {
-  return new Arguments.Variadic(self, O.none, O.some(max))
+  return new Variadic.Variadic(self, O.none, O.some(max))
 }
 
 /**
@@ -306,7 +301,7 @@ export function atMost(min: number) {
 }
 
 export function between_<A>(self: Args<A>, min: number, max: number): Args<Array<A>> {
-  return new Arguments.Variadic(self, O.some(min), O.some(max))
+  return new Variadic.Variadic(self, O.some(min), O.some(max))
 }
 
 /**
@@ -317,11 +312,11 @@ export function between(min: number, max: number) {
 }
 
 export function repeat<A>(self: Args<A>): Args<Array<A>> {
-  return new Arguments.Variadic(self, O.none, O.none)
+  return new Variadic.Variadic(self, O.none, O.none)
 }
 
 export function repeat1<A>(self: Args<A>): Args<NonEmptyArray<A>> {
-  return map_(new Arguments.Variadic(self, O.some(1), O.none), (as) => {
+  return map_(new Variadic.Variadic(self, O.some(1), O.none), (as) => {
     if (A.isNonEmpty(as)) {
       return as
     }

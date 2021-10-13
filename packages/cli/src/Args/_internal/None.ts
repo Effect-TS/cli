@@ -26,31 +26,31 @@ export class None extends Base<void> {
 // Minimum Size
 // -----------------------------------------------------------------------------
 
-export const noneMinSize = 0
+export const minSize = 0
 
 // -----------------------------------------------------------------------------
 // Maximum Size
 // -----------------------------------------------------------------------------
 
-export const noneMaxSize = 0
+export const maxSize = 0
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export const noneHelpDoc: HelpDoc = Help.empty
+export const helpDoc: HelpDoc = Help.empty
 
 // -----------------------------------------------------------------------------
 // UsageSynopsis
 // -----------------------------------------------------------------------------
 
-export const noneUsageSynopsis: UsageSynopsis = Synopsis.none
+export const synopsis: UsageSynopsis = Synopsis.none
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateNone(
+export function validate(
   args: Array<string>
 ): T.IO<HelpDoc, Tuple<[Array<string>, void]>> {
   return T.succeed(Tp.tuple(args, undefined))
