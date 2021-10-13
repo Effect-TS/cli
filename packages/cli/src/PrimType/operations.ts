@@ -8,7 +8,13 @@ import { matchTag_ } from "@effect-ts/core/Utils"
 import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
 import type { HelpDoc } from "../Help"
-import * as Primitives from "./_internal"
+import * as Bool from "./_internal/Bool"
+import * as Date from "./_internal/Date"
+import * as Enumeration from "./_internal/Enumeration"
+import * as Float from "./_internal/Float"
+import * as Integer from "./_internal/Integer"
+import * as Path from "./_internal/Path"
+import * as Text from "./_internal/Text"
 import type { Instruction, PrimType } from "./definition"
 
 // -----------------------------------------------------------------------------
@@ -24,32 +30,32 @@ export function instruction<A>(self: PrimType<A>): Instruction {
 }
 
 /**
- * Returns the `HelpDoc` for the specified `PrimType`.
- */
-export function helpDoc<A>(self: PrimType<A>): HelpDoc {
-  return matchTag_(instruction(self), {
-    Bool: () => Primitives.boolHelpDoc,
-    Date: () => Primitives.dateHelpDoc,
-    Enumeration: (_) => Primitives.getEnumerationHelpDoc(_),
-    Float: () => Primitives.floatHelpDoc,
-    Integer: () => Primitives.integerHelpDoc,
-    Path: (_) => Primitives.getPathHelpDoc(_),
-    Text: () => Primitives.textHelpDoc
-  })
-}
-
-/**
  * Returns the type name for the specified `PrimType`.
  */
 export function typeName<A>(self: PrimType<A>): string {
   return matchTag_(instruction(self), {
-    Bool: () => Primitives.boolTypeName,
-    Date: () => Primitives.dateTypeName,
-    Enumeration: (_) => Primitives.enumerationTypeName,
-    Float: () => Primitives.floatTypeName,
-    Integer: () => Primitives.integerTypeName,
-    Path: (_) => Primitives.getPathTypeName(_),
-    Text: () => Primitives.textTypeName
+    Bool: () => Bool.typeName,
+    Date: () => Date.typeName,
+    Enumeration: (_) => Enumeration.typeName,
+    Float: () => Float.typeName,
+    Integer: () => Integer.typeName,
+    Path: (_) => Path.typeName(_),
+    Text: () => Text.typeName
+  })
+}
+
+/**
+ * Returns the `HelpDoc` for the specified `PrimType`.
+ */
+export function helpDoc<A>(self: PrimType<A>): HelpDoc {
+  return matchTag_(instruction(self), {
+    Bool: () => Bool.helpDoc,
+    Date: () => Date.helpDoc,
+    Enumeration: (_) => Enumeration.helpDoc(_),
+    Float: () => Float.helpDoc,
+    Integer: () => Integer.helpDoc,
+    Path: (_) => Path.helpDoc(_),
+    Text: () => Text.helpDoc
   })
 }
 
@@ -58,7 +64,7 @@ export function typeName<A>(self: PrimType<A>): string {
  */
 export function choices<A>(self: PrimType<A>): Option<string> {
   const I = instruction(self)
-  return I._tag === "Enumeration" ? O.some(Primitives.getEnumerationChoices(I)) : O.none
+  return I._tag === "Enumeration" ? O.some(Enumeration.choices(I)) : O.none
 }
 
 /**
@@ -70,13 +76,13 @@ export function validate_<A>(
   config: CliConfig = Config.defaultConfig
 ): T.IO<string, A> {
   return matchTag_(instruction(self), {
-    Bool: Primitives.validateBool(value, config),
-    Date: () => Primitives.validateDate(value),
-    Enumeration: Primitives.validateEnumeration(value),
-    Float: () => Primitives.validateFloat(value),
-    Integer: () => Primitives.validateInteger(value),
-    Path: Primitives.validatePath(value),
-    Text: () => Primitives.validateText(value)
+    Bool: (_) => Bool.validate_(_, value, config),
+    Date: () => Date.validate(value),
+    Enumeration: (_) => Enumeration.validate_(_, value),
+    Float: () => Float.validate(value),
+    Integer: () => Integer.validate(value),
+    Path: (_) => Path.validate_(_, value),
+    Text: () => Text.validate(value)
   }) as T.IO<string, A>
 }
 

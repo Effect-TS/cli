@@ -1,15 +1,13 @@
 // ets_tracing: off
 
-import {
-  Bool,
-  Date,
-  Enumeration,
-  Float,
-  Integer,
-  Path,
-  PrimType,
-  Text
-} from "./_internal"
+import { PrimType } from "./_internal/Base"
+import { Bool } from "./_internal/Bool"
+import { Date } from "./_internal/Date"
+import { Enumeration } from "./_internal/Enumeration"
+import { Float } from "./_internal/Float"
+import { Integer } from "./_internal/Integer"
+import { Path } from "./_internal/Path"
+import { Text } from "./_internal/Text"
 
 // -----------------------------------------------------------------------------
 // Model

@@ -24,18 +24,18 @@ export class Float extends Base<NewType.Float> {
 // Type Name
 // -----------------------------------------------------------------------------
 
-export const floatTypeName = "float"
+export const typeName = "float"
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export const floatHelpDoc: HelpDoc = Help.text("A floating point number.")
+export const helpDoc: HelpDoc = Help.text("A floating point number.")
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateFloat(value: Option<string>): T.IO<string, NewType.Float> {
-  return attemptParse(value, NewType.parseFloat, floatTypeName)
+export function validate(value: Option<string>): T.IO<string, NewType.Float> {
+  return attemptParse(value, NewType.parseFloat, typeName)
 }

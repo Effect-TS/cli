@@ -47,10 +47,22 @@ export class Path extends Base<string> {
 }
 
 // -----------------------------------------------------------------------------
+// Type Name
+// -----------------------------------------------------------------------------
+
+export function typeName(self: Path): string {
+  return matchTag_(self.pathType, {
+    File: () => "file",
+    Directory: () => "directory",
+    Either: () => "path"
+  })
+}
+
+// -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getPathHelpDoc(self: Path): HelpDoc {
+export function helpDoc(self: Path): HelpDoc {
   return matchTag_(self.exists, {
     Yes: () =>
       matchTag_(self.pathType, {
@@ -74,18 +86,6 @@ export function getPathHelpDoc(self: Path): HelpDoc {
 }
 
 // -----------------------------------------------------------------------------
-// Type Name
-// -----------------------------------------------------------------------------
-
-export function getPathTypeName(self: Path): string {
-  return matchTag_(self.pathType, {
-    File: () => "file",
-    Directory: () => "directory",
-    Either: () => "path"
-  })
-}
-
-// -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
@@ -103,7 +103,7 @@ function refineExistence(value: string, expected: Exists) {
   }
 }
 
-export function validatePath_(self: Path, value: Option<string>): T.IO<string, string> {
+export function validate_(self: Path, value: Option<string>): T.IO<string, string> {
   return T.chain_(
     T.orElseFail_(T.fromOption(value), `Path options do not have a default value.`),
     (path) =>
@@ -136,8 +136,8 @@ export function validatePath_(self: Path, value: Option<string>): T.IO<string, s
 }
 
 /**
- * validatePath_
+ * @ets_data_first validate_
  */
-export function validatePath(value: Option<string>) {
-  return (self: Path): T.IO<string, string> => validatePath_(self, value)
+export function validate(value: Option<string>) {
+  return (self: Path): T.IO<string, string> => validate_(self, value)
 }

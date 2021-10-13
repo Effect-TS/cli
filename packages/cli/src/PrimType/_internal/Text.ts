@@ -21,21 +21,21 @@ export class Text extends Base<string> {
 }
 
 // -----------------------------------------------------------------------------
-// HelpDoc
-// -----------------------------------------------------------------------------
-
-export const textHelpDoc: HelpDoc = Help.text("A user-defined piece of text.")
-
-// -----------------------------------------------------------------------------
 // Type Name
 // -----------------------------------------------------------------------------
 
-export const textTypeName = "text"
+export const typeName = "text"
+
+// -----------------------------------------------------------------------------
+// HelpDoc
+// -----------------------------------------------------------------------------
+
+export const helpDoc: HelpDoc = Help.text("A user-defined piece of text.")
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateText(value: Option<string>): T.IO<string, string> {
-  return attemptParse(value, T.succeed, textTypeName)
+export function validate(value: Option<string>): T.IO<string, string> {
+  return attemptParse(value, T.succeed, typeName)
 }

@@ -24,18 +24,18 @@ export class Integer extends Base<NewType.Integer> {
 // Type Name
 // -----------------------------------------------------------------------------
 
-export const integerTypeName = "integer"
+export const typeName = "integer"
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export const integerHelpDoc: HelpDoc = Help.text("An integer.")
+export const helpDoc: HelpDoc = Help.text("An integer.")
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateInteger(value: Option<string>): T.IO<string, NewType.Integer> {
-  return attemptParse(value, NewType.parseInteger, integerTypeName)
+export function validate(value: Option<string>): T.IO<string, NewType.Integer> {
+  return attemptParse(value, NewType.parseInteger, typeName)
 }

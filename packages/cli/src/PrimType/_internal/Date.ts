@@ -29,21 +29,19 @@ export class Date extends Base<globalThis.Date> {
 // Type Name
 // -----------------------------------------------------------------------------
 
-export const dateTypeName = "date"
+export const typeName = "date"
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export const dateHelpDoc: HelpDoc = Help.text(
-  "A valid string representation of a date."
-)
+export const helpDoc: HelpDoc = Help.text("A valid string representation of a date.")
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateDate(value: Option<string>): T.IO<string, globalThis.Date> {
+export function validate(value: Option<string>): T.IO<string, globalThis.Date> {
   return attemptParse(
     value,
     (u) => {
@@ -52,6 +50,6 @@ export function validateDate(value: Option<string>): T.IO<string, globalThis.Dat
         ? T.fail("invalid date")
         : T.succeed(new globalThis.Date(ms))
     },
-    dateTypeName
+    typeName
   )
 }
