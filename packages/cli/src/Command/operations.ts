@@ -21,7 +21,10 @@ import type { Options } from "../Options"
 import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
-import * as Commands from "./_internal"
+import * as Map from "./_internal/Map"
+import * as OrElse from "./_internal/OrElse"
+import * as Single from "./_internal/Single"
+import * as Subcommands from "./_internal/Subcommands"
 import type { Command, Instruction } from "./definition"
 
 // -----------------------------------------------------------------------------
@@ -42,7 +45,7 @@ export function command<OptionsType, ArgsType>(
   args: Args<ArgsType>,
   helpDoc: HelpDoc = Help.empty
 ): Command<Tuple<[OptionsType, ArgsType]>> {
-  return new Commands.Single(name, helpDoc, options, args)
+  return new Single.Single(name, helpDoc, options, args)
 }
 
 // -----------------------------------------------------------------------------
@@ -56,15 +59,18 @@ export function subcommands_<A, B>(
 ): Command<Tuple<[A, B]>> {
   return A.foldLeft_(
     subcommands,
-    () => new Commands.Subcommands(self, subcommand),
+    () => new Subcommands.Subcommands(self, subcommand),
     (head, tail) =>
-      new Commands.Subcommands(
+      new Subcommands.Subcommands(
         self,
         A.reduce_(tail, orElse_(subcommand, head), orElse_)
       )
   )
 }
 
+/**
+ * @ets_data_first subcommands_
+ */
 export function subcommands<B>(
   subcommand: Command<B>,
   ...subcommands: Array<Command<B>>
@@ -86,7 +92,7 @@ export function instruction<A>(self: Command<A>): Instruction {
 }
 
 export function map_<A, B>(self: Command<A>, f: (a: A) => B): Command<B> {
-  return new Commands.Map(self, f)
+  return new Map.Map(self, f)
 }
 
 /**
@@ -97,7 +103,7 @@ export function map<A, B>(f: (a: A) => B) {
 }
 
 export function orElse_<A>(self: Command<A>, that: Command<A>): Command<A> {
-  return new Commands.OrElse(self, that)
+  return new OrElse.OrElse(self, that)
 }
 
 /**
@@ -115,7 +121,7 @@ export function orElseEither_<A, B>(
 }
 
 /**
- * @ets_data_first
+ * @ets_data_first orElseEither_
  */
 export function orElseEither<B>(that: Command<B>) {
   return <A>(self: Command<A>): Command<Either<A, B>> => orElseEither_(self, that)
@@ -126,9 +132,9 @@ export function orElseEither<B>(that: Command<B>) {
  */
 export function names<A>(self: Command<A>): Set<string> {
   return matchTag_(instruction(self), {
-    Single: (_) => S.singleton(_.name),
     Map: (_) => names(_.command),
     OrElse: (_) => S.union_(Equal.string)(names(_.left), names(_.right)),
+    Single: (_) => S.singleton(_.name),
     Subcommands: (_) => names(_.parent)
   })
 }
@@ -138,10 +144,10 @@ export function names<A>(self: Command<A>): Set<string> {
  */
 export function helpDoc<A>(self: Command<A>): HelpDoc {
   return matchTag_(instruction(self), {
-    Single: Commands.getSingleHelpDoc,
     Map: (_) => helpDoc(_.command),
     OrElse: (_) => Help.sequence_(helpDoc(_.left), helpDoc(_.right)),
-    Subcommands: (_) => Commands.getSubcommandsHelpDoc_(_, helpDoc)
+    Single: (_) => Single.helpDoc(_),
+    Subcommands: (_) => Subcommands.helpDoc_(_, helpDoc)
   })
 }
 
@@ -150,9 +156,9 @@ export function helpDoc<A>(self: Command<A>): HelpDoc {
  */
 export function synopsis<A>(self: Command<A>): UsageSynopsis {
   return matchTag_(instruction(self), {
-    Single: Commands.getSingleUsageSynopsis,
     Map: (_) => synopsis(_.command),
     OrElse: (_) => Synopsis.mixed,
+    Single: (_) => Single.synopsis(_),
     Subcommands: (_) => Synopsis.concat_(synopsis(_.parent), synopsis(_.child))
   })
 }
@@ -170,10 +176,10 @@ export function parse_<A>(
   config: CliConfig = Config.defaultConfig
 ): T.IO<ValidationError, CommandDirective<A>> {
   return matchTag_(instruction(self), {
-    Single: Commands.parseSingle(args, config),
-    Map: (_) => Commands.parseMap_(_, args, parse_, config),
-    OrElse: (_) => Commands.parseOrElse_(_, args, parse_, config),
-    Subcommands: (_) => Commands.parseSubcommands_(_, args, parse_, helpDoc)
+    Map: (_) => Map.parse_(_, args, parse_, config),
+    OrElse: (_) => OrElse.parse_(_, args, parse_, config),
+    Single: (_) => Single.parse_(_, args, config),
+    Subcommands: (_) => Subcommands.parse_(_, args, parse_, helpDoc)
   })
 }
 

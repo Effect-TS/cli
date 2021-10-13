@@ -49,7 +49,7 @@ export class Subcommands<A, B> extends Base<Tuple<[A, B]>> {
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getSubcommandsHelpDoc_<A, B>(
+export function helpDoc_<A, B>(
   self: Subcommands<A, B>,
   cont: (a: Command<any>) => HelpDoc
 ): HelpDoc {
@@ -61,17 +61,17 @@ export function getSubcommandsHelpDoc_<A, B>(
 }
 
 /**
- * @ets_data_first getSubcommandsHelpDoc_
+ * @ets_data_first helpDoc_
  */
-export function getSubcommandsHelpDoc(cont: (a: Command<any>) => HelpDoc) {
-  return <A, B>(self: Subcommands<A, B>): HelpDoc => getSubcommandsHelpDoc_(self, cont)
+export function helpDoc(cont: (a: Command<any>) => HelpDoc) {
+  return <A, B>(self: Subcommands<A, B>): HelpDoc => helpDoc_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Parser
 // -----------------------------------------------------------------------------
 
-export function parseSubcommands_<A, B>(
+export function parse_<A, B>(
   self: Subcommands<A, B>,
   args: Array<string>,
   cont: (
@@ -91,7 +91,7 @@ export function parseSubcommands_<A, B>(
             ? T.succeed(
                 Directive.builtIn(
                   new BuiltIns.ShowHelp({
-                    helpDoc: getSubcommandsHelpDoc_(self, helpDoc)
+                    helpDoc: helpDoc_(self, helpDoc)
                   })
                 )
               )
@@ -111,7 +111,7 @@ export function parseSubcommands_<A, B>(
             T.succeed(
               Directive.builtIn(
                 new BuiltIns.ShowHelp({
-                  helpDoc: getSubcommandsHelpDoc_(self, helpDoc)
+                  helpDoc: helpDoc_(self, helpDoc)
                 })
               )
             )
@@ -121,9 +121,9 @@ export function parseSubcommands_<A, B>(
 }
 
 /**
- * @ets_data_first parseSubcommands_
+ * @ets_data_first parse_
  */
-export function parseSubcommands(
+export function parse(
   args: Array<string>,
   cont: (
     a: Command<any>,
@@ -136,7 +136,7 @@ export function parseSubcommands(
   return <A, B>(
     self: Subcommands<A, B>
   ): T.IO<ValidationError, CommandDirective<Tuple<[A, B]>>> =>
-    parseSubcommands_(self, args, cont, helpDoc, config)
+    parse_(self, args, cont, helpDoc, config)
 }
 
 // -----------------------------------------------------------------------------
@@ -167,6 +167,14 @@ export function subcommandsDescription_<A, B, C>(
     },
     () => Help.empty
   )
+}
+
+/**
+ * @ets_data_first subcommandsDescription_
+ */
+export function subcommandsDescription<C>(command: Command<C>) {
+  return <A, B>(self: Subcommands<A, B>): HelpDoc =>
+    subcommandsDescription_(self, command)
 }
 
 function getHelpDescription(helpDoc: HelpDoc): HelpDoc {

@@ -1,6 +1,10 @@
 // ets_tracing: off
 
-import { Base, Command, Map, OrElse, Single, Subcommands } from "./_internal"
+import { Command } from "./_internal/Base"
+import { Map } from "./_internal/Map"
+import { OrElse } from "./_internal/OrElse"
+import { Single } from "./_internal/Single"
+import { Subcommands } from "./_internal/Subcommands"
 
 // -----------------------------------------------------------------------------
 // Model
@@ -12,4 +16,4 @@ export type Instruction =
   | Single<any, any>
   | Subcommands<any, any>
 
-export { Base, Command, Map, OrElse, Single, Subcommands }
+export { Command, Map, OrElse, Single, Subcommands }

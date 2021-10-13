@@ -42,7 +42,7 @@ export class OrElse<A> extends Base<A> {
 // Parser
 // -----------------------------------------------------------------------------
 
-export function parseOrElse_<A>(
+export function parse_<A>(
   self: OrElse<A>,
   args: Array<string>,
   cont: (
@@ -55,7 +55,10 @@ export function parseOrElse_<A>(
   return T.orElse_(cont(self.left, args, config), () => cont(self.right, args, config))
 }
 
-export function parseOrElse(
+/**
+ * @ets_data_first parse_
+ */
+export function parse(
   args: Array<string>,
   cont: (
     a: Command<any>,
@@ -65,5 +68,5 @@ export function parseOrElse(
   config: CliConfig = Config.defaultConfig
 ) {
   return <A>(self: OrElse<A>): T.IO<ValidationError, CommandDirective<A>> =>
-    parseOrElse_(self, args, cont, config)
+    parse_(self, args, cont, config)
 }
