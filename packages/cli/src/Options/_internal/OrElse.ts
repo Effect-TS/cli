@@ -67,14 +67,10 @@ export function validate_<A, B>(
       T.foldM_(
         cont(self.right, args, config),
         (err2) => {
-          if (err1.type._tag === "MissingValue" && err2.type._tag === "MissingValue") {
-            return T.fail(
-              Validation.missingValueError(Help.sequence_(err1.error, err2.error))
-            )
+          if (err1._tag === "MissingValue" && err2._tag === "MissingValue") {
+            return T.fail(Validation.missingValue(Help.sequence_(err1.help, err2.help)))
           } else {
-            return T.fail(
-              Validation.invalidValueError(Help.sequence_(err1.error, err2.error))
-            )
+            return T.fail(Validation.invalidValue(Help.sequence_(err1.help, err2.help)))
           }
         },
         (success) =>
@@ -86,7 +82,7 @@ export function validate_<A, B>(
         (_) => T.succeed(Tp.tuple(Tp.get_(result, 0), E.left(Tp.get_(result, 1)))),
         (_) =>
           T.fail(
-            Validation.invalidValueError(
+            Validation.invalidValue(
               Help.p(
                 Help.error(
                   "Options collision detected. You can only specify " +

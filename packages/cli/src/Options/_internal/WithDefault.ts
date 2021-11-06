@@ -99,7 +99,7 @@ export function validate_<A>(
   return T.foldM_(
     cont(self.options, args, config),
     (invalid) =>
-      Validation.isOptionMissing(invalid)
+      Validation.isMissingValue(invalid)
         ? T.succeed(Tp.tuple(args, self.defaultValue))
         : T.fail(invalid),
     T.succeed

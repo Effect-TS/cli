@@ -92,7 +92,7 @@ describe("Command", () => {
 
       expect(Ex.untraced(r1)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(
               Help.error("The flag '--afte' is not recognized. Did you mean '--after'?")
             )
@@ -101,7 +101,7 @@ describe("Command", () => {
       )
       expect(Ex.untraced(r2)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(
               Help.error(
                 "The flag '--efore' is not recognized. Did you mean '--before'?"
@@ -112,7 +112,7 @@ describe("Command", () => {
       )
       expect(Ex.untraced(r3)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.sequence_(
               Help.p(
                 Help.error(
@@ -140,7 +140,7 @@ describe("Command", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(Help.error("Expected to find '--after' option."))
           )
         )
@@ -241,9 +241,7 @@ describe("Command", () => {
         const result = yield* _(T.result(Command.parse_(git, ["git", "abc"])))
 
         expect(Ex.untraced(result)).toEqual(
-          Ex.fail(
-            Validation.commandMismatchError(Help.p("Unexpected command name: abc"))
-          )
+          Ex.fail(Validation.commandMismatch(Help.p("Unexpected command name: abc")))
         )
       }))
 
@@ -252,7 +250,7 @@ describe("Command", () => {
         const result = yield* _(T.result(Command.parse_(git, ["git"])))
 
         expect(Ex.untraced(result)).toEqual(
-          Ex.fail(Validation.missingSubcommandError(Help.p("Missing subcommand.")))
+          Ex.fail(Validation.missingSubcommand(Help.p("Missing subcommand.")))
         )
       }))
   })

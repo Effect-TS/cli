@@ -69,7 +69,7 @@ describe("Options", () => {
       expect(v4).toEqual(Tp.tuple(A.empty, false))
       expect(v5).toEqual(Tp.tuple(A.empty, false))
       expect(v6).toEqual(
-        Validation.invalidValueError(
+        Validation.invalidValue(
           Help.p(
             Help.error(
               "Options collision detected. You can only specify either " +
@@ -79,7 +79,7 @@ describe("Options", () => {
         )
       )
       expect(v7).toEqual(
-        Validation.invalidValueError(
+        Validation.invalidValue(
           Help.p(
             Help.error(
               "Options collision detected. You can only specify either " +
@@ -119,7 +119,7 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(Help.error("Expected to find '--firstname' option."))
           )
         )
@@ -141,9 +141,7 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
-            Help.p(Help.error("Expected to find '-t' option."))
-          )
+          Validation.missingValue(Help.p(Help.error("Expected to find '-t' option.")))
         )
       )
     }))
@@ -155,7 +153,7 @@ describe("Options", () => {
       const result = yield* _(T.result(Options.validate_(intOption, ["-t", "abc"])))
 
       expect(Ex.untraced(result)).toEqual(
-        Ex.fail(Validation.invalidValueError(Help.p("'abc' is not a integer")))
+        Ex.fail(Validation.invalidValue(Help.p("'abc' is not a integer")))
       )
     }))
 
@@ -169,7 +167,7 @@ describe("Options", () => {
       const result = yield* _(T.result(Options.validate_(o, ["--integer", "abc"])))
 
       expect(Ex.untraced(result)).toEqual(
-        Ex.fail(Validation.invalidValueError(Help.p("'abc' is not a integer")))
+        Ex.fail(Validation.invalidValue(Help.p("'abc' is not a integer")))
       )
     }))
 
@@ -181,7 +179,7 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.invalidValueError(
+          Validation.invalidValue(
             Help.p(
               Help.error(
                 "Options collision detected. You can only specify either '-v' or '-s'."
@@ -205,7 +203,7 @@ describe("Options", () => {
       expect(r1).toEqual(Tp.tuple(A.empty, "John"))
       expect(r2).toEqual(Tp.tuple(A.empty, "John"))
       expect(r3).toEqual(
-        Validation.missingValueError(
+        Validation.missingValue(
           Help.p(
             Help.error(
               "The flag '--firstname' is not recognized. Did you mean '--FirstName'?"
@@ -214,7 +212,7 @@ describe("Options", () => {
         )
       )
       expect(r4).toEqual(
-        Validation.missingValueError(
+        Validation.missingValue(
           Help.p(Help.error("Expected to find '--FirstName' option."))
         )
       )
@@ -299,7 +297,7 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(
               Help.error(
                 "The flag '--firstme' is not recognized. Did you mean '--firstname'?"
@@ -316,7 +314,7 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(Help.error("Expected to find '--age' option."))
           )
         )
@@ -352,7 +350,7 @@ describe("Options", () => {
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(
-            Validation.invalidValueError(
+            Validation.invalidValue(
               Help.p(
                 Help.error(
                   "Options collision detected. You can only specify either " +
@@ -375,7 +373,7 @@ describe("Options", () => {
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(
-            Validation.missingValueError(
+            Validation.missingValue(
               Help.sequence_(
                 Help.p(Help.error("Expected to find '--string' option.")),
                 Help.p(Help.error("Expected to find '--integer' option."))
@@ -397,7 +395,7 @@ describe("Options", () => {
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(
-            Validation.invalidValueError(
+            Validation.invalidValue(
               Help.sequence_(
                 Help.p("'abc' is not a integer"),
                 Help.p(Help.error("Expected to find '--max' option."))

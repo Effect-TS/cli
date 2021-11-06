@@ -102,7 +102,7 @@ export function parse_<A, B>(
                 cont(self.child, _.leftover, config),
                 Directive.map((b) => Tp.tuple(_.value, b))
               )
-            : T.fail(Validation.missingSubcommandError(Help.p(`Missing subcommand.`)))
+            : T.fail(Validation.missingSubcommand(Help.p(`Missing subcommand.`)))
       })
     ),
     () =>

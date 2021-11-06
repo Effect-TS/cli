@@ -153,7 +153,7 @@ export function builtIn_<OptionsType, ArgsType>(
     T.some(
       T.bimap_(
         Opts.validate_(builtInOptions(self), args, config),
-        (e) => e.error,
+        (e) => e.help,
         ({ tuple: [_, builtInOption] }) => builtInOption
       )
     ),
@@ -181,7 +181,7 @@ export function userDefined_<OptionsType, ArgsType>(
       args,
       () =>
         T.fail(
-          Validation.commandMismatchError(Help.p(`Missing command name: ${self.name}`))
+          Validation.commandMismatch(Help.p(`Missing command name: ${self.name}`))
         ),
       (head, tail) => {
         if (
@@ -191,7 +191,7 @@ export function userDefined_<OptionsType, ArgsType>(
           return T.succeed(tail)
         } else {
           return T.fail(
-            Validation.commandMismatchError(Help.p(`Unexpected command name: ${head}`))
+            Validation.commandMismatch(Help.p(`Unexpected command name: ${head}`))
           )
         }
       }
@@ -202,7 +202,7 @@ export function userDefined_<OptionsType, ArgsType>(
         ({ tuple: [args1, opts1] }) => {
           return T.map_(
             T.mapError_(Arguments.validate_(self.args, args1, config), (helpDoc) =>
-              Validation.invalidArgumentError(helpDoc)
+              Validation.invalidArgument(helpDoc)
             ),
             ({ tuple: [args2, opts2] }) =>
               Directive.userDefined(args2, Tp.tuple(opts1, opts2))
