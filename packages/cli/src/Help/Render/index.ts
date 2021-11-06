@@ -232,24 +232,31 @@ function helpDocToHtml(helpDoc: HelpDoc, options: LayoutOptions): string {
 // Render
 // -----------------------------------------------------------------------------
 
-export function render_(helpDoc: HelpDoc, mode: RenderMode): string {
+export function render_(self: HelpDoc, mode: RenderMode): string {
   switch (mode._tag) {
     case "HtmlMode":
       return helpDocToHtml(
-        helpDoc,
+        self,
         Layout.layoutOptions(
           PageWidth.availablePerLine(mode.lineWidth, mode.ribbonFraction)
         )
       )
     case "PlainMode":
       return helpDocToPlaintext(
-        helpDoc,
+        self,
         Layout.layoutOptions(
           PageWidth.availablePerLine(mode.lineWidth, mode.ribbonFraction)
         ),
         mode.ansi
       )
   }
+}
+
+/**
+ * @ets_data_first render_
+ */
+export function render(mode: RenderMode) {
+  return (self: HelpDoc): string => render_(self, mode)
 }
 
 // -----------------------------------------------------------------------------

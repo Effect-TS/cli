@@ -296,4 +296,62 @@ describe("Command", () => {
         )
       }))
   })
+
+  describe("Command HelpDoc", () => {
+    it("should add help to a command", () =>
+      T.gen(function* (_) {
+        const command = pipe(
+          Command.command("tldr"),
+          Command.withHelp("this is some help")
+        )
+        const result = yield* _(Command.parse_(command, ["tldr"]))
+
+        expect(Command.helpDoc(command)).toEqual(
+          Help.sequence_(Help.h1("DESCRIPTION"), Help.p("this is some help"))
+        )
+        expect(result).toEqual(
+          CommandDirective.userDefined(A.empty, Tp.tuple(undefined, undefined))
+        )
+      }))
+
+    it("should add help to subcommands", () =>
+      T.succeedWith(() => {
+        const command = pipe(
+          Command.command("command"),
+          Command.subcommands(
+            pipe(Command.command("sub"), Command.withHelp("this is some help"))
+          )
+        )
+
+        expect(Command.helpDoc(command)).not.toEqual(
+          Help.sequence_(Help.h1("DESCRIPTION"), Help.p("this is some help"))
+        )
+      }))
+
+    it("should add help to an OrElse command", () =>
+      T.succeedWith(() => {
+        const command = pipe(
+          Command.command("command1"),
+          Command.withHelp("this is help for command1"),
+          Command.orElse(Command.command("command2"))
+        )
+
+        expect(Command.helpDoc((command as any).left)).toEqual(
+          Help.sequence_(Help.h1("DESCRIPTION"), Help.p("this is help for command1"))
+        )
+      }))
+
+    it("should add help to a Map command", () =>
+      T.succeedWith(() => {
+        const command = pipe(
+          Command.command("command", Options.text("word"), Args.text),
+          Command.withHelp("this is some help"),
+          Command.map(({ tuple: [_, a] }) => a.length)
+        )
+
+        expect(Help.render_(Command.helpDoc(command), Help.plainMode())).toContain(
+          "this is some help"
+        )
+      }))
+  })
 })

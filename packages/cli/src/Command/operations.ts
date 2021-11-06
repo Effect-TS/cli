@@ -13,12 +13,14 @@ import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
 import { matchTag_ } from "@effect-ts/system/Utils"
 
 import type { Args } from "../Args"
+import * as Arguments from "../Args"
 import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
 import type { CommandDirective } from "../CommandDirective"
 import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { Options } from "../Options"
+import * as Opts from "../Options"
 import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
@@ -43,8 +45,8 @@ import type { Command, Instruction } from "./definition"
  */
 export function command<OptionsType, ArgsType>(
   name: string,
-  options: Options<OptionsType>,
-  args: Args<ArgsType>,
+  options: Options<OptionsType> = Opts.none as Options<OptionsType>,
+  args: Args<ArgsType> = Arguments.none as Args<ArgsType>,
   helpDoc: HelpDoc = Help.empty
 ): Command<Tuple<[OptionsType, ArgsType]>> {
   return new Single.Single(name, helpDoc, options, args)
@@ -53,6 +55,32 @@ export function command<OptionsType, ArgsType>(
 // -----------------------------------------------------------------------------
 // Combinators
 // -----------------------------------------------------------------------------
+
+/**
+ * Add a `HelpDoc` to a `Command`.
+ */
+export function withHelp_<A>(self: Command<A>, help: string | HelpDoc): Command<A> {
+  const helpDoc = typeof help === "string" ? Help.p(help) : help
+  return matchTag_(instruction(self), {
+    Map: (_) => new Map.Map(withHelp_(_.command, helpDoc), _.map),
+    // If the left and right already have a HelpDoc, it will be overwritten
+    // by this function. Perhaps not the best idea...
+    OrElse: (_) =>
+      new OrElse.OrElse(withHelp_(_.left, helpDoc), withHelp_(_.right, helpDoc)),
+    Single: (_) => new Single.Single(_.name, helpDoc, _.options, _.args),
+    Subcommands: (_) =>
+      new Subcommands.Subcommands(withHelp_(_.parent, helpDoc), _.child)
+  }) as Command<A>
+}
+
+/**
+ * Add a `HelpDoc` to a `Command`.
+ *
+ * @ets_data_first withHelp_
+ */
+export function withHelp(help: string | HelpDoc) {
+  return <A>(self: Command<A>): Command<A> => withHelp_(self, help)
+}
 
 export function subcommands_<A, B>(
   self: Command<A>,

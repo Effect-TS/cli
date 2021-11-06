@@ -157,11 +157,7 @@ export function subcommandsDescription_<A, B, C>(
     {
       Single: (_) =>
         Help.p(
-          Help.spansT(
-            Help.text(_.name),
-            Help.text(" \t "),
-            getHelpDescription(_.description)
-          )
+          Help.spansT(Help.text(_.name), Help.text(" \t "), getHelpDescription(_.help))
         ),
       Map: (_) => subcommandsDescription_(self, _.command),
       OrElse: (_) =>

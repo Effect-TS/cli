@@ -47,7 +47,7 @@ export class Single<OptionsType, ArgsType> extends Base<
     /**
      * The description for the command.
      */
-    readonly description: HelpDoc,
+    readonly help: HelpDoc,
     /**
      * The command-line options that can be passed to the command.
      */
@@ -68,9 +68,9 @@ export class Single<OptionsType, ArgsType> extends Base<
 export function helpDoc<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>
 ): HelpDoc {
-  const descriptionSection = Help.isEmpty(self.description)
+  const descriptionSection = Help.isEmpty(self.help)
     ? Help.empty
-    : Help.sequence_(Help.h1("DESCRIPTION"), self.description)
+    : Help.sequence_(Help.h1("DESCRIPTION"), self.help)
 
   const argsHelp = Arguments.helpDoc(self.args)
   const argumentsSection = Help.isEmpty(argsHelp)
