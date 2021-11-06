@@ -47,7 +47,7 @@ export class Single<OptionsType, ArgsType> extends Base<
     /**
      * The description for the command.
      */
-    readonly description: HelpDoc,
+    readonly help: HelpDoc,
     /**
      * The command-line options that can be passed to the command.
      */
@@ -68,22 +68,19 @@ export class Single<OptionsType, ArgsType> extends Base<
 export function helpDoc<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>
 ): HelpDoc {
-  const opts = Help.isEmpty(Opts.helpDoc(self.options))
-    ? BuiltIns.builtInOptions
-    : Opts.zip_(self.options, BuiltIns.builtInOptions)
-
-  const descriptionSection = Help.isEmpty(self.description)
+  const descriptionSection = Help.isEmpty(self.help)
     ? Help.empty
-    : Help.sequence_(Help.h1("DESCRIPTION"), self.description)
+    : Help.sequence_(Help.h1("DESCRIPTION"), self.help)
 
   const argsHelp = Arguments.helpDoc(self.args)
   const argumentsSection = Help.isEmpty(argsHelp)
     ? Help.empty
     : Help.sequence_(Help.h1("ARGUMENTS"), argsHelp)
 
-  const optionsSection = Help.isEmpty(Opts.helpDoc(opts as Options<any>))
+  const optsHelp = Opts.helpDoc(self.options)
+  const optionsSection = Help.isEmpty(optsHelp)
     ? Help.empty
-    : Help.sequence_(Help.h1("OPTIONS"), Opts.helpDoc(opts as Options<any>))
+    : Help.sequence_(Help.h1("OPTIONS"), optsHelp)
 
   return Help.blocks(
     A.filter_([descriptionSection, argumentsSection, optionsSection], not(Help.isEmpty))
@@ -108,12 +105,30 @@ export function synopsis<OptionsType, ArgsType>(
 // Parser
 // -----------------------------------------------------------------------------
 
+function parseBuiltInArgs<OptionsType, ArgsType>(
+  self: Single<OptionsType, ArgsType>,
+  args: Array<string>,
+  config: CliConfig
+): T.IO<Option<HelpDoc>, CommandDirective<Tuple<[OptionsType, ArgsType]>>> {
+  const hasArg = O.getOrElse_(
+    O.map_(
+      A.head(args),
+      (_) =>
+        Config.normalizeCase_(config, _) === Config.normalizeCase_(config, self.name)
+    ),
+    () => false
+  )
+  return hasArg ? builtIn_(self, args, config) : T.fail(O.none)
+}
+
 export function parse_<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>,
   args: Array<string>,
   config: CliConfig = Config.defaultConfig
 ): T.IO<ValidationError, CommandDirective<Tuple<[OptionsType, ArgsType]>>> {
-  return T.orElse_(builtIn_(self, args, config), () => userDefined_(self, args, config))
+  return T.orElse_(parseBuiltInArgs(self, args, config), () =>
+    userDefined_(self, args, config)
+  )
 }
 
 /**
@@ -153,7 +168,7 @@ export function builtIn_<OptionsType, ArgsType>(
     T.some(
       T.bimap_(
         Opts.validate_(builtInOptions(self), args, config),
-        (e) => e.error,
+        (e) => e.help,
         ({ tuple: [_, builtInOption] }) => builtInOption
       )
     ),
@@ -181,7 +196,7 @@ export function userDefined_<OptionsType, ArgsType>(
       args,
       () =>
         T.fail(
-          Validation.commandMismatchError(Help.p(`Missing command name: ${self.name}`))
+          Validation.commandMismatch(Help.p(`Missing command name: ${self.name}`))
         ),
       (head, tail) => {
         if (
@@ -191,18 +206,18 @@ export function userDefined_<OptionsType, ArgsType>(
           return T.succeed(tail)
         } else {
           return T.fail(
-            Validation.commandMismatchError(Help.p(`Unexpected command name: ${head}`))
+            Validation.commandMismatch(Help.p(`Unexpected command name: ${head}`))
           )
         }
       }
     ),
     (args2) =>
       T.chain_(
-        Opts.validate_(self.options, args2, config),
+        Opts.validate_(self.options, uncluster(args2), config),
         ({ tuple: [args1, opts1] }) => {
           return T.map_(
             T.mapError_(Arguments.validate_(self.args, args1, config), (helpDoc) =>
-              Validation.invalidArgumentError(helpDoc)
+              Validation.invalidArgument(helpDoc)
             ),
             ({ tuple: [args2, opts2] }) =>
               Directive.userDefined(args2, Tp.tuple(opts1, opts2))
@@ -223,4 +238,18 @@ export function userDefined(
     self: Single<OptionsType, ArgsType>
   ): T.IO<ValidationError, CommandDirective<Tuple<[OptionsType, ArgsType]>>> =>
     userDefined_(self, args, config)
+}
+
+const clusteredOptionRegex = /^-{1}([^-]{2,}|$)/
+
+function isClustered(arg: string): boolean {
+  return clusteredOptionRegex.test(arg.trim())
+}
+
+function uncluster(args: Array<string>): Array<string> {
+  return A.chain_(args, (arg) => {
+    return isClustered(arg)
+      ? A.map_(arg.substring(1).split(""), (c) => `-${c}`)
+      : A.single(arg)
+  })
 }

@@ -201,7 +201,7 @@ export function run_<R, E, A>(
       A.concat_(prefixCommandName(self.command), args),
       self.config
     ),
-    (e) => T.provideLayer_(printDocs_(e.error), L.pure(Console)(self.console)),
+    (e) => T.provideLayer_(printDocs_(e.help), L.pure(Console)(self.console)),
     (directive) => {
       switch (directive._tag) {
         case "BuiltIn":

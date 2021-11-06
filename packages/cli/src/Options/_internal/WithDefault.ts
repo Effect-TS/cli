@@ -4,6 +4,8 @@ import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
+import type { Option } from "@effect-ts/core/Option"
+import * as O from "@effect-ts/core/Option"
 import type { Show } from "@effect-ts/core/Show"
 
 import type { CliConfig } from "../../CliConfig"
@@ -36,15 +38,15 @@ export class WithDefault<A> extends Base<A> {
      */
     readonly defaultValue: A,
     /**
-     * The description of the default value.
-     */
-    readonly defaultDescription: string,
-    /**
      * An instance of `Show` for the default value.
      *
      * Used when rendering help messages.
      */
-    readonly showDefaultValue: Show<A>
+    readonly showDefaultValue: Show<A>,
+    /**
+     * The optional description for the default value.
+     */
+    readonly defaultDescription: Option<string>
   ) {
     super()
   }
@@ -68,7 +70,7 @@ export function helpDoc_<A>(
         Help.p(
           `This setting is optional. If unspecified, the default value of ` +
             `this option is '${self.showDefaultValue.show(self.defaultValue)}'` +
-            `. ${self.defaultDescription}`
+            `. ${O.getOrElse_(self.defaultDescription, () => "")}`
         )
       )
     )
@@ -96,13 +98,10 @@ export function validate_<A>(
   ) => T.IO<ValidationError, Tuple<[Array<string>, any]>>,
   config: CliConfig = Config.defaultConfig
 ): T.IO<ValidationError, Tuple<[Array<string>, A]>> {
-  return T.foldM_(
-    cont(self.options, args, config),
-    (invalid) =>
-      Validation.isOptionMissing(invalid)
-        ? T.succeed(Tp.tuple(args, self.defaultValue))
-        : T.fail(invalid),
-    T.succeed
+  return T.catchSome_(cont(self.options, args, config), (err) =>
+    Validation.isMissingValue(err)
+      ? O.some(T.succeed(Tp.tuple(args, self.defaultValue)))
+      : O.none
   )
 }
 
@@ -134,8 +133,8 @@ export function modifySingle_<A>(
   return new WithDefault(
     cont(self.options, modifier),
     self.defaultValue,
-    self.defaultDescription,
-    self.showDefaultValue
+    self.showDefaultValue,
+    self.defaultDescription
   )
 }
 

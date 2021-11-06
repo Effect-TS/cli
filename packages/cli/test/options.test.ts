@@ -1,4 +1,5 @@
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import * as Map from "@effect-ts/core/Collections/Immutable/Map"
 import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
@@ -17,8 +18,10 @@ import * as Validation from "../src/Validation"
 const f = Options.alias_(Options.text("firstname"), "f")
 const l = Options.text("lastname")
 const a = Options.integer("age")
-const aOpt = Options.optional_(Options.integer("age"), "N/A", Show.number)
+const aOpt = Options.optionalDescription_(Options.integer("age"), Show.number, "N/A")
 const b = Options.boolean("verbose", true)
+const m = Options.alias_(Options.mapping("defs"), "d")
+
 const options = Options.tuple(f, l, a)
 
 describe("Options", () => {
@@ -69,7 +72,7 @@ describe("Options", () => {
       expect(v4).toEqual(Tp.tuple(A.empty, false))
       expect(v5).toEqual(Tp.tuple(A.empty, false))
       expect(v6).toEqual(
-        Validation.invalidValueError(
+        Validation.invalidValue(
           Help.p(
             Help.error(
               "Options collision detected. You can only specify either " +
@@ -79,7 +82,7 @@ describe("Options", () => {
         )
       )
       expect(v7).toEqual(
-        Validation.invalidValueError(
+        Validation.invalidValue(
           Help.p(
             Help.error(
               "Options collision detected. You can only specify either " +
@@ -119,7 +122,7 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(Help.error("Expected to find '--firstname' option."))
           )
         )
@@ -141,9 +144,7 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
-            Help.p(Help.error("Expected to find '-t' option."))
-          )
+          Validation.missingValue(Help.p(Help.error("Expected to find '-t' option.")))
         )
       )
     }))
@@ -155,7 +156,7 @@ describe("Options", () => {
       const result = yield* _(T.result(Options.validate_(intOption, ["-t", "abc"])))
 
       expect(Ex.untraced(result)).toEqual(
-        Ex.fail(Validation.invalidValueError(Help.p("'abc' is not a integer")))
+        Ex.fail(Validation.invalidValue(Help.p("'abc' is not a integer")))
       )
     }))
 
@@ -163,13 +164,13 @@ describe("Options", () => {
     T.gen(function* (_) {
       const o = pipe(
         Options.integer("integer"),
-        Options.withDefault(0 as Integer, "0 as default", Show.number)
+        Options.withDefaultDescription(0 as Integer, Show.number, "0 as default")
       )
 
       const result = yield* _(T.result(Options.validate_(o, ["--integer", "abc"])))
 
       expect(Ex.untraced(result)).toEqual(
-        Ex.fail(Validation.invalidValueError(Help.p("'abc' is not a integer")))
+        Ex.fail(Validation.invalidValue(Help.p("'abc' is not a integer")))
       )
     }))
 
@@ -181,7 +182,7 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.invalidValueError(
+          Validation.invalidValue(
             Help.p(
               Help.error(
                 "Options collision detected. You can only specify either '-v' or '-s'."
@@ -205,7 +206,7 @@ describe("Options", () => {
       expect(r1).toEqual(Tp.tuple(A.empty, "John"))
       expect(r2).toEqual(Tp.tuple(A.empty, "John"))
       expect(r3).toEqual(
-        Validation.missingValueError(
+        Validation.missingValue(
           Help.p(
             Help.error(
               "The flag '--firstname' is not recognized. Did you mean '--FirstName'?"
@@ -214,7 +215,7 @@ describe("Options", () => {
         )
       )
       expect(r4).toEqual(
-        Validation.missingValueError(
+        Validation.missingValue(
           Help.p(Help.error("Expected to find '--FirstName' option."))
         )
       )
@@ -299,7 +300,7 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(
               Help.error(
                 "The flag '--firstme' is not recognized. Did you mean '--firstname'?"
@@ -316,12 +317,78 @@ describe("Options", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(Help.error("Expected to find '--age' option."))
           )
         )
       )
     }))
+
+  describe("Mapping", () => {
+    it("should validate a missing option", () =>
+      T.gen(function* (_) {
+        const result = yield* _(T.result(Options.validate_(m, A.empty)))
+
+        expect(Ex.untraced(result)).toEqual(
+          Ex.fail(
+            Validation.missingValue(
+              Help.p(Help.error("Expected to find '--defs' option."))
+            )
+          )
+        )
+      }))
+
+    it("should validate repeated values", () =>
+      T.gen(function* (_) {
+        const result = yield* _(
+          Options.validate_(m, ["-d", "key1=v1", "-d", "key2=v2", "--verbose"])
+        )
+
+        expect(result).toEqual(
+          Tp.tuple(
+            ["--verbose"],
+            Map.make([
+              ["key1", "v1"],
+              ["key2", "v2"]
+            ])
+          )
+        )
+      }))
+
+    it("should validate different key-value pairs", () =>
+      T.gen(function* (_) {
+        const result = yield* _(
+          Options.validate_(m, ["--defs", "key1=v1", "key2=v2", "--verbose"])
+        )
+
+        expect(result).toEqual(
+          Tp.tuple(
+            ["--verbose"],
+            Map.make([
+              ["key1", "v1"],
+              ["key2", "v2"]
+            ])
+          )
+        )
+      }))
+
+    it("should validate different key-value pairs with alias", () =>
+      T.gen(function* (_) {
+        const result = yield* _(
+          Options.validate_(m, ["-d", "key1=v1", "key2=v2", "--verbose"])
+        )
+
+        expect(result).toEqual(
+          Tp.tuple(
+            ["--verbose"],
+            Map.make([
+              ["key1", "v1"],
+              ["key2", "v2"]
+            ])
+          )
+        )
+      }))
+  })
 
   describe("orElse", () => {
     it("should validate orElse on two options", () =>
@@ -352,7 +419,7 @@ describe("Options", () => {
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(
-            Validation.invalidValueError(
+            Validation.invalidValue(
               Help.p(
                 Help.error(
                   "Options collision detected. You can only specify either " +
@@ -375,7 +442,7 @@ describe("Options", () => {
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(
-            Validation.missingValueError(
+            Validation.missingValue(
               Help.sequence_(
                 Help.p(Help.error("Expected to find '--string' option.")),
                 Help.p(Help.error("Expected to find '--integer' option."))
@@ -390,14 +457,14 @@ describe("Options", () => {
         const o = pipe(
           Options.integer("min"),
           Options.orElse(Options.integer("max")),
-          Options.withDefault(0 as Integer, "0 as default", Show.number)
+          Options.withDefaultDescription(0 as Integer, Show.number, "0 as default")
         )
 
         const result = yield* _(T.result(Options.validate_(o, ["--min", "abc"])))
 
         expect(Ex.untraced(result)).toEqual(
           Ex.fail(
-            Validation.invalidValueError(
+            Validation.invalidValue(
               Help.sequence_(
                 Help.p("'abc' is not a integer"),
                 Help.p(Help.error("Expected to find '--max' option."))

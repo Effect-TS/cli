@@ -58,8 +58,7 @@ export function validate_<A, B>(
     T.catchAll_(cont(self.head, args, config), (err1) =>
       T.foldM_(
         cont(self.tail, args, config),
-        (err2) =>
-          T.fail(Validation.missingValueError(Help.sequence_(err1.error, err2.error))),
+        (err2) => T.fail(Validation.missingValue(Help.sequence_(err1.help, err2.help))),
         () => T.fail(err1)
       )
     ),

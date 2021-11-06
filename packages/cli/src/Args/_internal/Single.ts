@@ -116,13 +116,30 @@ export function validate_<A>(
 ): T.IO<HelpDoc, Tuple<[Array<string>, A]>> {
   return A.foldLeft_(
     args,
-    () =>
-      T.fail(
-        Help.p(
-          `Missing argument ${self.name} with values ` +
-            `${O.getOrElse_(Primitive.choices(self.primType), () => "")}`
+    () => {
+      const pseudoName = self.pseudoName
+      const choices = Primitive.choices(self.primType)
+
+      if (O.isSome(pseudoName) && O.isSome(choices)) {
+        return T.fail(
+          Help.p(`Missing argument <${pseudoName.value}> with values ${choices.value}`)
         )
-      ),
+      }
+
+      if (O.isSome(pseudoName)) {
+        return T.fail(Help.p(`Missing argument <${pseudoName.value}>`))
+      }
+
+      if (O.isSome(choices)) {
+        const typeName = Primitive.typeName(self.primType)
+        return T.fail(
+          Help.p(`Missing argument ${typeName} with values ${choices.value}`)
+        )
+      }
+
+      const typeName = Primitive.typeName(self.primType)
+      return T.fail(Help.p(`Missing argument ${typeName}`))
+    },
     (head, tail) =>
       T.bimap_(Primitive.validate_(self.primType, O.some(head), config), Help.p, (a) =>
         Tp.tuple(tail, a)

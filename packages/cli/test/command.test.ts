@@ -3,6 +3,7 @@ import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import { pipe } from "@effect-ts/core/Function"
+import { matchTag } from "@effect-ts/core/Utils"
 import * as TE from "@effect-ts/jest/Test"
 
 import * as Args from "../src/Args"
@@ -92,7 +93,7 @@ describe("Command", () => {
 
       expect(Ex.untraced(r1)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(
               Help.error("The flag '--afte' is not recognized. Did you mean '--after'?")
             )
@@ -101,7 +102,7 @@ describe("Command", () => {
       )
       expect(Ex.untraced(r2)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(
               Help.error(
                 "The flag '--efore' is not recognized. Did you mean '--before'?"
@@ -112,7 +113,7 @@ describe("Command", () => {
       )
       expect(Ex.untraced(r3)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.sequence_(
               Help.p(
                 Help.error(
@@ -140,7 +141,7 @@ describe("Command", () => {
 
       expect(Ex.untraced(result)).toEqual(
         Ex.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(Help.error("Expected to find '--after' option."))
           )
         )
@@ -159,6 +160,23 @@ describe("Command", () => {
       expect(result).toEqual(
         CommandDirective.userDefined(A.empty, Tp.tuple(undefined, undefined))
       )
+    }))
+
+  it("should handle commands with clustered options", () =>
+    T.gen(function* (_) {
+      const clustered = yield* _(Command.parse_(wcCommand, ["wc", "-clw", "filename"]))
+
+      const unclustered = yield* _(
+        Command.parse_(wcCommand, ["wc", "-c", "-l", "-w", "filename"])
+      )
+
+      const commandDirective = CommandDirective.userDefined(
+        A.empty,
+        Tp.tuple([true, true, true, true], A.single("filename"))
+      )
+
+      expect(clustered).toEqual(commandDirective)
+      expect(unclustered).toEqual(commandDirective)
     }))
 
   describe("Subcommands without Options or Arguments", () => {
@@ -241,19 +259,27 @@ describe("Command", () => {
         const result = yield* _(T.result(Command.parse_(git, ["git", "abc"])))
 
         expect(Ex.untraced(result)).toEqual(
-          Ex.fail(
-            Validation.commandMismatchError(Help.p("Unexpected command name: abc"))
-          )
+          Ex.fail(Validation.commandMismatch(Help.p("Unexpected command name: abc")))
         )
       }))
 
     it("should reject a command without specifying the subcommand", () =>
       T.gen(function* (_) {
-        const result = yield* _(T.result(Command.parse_(git, ["git"])))
-
-        expect(Ex.untraced(result)).toEqual(
-          Ex.fail(Validation.missingSubcommandError(Help.p("Missing subcommand.")))
+        const result = yield* _(
+          pipe(
+            Command.parse_(git, ["git"]),
+            T.map(
+              matchTag(
+                {
+                  BuiltIn: (_) => _.option._tag === "ShowHelp"
+                },
+                () => false
+              )
+            )
+          )
         )
+
+        expect(result).toBeTruthy()
       }))
   })
 
@@ -284,6 +310,64 @@ describe("Command", () => {
               Tp.tuple(Tp.tuple(undefined, undefined), Tp.tuple(true, "text"))
             )
           )
+        )
+      }))
+  })
+
+  describe("Command HelpDoc", () => {
+    it("should add help to a command", () =>
+      T.gen(function* (_) {
+        const command = pipe(
+          Command.command("tldr"),
+          Command.withHelp("this is some help")
+        )
+        const result = yield* _(Command.parse_(command, ["tldr"]))
+
+        expect(Command.helpDoc(command)).toEqual(
+          Help.sequence_(Help.h1("DESCRIPTION"), Help.p("this is some help"))
+        )
+        expect(result).toEqual(
+          CommandDirective.userDefined(A.empty, Tp.tuple(undefined, undefined))
+        )
+      }))
+
+    it("should add help to subcommands", () =>
+      T.succeedWith(() => {
+        const command = pipe(
+          Command.command("command"),
+          Command.subcommands(
+            pipe(Command.command("sub"), Command.withHelp("this is some help"))
+          )
+        )
+
+        expect(Command.helpDoc(command)).not.toEqual(
+          Help.sequence_(Help.h1("DESCRIPTION"), Help.p("this is some help"))
+        )
+      }))
+
+    it("should add help to an OrElse command", () =>
+      T.succeedWith(() => {
+        const command = pipe(
+          Command.command("command1"),
+          Command.withHelp("this is help for command1"),
+          Command.orElse(Command.command("command2"))
+        )
+
+        expect(Command.helpDoc((command as any).left)).toEqual(
+          Help.sequence_(Help.h1("DESCRIPTION"), Help.p("this is help for command1"))
+        )
+      }))
+
+    it("should add help to a Map command", () =>
+      T.succeedWith(() => {
+        const command = pipe(
+          Command.command("command", Options.text("word"), Args.text),
+          Command.withHelp("this is some help"),
+          Command.map(({ tuple: [_, a] }) => a.length)
+        )
+
+        expect(Help.render_(Command.helpDoc(command), Help.plainMode())).toContain(
+          "this is some help"
         )
       }))
   })

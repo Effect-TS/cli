@@ -4,23 +4,27 @@ import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
 import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
 import * as S from "@effect-ts/core/Collections/Immutable/Set"
-import type * as T from "@effect-ts/core/Effect"
+import * as T from "@effect-ts/core/Effect"
 import type { Either } from "@effect-ts/core/Either"
 import * as E from "@effect-ts/core/Either"
 import * as Equal from "@effect-ts/core/Equal"
+import * as O from "@effect-ts/core/Option"
 import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
 import { matchTag_ } from "@effect-ts/system/Utils"
 
 import type { Args } from "../Args"
+import * as Arguments from "../Args"
 import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
 import type { CommandDirective } from "../CommandDirective"
 import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { Options } from "../Options"
+import * as Opts from "../Options"
 import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
+import * as Validation from "../Validation"
 import * as Map from "./_internal/Map"
 import * as OrElse from "./_internal/OrElse"
 import * as Single from "./_internal/Single"
@@ -41,8 +45,8 @@ import type { Command, Instruction } from "./definition"
  */
 export function command<OptionsType, ArgsType>(
   name: string,
-  options: Options<OptionsType>,
-  args: Args<ArgsType>,
+  options: Options<OptionsType> = Opts.none as Options<OptionsType>,
+  args: Args<ArgsType> = Arguments.none as Args<ArgsType>,
   helpDoc: HelpDoc = Help.empty
 ): Command<Tuple<[OptionsType, ArgsType]>> {
   return new Single.Single(name, helpDoc, options, args)
@@ -51,6 +55,32 @@ export function command<OptionsType, ArgsType>(
 // -----------------------------------------------------------------------------
 // Combinators
 // -----------------------------------------------------------------------------
+
+/**
+ * Add a `HelpDoc` to a `Command`.
+ */
+export function withHelp_<A>(self: Command<A>, help: string | HelpDoc): Command<A> {
+  const helpDoc = typeof help === "string" ? Help.p(help) : help
+  return matchTag_(instruction(self), {
+    Map: (_) => new Map.Map(withHelp_(_.command, helpDoc), _.map),
+    // If the left and right already have a HelpDoc, it will be overwritten
+    // by this function. Perhaps not the best idea...
+    OrElse: (_) =>
+      new OrElse.OrElse(withHelp_(_.left, helpDoc), withHelp_(_.right, helpDoc)),
+    Single: (_) => new Single.Single(_.name, helpDoc, _.options, _.args),
+    Subcommands: (_) =>
+      new Subcommands.Subcommands(withHelp_(_.parent, helpDoc), _.child)
+  }) as Command<A>
+}
+
+/**
+ * Add a `HelpDoc` to a `Command`.
+ *
+ * @ets_data_first withHelp_
+ */
+export function withHelp(help: string | HelpDoc) {
+  return <A>(self: Command<A>): Command<A> => withHelp_(self, help)
+}
 
 export function subcommands_<A, B>(
   self: Command<A>,
@@ -177,7 +207,12 @@ export function parse_<A>(
 ): T.IO<ValidationError, CommandDirective<A>> {
   return matchTag_(instruction(self), {
     Map: (_) => Map.parse_(_, args, parse_, config),
-    OrElse: (_) => OrElse.parse_(_, args, parse_, config),
+    OrElse: (_) =>
+      T.catchSome_(parse_(_.left, args, config), (err) =>
+        Validation.isCommandMismatch(err)
+          ? O.some(parse_(_.right, args, config))
+          : O.none
+      ),
     Single: (_) => Single.parse_(_, args, config),
     Subcommands: (_) => Subcommands.parse_(_, args, parse_, helpDoc)
   })

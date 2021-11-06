@@ -117,7 +117,7 @@ export function validate_<A>(
     args,
     () =>
       T.fail(
-        Validation.missingValueError(
+        Validation.missingValue(
           Help.p(Help.error(`Expected to find '${name}' option.`))
         )
       ),
@@ -127,16 +127,13 @@ export function validate_<A>(
         if (PrimitiveInstruction._tag === "Bool")
           return T.bimap_(
             Primitive.validate_(self.primType as PrimType<A>, O.none, config),
-            (e) => Validation.invalidValueError(Help.p(e)),
+            (e) => Validation.invalidValue(Help.p(e)),
             (a) => Tp.tuple(tail, a)
           )
+
         return T.bimap_(
-          A.foldLeft_(
-            tail,
-            () => Primitive.validate_(self.primType, O.none, config),
-            (head) => Primitive.validate_(self.primType, O.some(head), config)
-          ),
-          (e) => Validation.invalidValueError(Help.p(e)),
+          Primitive.validate_(self.primType, A.head(tail), config),
+          (e) => Validation.invalidValue(Help.p(e)),
           (a) => Tp.tuple(A.dropLeft_(tail, 1), a)
         )
       }
@@ -145,7 +142,7 @@ export function validate_<A>(
         AutoCorrect.levensteinDistance(head, name, config) <= config.autoCorrectLimit
       ) {
         return T.fail(
-          Validation.missingValueError(
+          Validation.missingValue(
             Help.p(
               Help.error(
                 `The flag '${head}' is not recognized. Did you mean '${name}'?`

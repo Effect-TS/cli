@@ -6,6 +6,7 @@ import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 import type { Lazy } from "@effect-ts/core/Function"
 import * as Identity from "@effect-ts/core/Identity"
 import * as IO from "@effect-ts/core/IO"
+import { matchTag } from "@effect-ts/core/Utils"
 
 // -----------------------------------------------------------------------------
 // Model
@@ -137,7 +138,7 @@ export function descriptionList(
 }
 
 export function enumeration(elements: Array<HelpDoc>): HelpDoc {
-  return new Enumeration(elements)
+  return flatten(new Enumeration(elements))
 }
 
 export function concat_(left: HelpDoc, right: HelpDoc): HelpDoc {
@@ -221,6 +222,20 @@ export function mapDescriptionList(
   f: (tuple: Tuple<[HelpDoc, HelpDoc]>) => Tuple<[HelpDoc, HelpDoc]>
 ) {
   return (self: HelpDoc): HelpDoc => mapDescriptionList_(self, f)
+}
+
+export function flatten(self: Enumeration): Enumeration {
+  return new Enumeration(
+    A.chain_(
+      self.elements,
+      matchTag(
+        {
+          Enumeration: (_) => _.elements
+        },
+        A.single
+      )
+    )
+  )
 }
 
 export function orElse_(self: HelpDoc, that: Lazy<HelpDoc>): HelpDoc {
