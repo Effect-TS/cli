@@ -68,10 +68,6 @@ export class Single<OptionsType, ArgsType> extends Base<
 export function helpDoc<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>
 ): HelpDoc {
-  const opts = Help.isEmpty(Opts.helpDoc(self.options))
-    ? BuiltIns.builtInOptions
-    : Opts.zip_(self.options, BuiltIns.builtInOptions)
-
   const descriptionSection = Help.isEmpty(self.description)
     ? Help.empty
     : Help.sequence_(Help.h1("DESCRIPTION"), self.description)
@@ -81,9 +77,10 @@ export function helpDoc<OptionsType, ArgsType>(
     ? Help.empty
     : Help.sequence_(Help.h1("ARGUMENTS"), argsHelp)
 
-  const optionsSection = Help.isEmpty(Opts.helpDoc(opts as Options<any>))
+  const optsHelp = Opts.helpDoc(self.options)
+  const optionsSection = Help.isEmpty(optsHelp)
     ? Help.empty
-    : Help.sequence_(Help.h1("OPTIONS"), Opts.helpDoc(opts as Options<any>))
+    : Help.sequence_(Help.h1("OPTIONS"), optsHelp)
 
   return Help.blocks(
     A.filter_([descriptionSection, argumentsSection, optionsSection], not(Help.isEmpty))
@@ -108,12 +105,30 @@ export function synopsis<OptionsType, ArgsType>(
 // Parser
 // -----------------------------------------------------------------------------
 
+function parseBuiltInArgs<OptionsType, ArgsType>(
+  self: Single<OptionsType, ArgsType>,
+  args: Array<string>,
+  config: CliConfig
+): T.IO<Option<HelpDoc>, CommandDirective<Tuple<[OptionsType, ArgsType]>>> {
+  const hasArg = O.getOrElse_(
+    O.map_(
+      A.head(args),
+      (_) =>
+        Config.normalizeCase_(config, _) === Config.normalizeCase_(config, self.name)
+    ),
+    () => false
+  )
+  return hasArg ? builtIn_(self, args, config) : T.fail(O.none)
+}
+
 export function parse_<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>,
   args: Array<string>,
   config: CliConfig = Config.defaultConfig
 ): T.IO<ValidationError, CommandDirective<Tuple<[OptionsType, ArgsType]>>> {
-  return T.orElse_(builtIn_(self, args, config), () => userDefined_(self, args, config))
+  return T.orElse_(parseBuiltInArgs(self, args, config), () =>
+    userDefined_(self, args, config)
+  )
 }
 
 /**

@@ -88,12 +88,17 @@ export function parse_<A, B>(
       T.matchTag({
         BuiltIn: (_) =>
           _.option._tag === "ShowHelp"
-            ? T.succeed(
-                Directive.builtIn(
-                  new BuiltIns.ShowHelp({
-                    helpDoc: helpDoc_(self, helpDoc)
-                  })
-                )
+            ? T.map_(
+                T.chain_(
+                  T.orElse_(cont(self.child, args.slice(1), config), () =>
+                    T.succeed(Directive.builtIn(BuiltIns.showHelp(helpDoc(self))))
+                  ),
+                  (help) =>
+                    help._tag === "BuiltIn" && help.option._tag === "ShowHelp"
+                      ? T.succeed(help.option.helpDoc)
+                      : T.fail(Validation.invalidArgument(Help.empty))
+                ),
+                (help) => Directive.builtIn(BuiltIns.showHelp(help))
               )
             : T.succeed(Directive.builtIn(_.option)),
         UserDefined: (_) =>
@@ -102,7 +107,7 @@ export function parse_<A, B>(
                 cont(self.child, _.leftover, config),
                 Directive.map((b) => Tp.tuple(_.value, b))
               )
-            : T.fail(Validation.missingSubcommand(Help.p(`Missing subcommand.`)))
+            : T.succeed(Directive.builtIn(BuiltIns.showHelp(helpDoc(self))))
       })
     ),
     () =>
