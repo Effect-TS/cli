@@ -3,6 +3,7 @@
 import { Options } from "./_internal/Base"
 import { Both } from "./_internal/Both"
 import { Map } from "./_internal/Map"
+import { Mapping } from "./_internal/Mapping"
 import { None } from "./_internal/None"
 import { OrElse } from "./_internal/OrElse"
 import { Single, SingleModifier } from "./_internal/Single"
@@ -15,12 +16,23 @@ import { WithDefault } from "./_internal/WithDefault"
 export type Instruction =
   | Both<any, any>
   | Map<any, any>
+  | Mapping
   | None
   | OrElse<any, any>
   | Single<any>
   | WithDefault<any>
 
-export { Both, Map, None, Options, OrElse, Single, SingleModifier, WithDefault }
+export {
+  Both,
+  Map,
+  Mapping,
+  None,
+  Options,
+  OrElse,
+  Single,
+  SingleModifier,
+  WithDefault
+}
 
 // -----------------------------------------------------------------------------
 // HKT

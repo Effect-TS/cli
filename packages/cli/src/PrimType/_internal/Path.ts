@@ -128,7 +128,9 @@ export function validate_(self: Path, value: Option<string>): T.IO<string, strin
 
     yield* _(validateExistence(path, self.shouldExist, exists))
 
-    yield* _(validatePathType(self, path))
+    yield* _(
+      T.when_(validatePathType(self, path), () => self.shouldExist._tag !== "No")
+    )
 
     return path
   })

@@ -2,6 +2,7 @@
 
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import type * as PredefMap from "@effect-ts/core/Collections/Immutable/Map"
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 import type * as T from "@effect-ts/core/Effect"
 import type { Either } from "@effect-ts/core/Either"
@@ -27,6 +28,7 @@ import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
 import * as Both from "./_internal/Both"
 import * as Map from "./_internal/Map"
+import * as Mapping from "./_internal/Mapping"
 import * as None from "./_internal/None"
 import * as OrElse from "./_internal/OrElse"
 import * as Single from "./_internal/Single"
@@ -142,6 +144,16 @@ export function integer(name: string): Options<Integer> {
  */
 export function date(name: string): Options<Date> {
   return new Single.Single(name, A.empty, new Primitive.Date())
+}
+
+export function mapping(name: string): Options<PredefMap.Map<string, string>> {
+  return mappingFromOption(new Single.Single(name, A.empty, new Primitive.Text()))
+}
+
+export function mappingFromOption(
+  argumentOption: Single.Single<string>
+): Options<PredefMap.Map<string, string>> {
+  return new Mapping.Mapping(argumentOption.name, argumentOption)
 }
 
 // -----------------------------------------------------------------------------
@@ -352,6 +364,7 @@ export function uid<A>(self: Options<A>): Option<string> {
       return uids.length === 0 ? O.none : O.some(uids.join(", "))
     },
     Map: (_) => uid(_.value),
+    Mapping: (_) => uid(_.argumentOption),
     None: () => O.none,
     OrElse: (_) => {
       const uids = A.compact([uid(_.left), uid(_.right)])
@@ -369,6 +382,7 @@ export function helpDoc<A>(self: Options<A>): HelpDoc {
   return matchTag_(instruction(self), {
     Both: (_) => Help.sequence_(helpDoc(_.head), helpDoc(_.tail)),
     Map: (_) => helpDoc(_.value),
+    Mapping: (_) => helpDoc(_.argumentOption),
     None: () => Help.empty,
     OrElse: (_) => Help.sequence_(helpDoc(_.left), helpDoc(_.right)),
     Single: (_) => Single.helpDoc(_),
@@ -383,6 +397,7 @@ export function synopsis<A>(self: Options<A>): UsageSynopsis {
   return matchTag_(instruction(self), {
     Both: (_) => Synopsis.concat_(synopsis(_.head), synopsis(_.tail)),
     Map: (_) => synopsis(_.value),
+    Mapping: (_) => synopsis(_.argumentOption),
     None: () => Synopsis.none,
     OrElse: (_) => Synopsis.concat_(synopsis(_.left), synopsis(_.right)),
     Single: (_) => Single.synopsis(_),
@@ -405,6 +420,7 @@ export function validate_<A>(
   return matchTag_(instruction(self), {
     Both: (_) => Both.validate_(_, args, validate_, config),
     Map: (_) => Map.validate_(_, args, validate_, config),
+    Mapping: (_) => Mapping.validate_(_, args, validate_, config),
     None: () => None.validate(args),
     OrElse: (_) => OrElse.validate_(_, args, validate_, uid, config),
     Single: (_) => Single.validate_(_, args, validate_, config),
@@ -440,6 +456,7 @@ export function modifySingle_<A>(
   return matchTag_(instruction(self), {
     Both: (_) => Both.modifySingle_(_, modifier, modifySingle_),
     Map: (_) => Map.modifySingle_(_, modifier, modifySingle_),
+    Mapping: (_) => Mapping.modifySingle_(_, modifier),
     None: identity,
     OrElse: (_) => OrElse.modifySingle_(_, modifier, modifySingle_),
     Single: (_) => Single.modifySingle_(_, modifier),

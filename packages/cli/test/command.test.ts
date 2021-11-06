@@ -3,6 +3,7 @@ import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
 import { pipe } from "@effect-ts/core/Function"
+import { matchTag } from "@effect-ts/core/Utils"
 import * as TE from "@effect-ts/jest/Test"
 
 import * as Args from "../src/Args"
@@ -247,11 +248,21 @@ describe("Command", () => {
 
     it("should reject a command without specifying the subcommand", () =>
       T.gen(function* (_) {
-        const result = yield* _(T.result(Command.parse_(git, ["git"])))
-
-        expect(Ex.untraced(result)).toEqual(
-          Ex.fail(Validation.missingSubcommand(Help.p("Missing subcommand.")))
+        const result = yield* _(
+          pipe(
+            Command.parse_(git, ["git"]),
+            T.map(
+              matchTag(
+                {
+                  BuiltIn: (_) => _.option._tag === "ShowHelp"
+                },
+                () => false
+              )
+            )
+          )
         )
+
+        expect(result).toBeTruthy()
       }))
   })
 

@@ -1,4 +1,5 @@
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import * as Map from "@effect-ts/core/Collections/Immutable/Map"
 import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
 import * as Ex from "@effect-ts/core/Effect/Exit"
@@ -19,6 +20,8 @@ const l = Options.text("lastname")
 const a = Options.integer("age")
 const aOpt = Options.optionalDescription_(Options.integer("age"), Show.number, "N/A")
 const b = Options.boolean("verbose", true)
+const m = Options.alias_(Options.mapping("defs"), "d")
+
 const options = Options.tuple(f, l, a)
 
 describe("Options", () => {
@@ -320,6 +323,72 @@ describe("Options", () => {
         )
       )
     }))
+
+  describe("Mapping", () => {
+    it("should validate a missing option", () =>
+      T.gen(function* (_) {
+        const result = yield* _(T.result(Options.validate_(m, A.empty)))
+
+        expect(Ex.untraced(result)).toEqual(
+          Ex.fail(
+            Validation.missingValue(
+              Help.p(Help.error("Expected to find '--defs' option."))
+            )
+          )
+        )
+      }))
+
+    it("should validate repeated values", () =>
+      T.gen(function* (_) {
+        const result = yield* _(
+          Options.validate_(m, ["-d", "key1=v1", "-d", "key2=v2", "--verbose"])
+        )
+
+        expect(result).toEqual(
+          Tp.tuple(
+            ["--verbose"],
+            Map.make([
+              ["key1", "v1"],
+              ["key2", "v2"]
+            ])
+          )
+        )
+      }))
+
+    it("should validate different key-value pairs", () =>
+      T.gen(function* (_) {
+        const result = yield* _(
+          Options.validate_(m, ["--defs", "key1=v1", "key2=v2", "--verbose"])
+        )
+
+        expect(result).toEqual(
+          Tp.tuple(
+            ["--verbose"],
+            Map.make([
+              ["key1", "v1"],
+              ["key2", "v2"]
+            ])
+          )
+        )
+      }))
+
+    it("should validate different key-value pairs with alias", () =>
+      T.gen(function* (_) {
+        const result = yield* _(
+          Options.validate_(m, ["-d", "key1=v1", "key2=v2", "--verbose"])
+        )
+
+        expect(result).toEqual(
+          Tp.tuple(
+            ["--verbose"],
+            Map.make([
+              ["key1", "v1"],
+              ["key2", "v2"]
+            ])
+          )
+        )
+      }))
+  })
 
   describe("orElse", () => {
     it("should validate orElse on two options", () =>
