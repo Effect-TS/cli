@@ -36,13 +36,13 @@ export class Enumeration<A> extends Base<A> {
 // Type Name
 // -----------------------------------------------------------------------------
 
-export const enumerationTypeName = "choice"
+export const typeName = "choice"
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getEnumerationHelpDoc<A>(self: Enumeration<A>): HelpDoc {
+export function helpDoc<A>(self: Enumeration<A>): HelpDoc {
   return Help.text(
     `One of the following cases: ${A.join_(A.map_(self.cases, Tp.get(0)), ", ")}`
   )
@@ -52,7 +52,7 @@ export function getEnumerationHelpDoc<A>(self: Enumeration<A>): HelpDoc {
 // Choices
 // -----------------------------------------------------------------------------
 
-export function getEnumerationChoices<A>(self: Enumeration<A>): string {
+export function choices<A>(self: Enumeration<A>): string {
   return A.join_(A.map_(self.cases, Tp.get(0)), " | ")
 }
 
@@ -60,7 +60,7 @@ export function getEnumerationChoices<A>(self: Enumeration<A>): string {
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateEnumeration_<A>(
+export function validate_<A>(
   self: Enumeration<A>,
   value: Option<string>
 ): T.IO<string, A> {
@@ -83,8 +83,8 @@ export function validateEnumeration_<A>(
 }
 
 /**
- * @ets_data_first validateEnumeration_
+ * @ets_data_first validate_
  */
-export function validateEnumeration(value: Option<string>) {
-  return <A>(self: Enumeration<A>): T.IO<string, A> => validateEnumeration_(self, value)
+export function validate(value: Option<string>) {
+  return <A>(self: Enumeration<A>): T.IO<string, A> => validate_(self, value)
 }

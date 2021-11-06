@@ -44,7 +44,7 @@ export class Map<A, B> extends Base<B> {
 // Minimum Size
 // -----------------------------------------------------------------------------
 
-export function getMapMinSize_<A, B>(
+export function minSize_<A, B>(
   self: Map<A, B>,
   cont: (a: Args<any>) => number
 ): number {
@@ -52,17 +52,17 @@ export function getMapMinSize_<A, B>(
 }
 
 /**
- * @ets_data_first getMapMinSize_
+ * @ets_data_first minSize_
  */
-export function getMapMinSize(cont: (a: Args<any>) => number) {
-  return <A, B>(self: Map<A, B>): number => getMapMinSize_(self, cont)
+export function minSize(cont: (a: Args<any>) => number) {
+  return <A, B>(self: Map<A, B>): number => minSize_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Maximum Size
 // -----------------------------------------------------------------------------
 
-export function getMapMaxSize_<A, B>(
+export function maxSize_<A, B>(
   self: Map<A, B>,
   cont: (a: Args<any>) => number
 ): number {
@@ -70,17 +70,17 @@ export function getMapMaxSize_<A, B>(
 }
 
 /**
- * @ets_data_first getMapMaxSize_
+ * @ets_data_first maxSize_
  */
-export function getMapMaxSize(cont: (a: Args<any>) => number) {
-  return <A, B>(self: Map<A, B>): number => getMapMaxSize_(self, cont)
+export function maxSize(cont: (a: Args<any>) => number) {
+  return <A, B>(self: Map<A, B>): number => maxSize_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getMapHelpDoc_<A, B>(
+export function helpDoc_<A, B>(
   self: Map<A, B>,
   cont: (a: Args<any>) => HelpDoc
 ): HelpDoc {
@@ -88,17 +88,17 @@ export function getMapHelpDoc_<A, B>(
 }
 
 /**
- * @ets_data_first getMapHelpDoc_
+ * @ets_data_first helpDoc_
  */
-export function getMapHelpDoc(cont: (a: Args<any>) => HelpDoc) {
-  return <A, B>(self: Map<A, B>): HelpDoc => getMapHelpDoc_(self, cont)
+export function helpDoc(cont: (a: Args<any>) => HelpDoc) {
+  return <A, B>(self: Map<A, B>): HelpDoc => helpDoc_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // UsageSynopsis
 // -----------------------------------------------------------------------------
 
-export function getMapUsageSynopsis_<A, B>(
+export function synopsis_<A, B>(
   self: Map<A, B>,
   cont: (a: Args<any>) => UsageSynopsis
 ): UsageSynopsis {
@@ -106,17 +106,17 @@ export function getMapUsageSynopsis_<A, B>(
 }
 
 /**
- * @ets_data_first getMapUsageSynopsis_
+ * @ets_data_first synopsis_
  */
-export function getMapUsageSynopsis(cont: (a: Args<any>) => UsageSynopsis) {
-  return <A, B>(self: Map<A, B>): UsageSynopsis => getMapUsageSynopsis_(self, cont)
+export function synopsis(cont: (a: Args<any>) => UsageSynopsis) {
+  return <A, B>(self: Map<A, B>): UsageSynopsis => synopsis_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Description
 // -----------------------------------------------------------------------------
 
-export function addMapDescription_<A, B>(
+export function addDescription_<A, B>(
   self: Map<A, B>,
   text: string,
   cont: (a: Args<any>, text: string) => Args<any>
@@ -125,20 +125,20 @@ export function addMapDescription_<A, B>(
 }
 
 /**
- * @ets_data_first addMapDescription_
+ * @ets_data_first addDescription_
  */
-export function addMapDescription(
+export function addDescription(
   text: string,
   cont: (a: Args<any>, text: string) => Args<any>
 ) {
-  return <A, B>(self: Map<A, B>): Args<B> => addMapDescription_(self, text, cont)
+  return <A, B>(self: Map<A, B>): Args<B> => addDescription_(self, text, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateMap_<A, B>(
+export function validate_<A, B>(
   self: Map<A, B>,
   args: Array<string>,
   config: CliConfig = Config.defaultConfig,
@@ -154,9 +154,9 @@ export function validateMap_<A, B>(
 }
 
 /**
- * @ets_data_first validateMap_
+ * @ets_data_first validate_
  */
-export function validateMap(
+export function validate(
   args: Array<string>,
   config: CliConfig = Config.defaultConfig,
   cont: (
@@ -166,5 +166,5 @@ export function validateMap(
   ) => T.IO<HelpDoc, Tuple<[Array<string>, any]>>
 ) {
   return <A, B>(self: Map<A, B>): T.IO<HelpDoc, Tuple<[Array<string>, B]>> =>
-    validateMap_(self, args, config, cont)
+    validate_(self, args, config, cont)
 }

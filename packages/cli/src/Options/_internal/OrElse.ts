@@ -50,7 +50,7 @@ export class OrElse<A, B> extends Base<Either<A, B>> {
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateOrElse_<A, B>(
+export function validate_<A, B>(
   self: OrElse<A, B>,
   args: Array<string>,
   cont: (
@@ -100,11 +100,30 @@ export function validateOrElse_<A, B>(
   )
 }
 
+/**
+ * @ets_data_first validate_
+ */
+export function validate(
+  args: Array<string>,
+  cont: (
+    a: Options<any>,
+    args: Array<string>,
+    config: CliConfig
+  ) => T.IO<ValidationError, Tuple<[Array<string>, any]>>,
+  uid: (a: Options<any>) => Option<string>,
+  config: CliConfig = Config.defaultConfig
+) {
+  return <A, B>(
+    self: OrElse<A, B>
+  ): T.IO<ValidationError, Tuple<[Array<string>, Either<A, B>]>> =>
+    validate_(self, args, cont, uid, config)
+}
+
 // -----------------------------------------------------------------------------
 // Modification
 // -----------------------------------------------------------------------------
 
-export function modifyOrElse_<A, B>(
+export function modifySingle_<A, B>(
   self: OrElse<A, B>,
   modifier: SingleModifier,
   cont: (a: Options<any>, modifier: SingleModifier) => Options<any>
@@ -113,12 +132,12 @@ export function modifyOrElse_<A, B>(
 }
 
 /**
- * @ets_data_first modifyOrElse_
+ * @ets_data_first modifySingle_
  */
-export function modifyOrElse(
+export function modifySingle(
   modifier: SingleModifier,
   cont: (a: Options<any>, modifier: SingleModifier) => Options<any>
 ) {
   return <A, B>(self: OrElse<A, B>): Options<Either<A, B>> =>
-    modifyOrElse_(self, modifier, cont)
+    modifySingle_(self, modifier, cont)
 }

@@ -37,19 +37,19 @@ export class Bool extends Base<boolean> {
 // Type Name
 // -----------------------------------------------------------------------------
 
-export const boolTypeName = "boolean"
+export const typeName = "boolean"
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export const boolHelpDoc: HelpDoc = Help.text("A true or false value.")
+export const helpDoc: HelpDoc = Help.text("A true or false value.")
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateBool_(
+export function validate_(
   self: Bool,
   value: Option<string>,
   config: CliConfig = Config.defaultConfig
@@ -71,11 +71,11 @@ export function validateBool_(
 }
 
 /**
- * @ets_data_first validateBool_
+ * @ets_data_first validate_
  */
-export function validateBool(
+export function validate(
   value: Option<string>,
   config: CliConfig = Config.defaultConfig
 ) {
-  return (self: Bool): T.IO<string, boolean> => validateBool_(self, value, config)
+  return (self: Bool): T.IO<string, boolean> => validate_(self, value, config)
 }

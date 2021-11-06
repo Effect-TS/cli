@@ -65,7 +65,7 @@ export interface SingleModifier {
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getSingleHelpDoc<A>(self: Single<A>): HelpDoc {
+export function helpDoc<A>(self: Single<A>): HelpDoc {
   const allNames = A.cons_(
     A.map_(self.aliases, (alias) => `--${alias}`),
     `--${self.name}`
@@ -93,27 +93,32 @@ export function getSingleHelpDoc<A>(self: Single<A>): HelpDoc {
 // UsageSynopsis
 // -----------------------------------------------------------------------------
 
-export function getSingleUsageSynopsis<A>(self: Single<A>): UsageSynopsis {
-  return Synopsis.named(getSingleFullName(self), Primitive.choices(self.primType))
+export function synopsis<A>(self: Single<A>): UsageSynopsis {
+  return Synopsis.named(fullName(self), Primitive.choices(self.primType))
 }
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateSingle_<A>(
+export function validate_<A>(
   self: Single<A>,
   args: Array<string>,
+  cont: (
+    a: Options<any>,
+    args: Array<string>,
+    config: CliConfig
+  ) => T.IO<ValidationError, Tuple<[Array<string>, any]>>,
   config: CliConfig = Config.defaultConfig
 ): T.IO<ValidationError, Tuple<[Array<string>, A]>> {
-  const fullName = getSingleFullName(self)
-  const names = A.cons_(A.map_(self.aliases, makeFullName), fullName)
+  const name = fullName(self)
+  const names = A.cons_(A.map_(self.aliases, makeFullName), name)
   return A.foldLeft_(
     args,
     () =>
       T.fail(
         Validation.missingValueError(
-          Help.p(Help.error(`Expected to find '${fullName}' option.`))
+          Help.p(Help.error(`Expected to find '${name}' option.`))
         )
       ),
     (head, tail) => {
@@ -137,33 +142,37 @@ export function validateSingle_<A>(
       }
       if (
         self.name.length > config.autoCorrectLimit + 1 &&
-        AutoCorrect.levensteinDistance(head, fullName, config) <=
-          config.autoCorrectLimit
+        AutoCorrect.levensteinDistance(head, name, config) <= config.autoCorrectLimit
       ) {
         return T.fail(
           Validation.missingValueError(
             Help.p(
               Help.error(
-                `The flag '${head}' is not recognized. Did you mean '${fullName}'?`
+                `The flag '${head}' is not recognized. Did you mean '${name}'?`
               )
             )
           )
         )
       }
-      return T.map_(validateSingle_(self, tail, config), Tp.update(0, A.cons(head)))
+      return T.map_(cont(self, tail, config), Tp.update(0, A.cons(head)))
     }
   )
 }
 
 /**
- * @ets_data_first validateSingle_
+ * @ets_data_first validate_
  */
-export function validateSingle(
+export function validate(
   args: Array<string>,
+  cont: (
+    a: Options<any>,
+    args: Array<string>,
+    config: CliConfig
+  ) => T.IO<ValidationError, Tuple<[Array<string>, any]>>,
   config: CliConfig = Config.defaultConfig
 ) {
   return <A>(self: Single<A>): T.IO<ValidationError, Tuple<[Array<string>, A]>> =>
-    validateSingle_(self, args, config)
+    validate_(self, args, cont, config)
 }
 
 // -----------------------------------------------------------------------------
@@ -195,7 +204,7 @@ function makeFullName(name: string): string {
 /**
  * Return the full name for a `Single` option.
  */
-export function getSingleFullName<A>(self: Single<A>): string {
+export function fullName<A>(self: Single<A>): string {
   return makeFullName(self.name)
 }
 

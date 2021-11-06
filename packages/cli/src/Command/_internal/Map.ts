@@ -40,7 +40,7 @@ export class Map<A, B> extends Base<B> {
 // Parser
 // -----------------------------------------------------------------------------
 
-export function parseMap_<A, B>(
+export function parse_<A, B>(
   self: Map<A, B>,
   args: Array<string>,
   cont: (
@@ -53,7 +53,10 @@ export function parseMap_<A, B>(
   return T.map_(cont(self.command, args, config), Directive.map(self.map))
 }
 
-export function parseMap(
+/**
+ * @ets_data_first parse_
+ */
+export function parse(
   args: Array<string>,
   cont: (
     a: Command<any>,
@@ -63,5 +66,5 @@ export function parseMap(
   config: CliConfig = Config.defaultConfig
 ) {
   return <A, B>(self: Map<A, B>): T.IO<ValidationError, CommandDirective<B>> =>
-    parseMap_(self, args, cont, config)
+    parse_(self, args, cont, config)
 }

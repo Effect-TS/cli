@@ -25,7 +25,7 @@ export class None extends Base<void> {
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateNone(
+export function validate(
   args: Array<string>
 ): T.IO<ValidationError, Tuple<[Array<string>, void]>> {
   return T.succeed(Tp.tuple(args, undefined))
@@ -38,13 +38,13 @@ export function validateNone(
 /**
  * @ets_optimize identity
  */
-export function modifyNone_(self: None, modifier: SingleModifier): Options<void> {
+export function modifySingle_(self: None, modifier: SingleModifier): Options<void> {
   return self
 }
 
 /**
- * @ets_data_first modifyNone_
+ * @ets_data_first modifySingle_
  */
-export function modifyNone(modifier: SingleModifier) {
-  return (self: None): Options<void> => modifyNone_(self, modifier)
+export function modifySingle(modifier: SingleModifier) {
+  return (self: None): Options<void> => modifySingle_(self, modifier)
 }

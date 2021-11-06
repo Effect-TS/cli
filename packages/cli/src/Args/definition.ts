@@ -1,6 +1,11 @@
 // ets_tracing: off
 
-import { Args, Both, Map, None, Single, Variadic } from "./_internal"
+import { Args } from "./_internal/Base"
+import { Both } from "./_internal/Both"
+import { Map } from "./_internal/Map"
+import { None } from "./_internal/None"
+import { Single } from "./_internal/Single"
+import { Variadic } from "./_internal/Variadic"
 
 // -----------------------------------------------------------------------------
 // Model

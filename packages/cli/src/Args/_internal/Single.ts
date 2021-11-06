@@ -55,19 +55,19 @@ export class Single<A> extends Base<A> {
 // Minimum Size
 // -----------------------------------------------------------------------------
 
-export const singleMinSize = 1
+export const minSize = 1
 
 // -----------------------------------------------------------------------------
 // Maximum Size
 // -----------------------------------------------------------------------------
 
-export const singleMaxSize = 1
+export const maxSize = 1
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getSingleHelpDoc<A>(self: Single<A>): HelpDoc {
+export function helpDoc<A>(self: Single<A>): HelpDoc {
   return Help.descriptionList(
     A.single(
       Tp.tuple(
@@ -82,7 +82,7 @@ export function getSingleHelpDoc<A>(self: Single<A>): HelpDoc {
 // UsageSynopsis
 // -----------------------------------------------------------------------------
 
-export function getSingleUsageSynopsis<A>(self: Single<A>): UsageSynopsis {
+export function synopsis<A>(self: Single<A>): UsageSynopsis {
   return Synopsis.named(self.name, Primitive.choices(self.primType))
 }
 
@@ -90,7 +90,7 @@ export function getSingleUsageSynopsis<A>(self: Single<A>): UsageSynopsis {
 // Description
 // -----------------------------------------------------------------------------
 
-export function addSingleDescription_<A>(self: Single<A>, text: string): Args<A> {
+export function addDescription_<A>(self: Single<A>, text: string): Args<A> {
   return new Single(
     self.pseudoName,
     self.primType,
@@ -99,17 +99,17 @@ export function addSingleDescription_<A>(self: Single<A>, text: string): Args<A>
 }
 
 /**
- * @ets_data_first addSingleDescription_
+ * @ets_data_first addDescription_
  */
-export function addSingleDescription(text: string) {
-  return <A>(self: Single<A>): Args<A> => addSingleDescription_(self, text)
+export function addDescription(text: string) {
+  return <A>(self: Single<A>): Args<A> => addDescription_(self, text)
 }
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateSingle_<A>(
+export function validate_<A>(
   self: Single<A>,
   args: Array<string>,
   config: CliConfig = Config.defaultConfig
@@ -131,12 +131,12 @@ export function validateSingle_<A>(
 }
 
 /**
- * @ets_data_first validateSingle_
+ * @ets_data_first validate_
  */
-export function validateSingle(
+export function validate(
   args: Array<string>,
   config: CliConfig = Config.defaultConfig
 ) {
   return <A>(self: Single<A>): T.IO<HelpDoc, Tuple<[Array<string>, A]>> =>
-    validateSingle_(self, args, config)
+    validate_(self, args, config)
 }

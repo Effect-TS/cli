@@ -25,24 +25,28 @@ import * as Primitive from "../PrimType"
 import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
-import type { SingleModifier } from "./_internal"
-import * as Opts from "./_internal"
-import type { Instruction, Options } from "./definition"
+import * as Both from "./_internal/Both"
+import * as Map from "./_internal/Map"
+import * as None from "./_internal/None"
+import * as OrElse from "./_internal/OrElse"
+import * as Single from "./_internal/Single"
+import * as WithDefault from "./_internal/WithDefault"
+import type { Instruction, Options, SingleModifier } from "./definition"
 
 // -----------------------------------------------------------------------------
 // Constructors
 // -----------------------------------------------------------------------------
 
-export const none: Options<void> = new Opts.None()
+export const none: Options<void> = new None.None()
 
 function makeBoolean(name: string, ifPresent: boolean, negationNames: Array<string>) {
-  const option = new Opts.Single(name, A.empty, new Primitive.Bool(O.some(ifPresent)))
+  const option = new Single.Single(name, A.empty, new Primitive.Bool(O.some(ifPresent)))
 
   return A.foldLeft_(
     negationNames,
     () => withDefault_(option, !ifPresent, `${!ifPresent}`, showBoolean),
     (head, tail) => {
-      const negationOption = new Opts.Single(
+      const negationOption = new Single.Single(
         head,
         tail,
         new Primitive.Bool(O.some(!ifPresent))
@@ -88,14 +92,14 @@ export function enumeration<A>(
   name: string,
   cases: Array<Tuple<[string, A]>>
 ): Options<A> {
-  return new Opts.Single(name, A.empty, new Primitive.Enumeration(cases))
+  return new Single.Single(name, A.empty, new Primitive.Enumeration(cases))
 }
 
 /**
  * Creates a parameter which expects a path to a file.
  */
 export function file(name: string, exists: Exists = Exist.either): Options<string> {
-  return new Opts.Single(name, A.empty, new Primitive.Path(PathType.file, exists))
+  return new Single.Single(name, A.empty, new Primitive.Path(PathType.file, exists))
 }
 
 /**
@@ -105,35 +109,39 @@ export function directory(
   name: string,
   exists: Exists = Exist.either
 ): Options<string> {
-  return new Opts.Single(name, A.empty, new Primitive.Path(PathType.directory, exists))
+  return new Single.Single(
+    name,
+    A.empty,
+    new Primitive.Path(PathType.directory, exists)
+  )
 }
 
 /**
  * Creates a parameter expecting a text value.
  */
 export function text(name: string): Options<string> {
-  return new Opts.Single(name, A.empty, new Primitive.Text())
+  return new Single.Single(name, A.empty, new Primitive.Text())
 }
 
 /**
  * Creates a parameter expecting an float value.
  */
 export function float(name: string): Options<Float> {
-  return new Opts.Single(name, A.empty, new Primitive.Float())
+  return new Single.Single(name, A.empty, new Primitive.Float())
 }
 
 /**
  * Creates a parameter expecting an integer value.
  */
 export function integer(name: string): Options<Integer> {
-  return new Opts.Single(name, A.empty, new Primitive.Integer())
+  return new Single.Single(name, A.empty, new Primitive.Integer())
 }
 
 /**
  * Creates a parameter expecting a date value.
  */
 export function date(name: string): Options<Date> {
-  return new Opts.Single(name, A.empty, new Primitive.Date())
+  return new Single.Single(name, A.empty, new Primitive.Date())
 }
 
 // -----------------------------------------------------------------------------
@@ -144,7 +152,7 @@ export function describe_<A>(self: Options<A>, description: string): Options<A> 
   return modifySingle_(
     self,
     (single) =>
-      new Opts.Single(
+      new Single.Single(
         single.name,
         single.aliases,
         single.primType,
@@ -166,7 +174,12 @@ export function withDefault_<A>(
   defaultDescription: string,
   showDefaultValue: Show<A>
 ): Options<A> {
-  return new Opts.WithDefault(self, defaultValue, defaultDescription, showDefaultValue)
+  return new WithDefault.WithDefault(
+    self,
+    defaultValue,
+    defaultDescription,
+    showDefaultValue
+  )
 }
 
 /**
@@ -210,7 +223,7 @@ export function alias_<A>(
   return modifySingle_(
     self,
     (single) =>
-      new Opts.Single(
+      new Single.Single(
         single.name,
         A.concatS_(A.cons_(names, name), single.aliases),
         single.primType,
@@ -239,7 +252,7 @@ export function instruction<A>(self: Options<A>): Instruction {
 }
 
 export function map_<A, B>(self: Options<A>, f: (a: A) => B): Options<B> {
-  return new Opts.Map(self, (a) => E.right(f(a)))
+  return new Map.Map(self, (a) => E.right(f(a)))
 }
 
 /**
@@ -253,7 +266,7 @@ export function mapOrFail_<A, B>(
   self: Options<A>,
   f: (a: A) => Either<ValidationError, B>
 ): Options<B> {
-  return new Opts.Map(self, f)
+  return new Map.Map(self, f)
 }
 
 /**
@@ -264,7 +277,7 @@ export function mapOrFail<A, B>(f: (a: A) => Either<ValidationError, B>) {
 }
 
 export function zip_<A, B>(self: Options<A>, that: Options<B>): Options<Tuple<[A, B]>> {
-  return new Opts.Both(self, that)
+  return new Both.Both(self, that)
 }
 
 /**
@@ -289,7 +302,7 @@ export function orElseEither_<A, B>(
   self: Options<A>,
   that: Options<B>
 ): Options<Either<A, B>> {
-  return new Opts.OrElse(self, that)
+  return new OrElse.OrElse(self, that)
 }
 
 /**
@@ -304,17 +317,17 @@ export function orElseEither<B>(that: Options<B>) {
  */
 export function uid<A>(self: Options<A>): Option<string> {
   return matchTag_(instruction(self), {
-    None: () => O.none,
-    Single: (_) => O.some(Opts.getSingleFullName(_)),
-    Map: (_) => uid(_.value),
     Both: (_) => {
       const uids = A.compact([uid(_.head), uid(_.tail)])
       return uids.length === 0 ? O.none : O.some(uids.join(", "))
     },
+    Map: (_) => uid(_.value),
+    None: () => O.none,
     OrElse: (_) => {
       const uids = A.compact([uid(_.left), uid(_.right)])
       return uids.length === 0 ? O.none : O.some(uids.join(", "))
     },
+    Single: (_) => O.some(Single.fullName(_)),
     WithDefault: (_) => uid(_.options)
   })
 }
@@ -324,12 +337,12 @@ export function uid<A>(self: Options<A>): Option<string> {
  */
 export function helpDoc<A>(self: Options<A>): HelpDoc {
   return matchTag_(instruction(self), {
-    None: () => Help.empty,
-    Single: Opts.getSingleHelpDoc,
-    Map: (_) => helpDoc(_.value),
     Both: (_) => Help.sequence_(helpDoc(_.head), helpDoc(_.tail)),
+    Map: (_) => helpDoc(_.value),
+    None: () => Help.empty,
     OrElse: (_) => Help.sequence_(helpDoc(_.left), helpDoc(_.right)),
-    WithDefault: (_) => Opts.getWithDefaultHelpDoc_(_, helpDoc)
+    Single: (_) => Single.helpDoc(_),
+    WithDefault: (_) => WithDefault.helpDoc_(_, helpDoc)
   })
 }
 
@@ -338,11 +351,11 @@ export function helpDoc<A>(self: Options<A>): HelpDoc {
  */
 export function synopsis<A>(self: Options<A>): UsageSynopsis {
   return matchTag_(instruction(self), {
-    None: () => Synopsis.none,
-    Single: Opts.getSingleUsageSynopsis,
-    Map: (_) => synopsis(_.value),
     Both: (_) => Synopsis.concat_(synopsis(_.head), synopsis(_.tail)),
+    Map: (_) => synopsis(_.value),
+    None: () => Synopsis.none,
     OrElse: (_) => Synopsis.concat_(synopsis(_.left), synopsis(_.right)),
+    Single: (_) => Single.synopsis(_),
     WithDefault: (_) => synopsis(_.options)
   })
 }
@@ -360,12 +373,12 @@ export function validate_<A>(
   config: CliConfig = Config.defaultConfig
 ): T.IO<ValidationError, Tuple<[Array<string>, A]>> {
   return matchTag_(instruction(self), {
-    None: () => Opts.validateNone(args),
-    Single: Opts.validateSingle(args, config),
-    Map: (_) => Opts.validateMap_(_, args, validate_, config),
-    Both: (_) => Opts.validateBoth_(_, args, validate_, config),
-    OrElse: (_) => Opts.validateOrElse_(_, args, validate_, uid, config),
-    WithDefault: (_) => Opts.validateWithDefault_(_, args, validate_, config)
+    Both: (_) => Both.validate_(_, args, validate_, config),
+    Map: (_) => Map.validate_(_, args, validate_, config),
+    None: () => None.validate(args),
+    OrElse: (_) => OrElse.validate_(_, args, validate_, uid, config),
+    Single: (_) => Single.validate_(_, args, validate_, config),
+    WithDefault: (_) => WithDefault.validate_(_, args, validate_, config)
   })
 }
 
@@ -395,12 +408,12 @@ export function modifySingle_<A>(
   modifier: SingleModifier
 ): Options<A> {
   return matchTag_(instruction(self), {
+    Both: (_) => Both.modifySingle_(_, modifier, modifySingle_),
+    Map: (_) => Map.modifySingle_(_, modifier, modifySingle_),
     None: identity,
-    Single: Opts.modifySingle(modifier),
-    Map: (_) => Opts.modifyMap_(_, modifier, modifySingle_),
-    Both: (_) => Opts.modifyBoth_(_, modifier, modifySingle_),
-    OrElse: (_) => Opts.modifyOrElse_(_, modifier, modifySingle_),
-    WithDefault: (_) => Opts.modifyWithDefault_(_, modifier, modifySingle_)
+    OrElse: (_) => OrElse.modifySingle_(_, modifier, modifySingle_),
+    Single: (_) => Single.modifySingle_(_, modifier),
+    WithDefault: (_) => WithDefault.modifySingle_(_, modifier, modifySingle_)
   }) as Options<A>
 }
 

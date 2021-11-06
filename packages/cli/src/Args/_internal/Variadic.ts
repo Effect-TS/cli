@@ -49,43 +49,37 @@ export class Variadic<A> extends Base<Array<A>> {
 // Minimum Size
 // -----------------------------------------------------------------------------
 
-export function getVariadicMinSize_<A>(
-  self: Variadic<A>,
-  cont: (a: Args<any>) => number
-): number {
+export function minSize_<A>(self: Variadic<A>, cont: (a: Args<any>) => number): number {
   return O.getOrElse_(self.min, () => 0) * cont(self.value)
 }
 
 /**
- * @ets_data_first getVariadicMinSize_
+ * @ets_data_first minSize_
  */
-export function getVariadicMinSize(cont: (a: Args<any>) => number) {
-  return <A>(self: Variadic<A>): number => getVariadicMinSize_(self, cont)
+export function minSize(cont: (a: Args<any>) => number) {
+  return <A>(self: Variadic<A>): number => minSize_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Maximum Size
 // -----------------------------------------------------------------------------
 
-export function getVariadicMaxSize_<A>(
-  self: Variadic<A>,
-  cont: (a: Args<any>) => number
-): number {
+export function maxSize_<A>(self: Variadic<A>, cont: (a: Args<any>) => number): number {
   return O.getOrElse_(self.min, () => Number.MAX_SAFE_INTEGER / 2) * cont(self.value)
 }
 
 /**
- * @ets_data_first getVariadicMaxSize_
+ * @ets_data_first maxSize_
  */
-export function getVariadicMaxSize(cont: (a: Args<any>) => number) {
-  return <A>(self: Variadic<A>): number => getVariadicMaxSize_(self, cont)
+export function maxSize(cont: (a: Args<any>) => number) {
+  return <A>(self: Variadic<A>): number => maxSize_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getVariadicHelpDoc_<A>(
+export function helpDoc_<A>(
   self: Variadic<A>,
   cont: (a: Args<any>) => HelpDoc,
   minSize: (a: Args<any>) => number,
@@ -120,22 +114,21 @@ export function getVariadicHelpDoc_<A>(
 }
 
 /**
- * @ets_data_first getVariadicHelpDoc_
+ * @ets_data_first helpDoc_
  */
-export function getVariadicHelpDoc(
+export function helpDoc(
   cont: (a: Args<any>) => HelpDoc,
   minSize: (a: Args<any>) => number,
   maxSize: (a: Args<any>) => number
 ) {
-  return <A>(self: Variadic<A>): HelpDoc =>
-    getVariadicHelpDoc_(self, cont, minSize, maxSize)
+  return <A>(self: Variadic<A>): HelpDoc => helpDoc_(self, cont, minSize, maxSize)
 }
 
 // -----------------------------------------------------------------------------
 // UsageSynopsis
 // -----------------------------------------------------------------------------
 
-export function getVariadicUsageSynopsis_<A>(
+export function synopsis_<A>(
   self: Variadic<A>,
   cont: (a: Args<any>) => UsageSynopsis
 ): UsageSynopsis {
@@ -143,17 +136,17 @@ export function getVariadicUsageSynopsis_<A>(
 }
 
 /**
- * @ets_data_first getVariadicUsageSynopsis_
+ * @ets_data_first synopsis_
  */
-export function getVariadicUsageSynopsis(cont: (a: Args<any>) => UsageSynopsis) {
-  return <A>(self: Variadic<A>): UsageSynopsis => getVariadicUsageSynopsis_(self, cont)
+export function synopsis(cont: (a: Args<any>) => UsageSynopsis) {
+  return <A>(self: Variadic<A>): UsageSynopsis => synopsis_(self, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Description
 // -----------------------------------------------------------------------------
 
-export function addVariadicDescription_<A>(
+export function addDescription_<A>(
   self: Variadic<A>,
   text: string,
   cont: (a: Args<any>, text: string) => Args<any>
@@ -162,21 +155,20 @@ export function addVariadicDescription_<A>(
 }
 
 /**
- * @ets_data_first addVariadicDescription_
+ * @ets_data_first addDescription_
  */
-export function addVariadicDescription(
+export function addDescription(
   text: string,
   cont: (a: Args<any>, text: string) => Args<any>
 ) {
-  return <A>(self: Variadic<A>): Args<Array<A>> =>
-    addVariadicDescription_(self, text, cont)
+  return <A>(self: Variadic<A>): Args<Array<A>> => addDescription_(self, text, cont)
 }
 
 // -----------------------------------------------------------------------------
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateVariadic_<A>(
+export function validate_<A>(
   self: Variadic<A>,
   args: Array<string>,
   config: CliConfig = Config.defaultConfig,
@@ -212,9 +204,9 @@ export function validateVariadic_<A>(
 }
 
 /**
- * @ets_data_first validateVariadic_
+ * @ets_data_first validate_
  */
-export function validateVariadic(
+export function validate(
   args: Array<string>,
   config: CliConfig = Config.defaultConfig,
   cont: (
@@ -224,5 +216,5 @@ export function validateVariadic(
   ) => T.IO<HelpDoc, Tuple<[Array<string>, any]>>
 ) {
   return <A>(self: Variadic<A>): T.IO<HelpDoc, Tuple<[Array<string>, Array<A>]>> =>
-    validateVariadic_(self, args, config, cont)
+    validate_(self, args, config, cont)
 }

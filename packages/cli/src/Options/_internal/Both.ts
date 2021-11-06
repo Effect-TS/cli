@@ -44,7 +44,7 @@ export class Both<A, B> extends Base<Tuple<[A, B]>> {
 // Validation
 // -----------------------------------------------------------------------------
 
-export function validateBoth_<A, B>(
+export function validate_<A, B>(
   self: Both<A, B>,
   args: Array<string>,
   cont: (
@@ -72,9 +72,9 @@ export function validateBoth_<A, B>(
 }
 
 /**
- * @ets_data_first validateBoth_
+ * @ets_data_first validate_
  */
-export function validateBoth(
+export function validate(
   args: Array<string>,
   cont: (
     a: Options<any>,
@@ -86,14 +86,14 @@ export function validateBoth(
   return <A, B>(
     self: Both<A, B>
   ): T.IO<ValidationError, Tuple<[Array<string>, Tuple<[A, B]>]>> =>
-    validateBoth_(self, args, cont, config)
+    validate_(self, args, cont, config)
 }
 
 // -----------------------------------------------------------------------------
 // Modification
 // -----------------------------------------------------------------------------
 
-export function modifyBoth_<A, B>(
+export function modifySingle_<A, B>(
   self: Both<A, B>,
   modifier: SingleModifier,
   cont: (a: Options<any>, modifier: SingleModifier) => Options<any>
@@ -102,12 +102,12 @@ export function modifyBoth_<A, B>(
 }
 
 /**
- * @ets_data_first modifyBoth_
+ * @ets_data_first modifySingle_
  */
-export function modifyBoth(
+export function modifySingle(
   modifier: SingleModifier,
   cont: (a: Options<any>, modifier: SingleModifier) => Options<any>
 ) {
   return <A, B>(self: Both<A, B>): Options<Tuple<[A, B]>> =>
-    modifyBoth_(self, modifier, cont)
+    modifySingle_(self, modifier, cont)
 }

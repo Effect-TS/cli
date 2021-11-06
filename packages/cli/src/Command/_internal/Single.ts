@@ -65,7 +65,7 @@ export class Single<OptionsType, ArgsType> extends Base<
 // HelpDoc
 // -----------------------------------------------------------------------------
 
-export function getSingleHelpDoc<OptionsType, ArgsType>(
+export function helpDoc<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>
 ): HelpDoc {
   const opts = Help.isEmpty(Opts.helpDoc(self.options))
@@ -94,7 +94,7 @@ export function getSingleHelpDoc<OptionsType, ArgsType>(
 // UsageSynopsis
 // -----------------------------------------------------------------------------
 
-export function getSingleUsageSynopsis<OptionsType, ArgsType>(
+export function synopsis<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>
 ): UsageSynopsis {
   return Synopsis.concatsT(
@@ -108,7 +108,7 @@ export function getSingleUsageSynopsis<OptionsType, ArgsType>(
 // Parser
 // -----------------------------------------------------------------------------
 
-export function parseSingle_<OptionsType, ArgsType>(
+export function parse_<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>,
   args: Array<string>,
   config: CliConfig = Config.defaultConfig
@@ -116,14 +116,14 @@ export function parseSingle_<OptionsType, ArgsType>(
   return T.orElse_(builtIn_(self, args, config), () => userDefined_(self, args, config))
 }
 
-export function parseSingle(
-  args: Array<string>,
-  config: CliConfig = Config.defaultConfig
-) {
+/**
+ * @ets_data_first parse_
+ */
+export function parse(args: Array<string>, config: CliConfig = Config.defaultConfig) {
   return <OptionsType, ArgsType>(
     self: Single<OptionsType, ArgsType>
   ): T.IO<ValidationError, CommandDirective<Tuple<[OptionsType, ArgsType]>>> =>
-    parseSingle_(self, args, config)
+    parse_(self, args, config)
 }
 
 // -----------------------------------------------------------------------------
@@ -141,7 +141,7 @@ export function completions<OptionsType, ArgsType>(
 export function builtInOptions<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>
 ): Options<Option<BuiltIns.BuiltInOption>> {
-  return BuiltIns.builtInOptionsFrom(getSingleHelpDoc(self), completions(self))
+  return BuiltIns.builtInOptionsFrom(helpDoc(self), completions(self))
 }
 
 export function builtIn_<OptionsType, ArgsType>(
@@ -161,6 +161,9 @@ export function builtIn_<OptionsType, ArgsType>(
   )
 }
 
+/**
+ * @ets_data_first builtIn_
+ */
 export function builtIn(args: Array<string>, config: CliConfig = Config.defaultConfig) {
   return <OptionsType, ArgsType>(
     self: Single<OptionsType, ArgsType>
@@ -209,6 +212,9 @@ export function userDefined_<OptionsType, ArgsType>(
   )
 }
 
+/**
+ * @ets_data_first userDefined_
+ */
 export function userDefined(
   args: Array<string>,
   config: CliConfig = Config.defaultConfig
