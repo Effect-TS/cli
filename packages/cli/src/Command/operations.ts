@@ -4,10 +4,11 @@ import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
 import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
 import * as S from "@effect-ts/core/Collections/Immutable/Set"
-import type * as T from "@effect-ts/core/Effect"
+import * as T from "@effect-ts/core/Effect"
 import type { Either } from "@effect-ts/core/Either"
 import * as E from "@effect-ts/core/Either"
 import * as Equal from "@effect-ts/core/Equal"
+import * as O from "@effect-ts/core/Option"
 import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
 import { matchTag_ } from "@effect-ts/system/Utils"
 
@@ -21,6 +22,7 @@ import type { Options } from "../Options"
 import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
+import * as Validation from "../Validation"
 import * as Map from "./_internal/Map"
 import * as OrElse from "./_internal/OrElse"
 import * as Single from "./_internal/Single"
@@ -177,7 +179,12 @@ export function parse_<A>(
 ): T.IO<ValidationError, CommandDirective<A>> {
   return matchTag_(instruction(self), {
     Map: (_) => Map.parse_(_, args, parse_, config),
-    OrElse: (_) => OrElse.parse_(_, args, parse_, config),
+    OrElse: (_) =>
+      T.catchSome_(parse_(_.left, args, config), (err) =>
+        Validation.isCommandMismatch(err)
+          ? O.some(parse_(_.right, args, config))
+          : O.none
+      ),
     Single: (_) => Single.parse_(_, args, config),
     Subcommands: (_) => Subcommands.parse_(_, args, parse_, helpDoc)
   })
