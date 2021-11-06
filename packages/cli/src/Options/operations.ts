@@ -44,18 +44,18 @@ function makeBoolean(name: string, ifPresent: boolean, negationNames: Array<stri
 
   return A.foldLeft_(
     negationNames,
-    () => withDefault_(option, !ifPresent, `${!ifPresent}`, showBoolean),
+    () => withDefaultDescription_(option, !ifPresent, showBoolean, `${!ifPresent}`),
     (head, tail) => {
       const negationOption = new Single.Single(
         head,
         tail,
         new Primitive.Bool(O.some(!ifPresent))
       )
-      return withDefault_(
+      return withDefaultDescription_(
         orElse_(option, negationOption),
         !ifPresent,
-        `${!ifPresent}`,
-        showBoolean
+        showBoolean,
+        `${!ifPresent}`
       )
     }
   )
@@ -171,48 +171,78 @@ export function describe(description: string) {
 export function withDefault_<A>(
   self: Options<A>,
   defaultValue: A,
-  defaultDescription: string,
   showDefaultValue: Show<A>
 ): Options<A> {
-  return new WithDefault.WithDefault(
-    self,
-    defaultValue,
-    defaultDescription,
-    showDefaultValue
-  )
+  return new WithDefault.WithDefault(self, defaultValue, showDefaultValue, O.none)
 }
 
 /**
  * @ets_data_first withDefault_
  */
-export function withDefault<A>(
+export function withDefault<A>(defaultValue: A, showDefaultValue: Show<A>) {
+  return (self: Options<A>): Options<A> =>
+    withDefault_(self, defaultValue, showDefaultValue)
+}
+
+export function withDefaultDescription_<A>(
+  self: Options<A>,
   defaultValue: A,
-  defaultDescription: string,
-  showDefaultValue: Show<A>
+  showDefaultValue: Show<A>,
+  description: string
+): Options<A> {
+  return new WithDefault.WithDefault(
+    self,
+    defaultValue,
+    showDefaultValue,
+    O.some(description)
+  )
+}
+
+/**
+ * @ets_data_first withDefaultDescription_
+ */
+export function withDefaultDescription<A>(
+  defaultValue: A,
+  showDefaultValue: Show<A>,
+  description: string
 ) {
   return (self: Options<A>): Options<A> =>
-    withDefault_(self, defaultValue, defaultDescription, showDefaultValue)
+    withDefaultDescription_(self, defaultValue, showDefaultValue, description)
 }
 
 export function optional_<A>(
   self: Options<A>,
-  defaultDescription: string,
   showDefaultValue: Show<A>
 ): Options<O.Option<A>> {
-  return withDefault_(
-    map_(self, O.some),
-    O.none,
-    defaultDescription,
-    O.getShow<A>(showDefaultValue)
-  )
+  return withDefault_(map_(self, O.some), O.none, O.getShow<A>(showDefaultValue))
 }
 
 /**
  * @ets_data_first optional_
  */
-export function optional<A>(defaultDescription: string, showDefaultValue: Show<A>) {
-  return (self: Options<A>): Options<O.Option<A>> =>
-    optional_(self, defaultDescription, showDefaultValue)
+export function optional<A>(showDefaultValue: Show<A>) {
+  return (self: Options<A>): Options<O.Option<A>> => optional_(self, showDefaultValue)
+}
+
+export function optionalDescription_<A>(
+  self: Options<A>,
+  showDefaultValue: Show<A>,
+  description: string
+): Options<Option<A>> {
+  return withDefaultDescription_(
+    map_(self, O.some),
+    O.none,
+    O.getShow<A>(showDefaultValue),
+    description
+  )
+}
+
+/**
+ * @ets_data_first optionalDescription_
+ */
+export function optionalDescription<A>(showDefaultValue: Show<A>, description: string) {
+  return (self: Options<A>): Options<Option<A>> =>
+    optionalDescription_(self, showDefaultValue, description)
 }
 
 export function alias_<A>(

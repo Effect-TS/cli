@@ -46,11 +46,12 @@ export function showCompletions(completions: Set<Array<string>>): BuiltInOption 
 
 export const helpOption: Options<boolean> = Opts.boolean("help")
 
-export const shellCompletionsOption: Options<Option<ShellType>> = Opts.optional_(
-  Shell.option,
-  "N/A",
-  makeShow(() => "N/A")
-)
+export const shellCompletionsOption: Options<Option<ShellType>> =
+  Opts.optionalDescription_(
+    Shell.option,
+    makeShow(() => "N/A"),
+    "N/A"
+  )
 
 export const builtInOptions: Options<BuiltIn> = Opts.map_(
   Opts.zip_(helpOption, shellCompletionsOption),

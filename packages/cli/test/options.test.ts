@@ -17,7 +17,7 @@ import * as Validation from "../src/Validation"
 const f = Options.alias_(Options.text("firstname"), "f")
 const l = Options.text("lastname")
 const a = Options.integer("age")
-const aOpt = Options.optional_(Options.integer("age"), "N/A", Show.number)
+const aOpt = Options.optionalDescription_(Options.integer("age"), Show.number, "N/A")
 const b = Options.boolean("verbose", true)
 const options = Options.tuple(f, l, a)
 
@@ -161,7 +161,7 @@ describe("Options", () => {
     T.gen(function* (_) {
       const o = pipe(
         Options.integer("integer"),
-        Options.withDefault(0 as Integer, "0 as default", Show.number)
+        Options.withDefaultDescription(0 as Integer, Show.number, "0 as default")
       )
 
       const result = yield* _(T.result(Options.validate_(o, ["--integer", "abc"])))
@@ -388,7 +388,7 @@ describe("Options", () => {
         const o = pipe(
           Options.integer("min"),
           Options.orElse(Options.integer("max")),
-          Options.withDefault(0 as Integer, "0 as default", Show.number)
+          Options.withDefaultDescription(0 as Integer, Show.number, "0 as default")
         )
 
         const result = yield* _(T.result(Options.validate_(o, ["--min", "abc"])))
