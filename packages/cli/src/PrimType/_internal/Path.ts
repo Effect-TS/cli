@@ -2,7 +2,6 @@
 
 import * as T from "@effect-ts/core/Effect"
 import type { Option } from "@effect-ts/core/Option"
-import * as O from "@effect-ts/core/Option"
 import { matchTag_ } from "@effect-ts/core/Utils"
 
 import type { Exists } from "../../Exists"
@@ -36,7 +35,7 @@ export class Path extends Base<string> {
      * - `No` if the path is not expected to exist, or
      * - `Either` if either situation is acceptable
      */
-    readonly exists: Exists,
+    readonly shouldExist: Exists,
     /**
      * An implementation of `FileSystem` interface.
      */
@@ -63,7 +62,7 @@ export function typeName(self: Path): string {
 // -----------------------------------------------------------------------------
 
 export function helpDoc(self: Path): HelpDoc {
-  return matchTag_(self.exists, {
+  return matchTag_(self.shouldExist, {
     Yes: () =>
       matchTag_(self.pathType, {
         File: () => Help.text("An existing file."),
@@ -89,50 +88,50 @@ export function helpDoc(self: Path): HelpDoc {
 // Validation
 // -----------------------------------------------------------------------------
 
-function refineExistence(value: string, expected: Exists) {
-  return (actual: boolean): T.IO<string, string> => {
-    return matchTag_(
-      expected,
-      {
-        No: () =>
-          actual ? T.fail(`Path '${value}' must not exist.`) : T.succeed(value),
-        Yes: () => (actual ? T.succeed(value) : T.fail(`Path '${value}' must exist.`))
-      },
-      () => T.succeed(value)
-    )
-  }
+function validateExistence(
+  path: string,
+  expected: Exists,
+  actual: boolean
+): T.IO<string, void> {
+  return matchTag_(
+    expected,
+    {
+      No: () => (actual ? T.fail(`Path '${path}' must not exist.`) : T.unit),
+      Yes: () => (actual ? T.unit : T.fail(`Path '${path}' must exist.`))
+    },
+    () => T.succeed(path)
+  )
+}
+
+function validatePathType(self: Path, path: string): T.IO<string, void> {
+  return matchTag_(self.pathType, {
+    File: () =>
+      T.unlessM_(
+        T.fail(`Expected path '${path}' to be a regular file.`),
+        self.fileSystem.isRegularFile(path)
+      ),
+    Directory: () =>
+      T.unlessM_(
+        T.fail(`Expected path '${path}' to be a directory.`),
+        self.fileSystem.isDirectory(path)
+      ),
+    Either: () => T.unit
+  })
 }
 
 export function validate_(self: Path, value: Option<string>): T.IO<string, string> {
-  return T.chain_(
-    T.orElseFail_(T.fromOption(value), `Path options do not have a default value.`),
-    (path) =>
-      T.zipLeft_(
-        T.chain_(self.fileSystem.exists(path), refineExistence(path, self.exists)),
-        T.when_(
-          matchTag_(self.pathType, {
-            File: () =>
-              T.unlessM_(
-                T.fail(
-                  `Expected path '${O.getOrElse_(value, () => "unknown")}' ` +
-                    "to be a regular file."
-                ),
-                self.fileSystem.isRegularFile(path)
-              ),
-            Directory: () =>
-              T.unlessM_(
-                T.fail(
-                  `Expected path '${O.getOrElse_(value, () => "unknown")}' ` +
-                    "to be a directory."
-                ),
-                self.fileSystem.isDirectory(path)
-              ),
-            Either: () => T.unit
-          }),
-          () => self.exists._tag !== "No"
-        )
-      )
-  )
+  return T.gen(function* (_) {
+    const path = yield* _(
+      T.orElseFail_(T.fromOption(value), "Path options do not have a default value.")
+    )
+    const exists = yield* _(self.fileSystem.exists(path))
+
+    yield* _(validateExistence(path, self.shouldExist, exists))
+
+    yield* _(validatePathType(self, path))
+
+    return path
+  })
 }
 
 /**
