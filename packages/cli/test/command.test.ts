@@ -162,6 +162,23 @@ describe("Command", () => {
       )
     }))
 
+  it("should handle commands with clustered options", () =>
+    T.gen(function* (_) {
+      const clustered = yield* _(Command.parse_(wcCommand, ["wc", "-clw", "filename"]))
+
+      const unclustered = yield* _(
+        Command.parse_(wcCommand, ["wc", "-c", "-l", "-w", "filename"])
+      )
+
+      const commandDirective = CommandDirective.userDefined(
+        A.empty,
+        Tp.tuple([true, true, true, true], A.single("filename"))
+      )
+
+      expect(clustered).toEqual(commandDirective)
+      expect(unclustered).toEqual(commandDirective)
+    }))
+
   describe("Subcommands without Options or Arguments", () => {
     const git = pipe(
       Command.command("git", Options.none, Args.none),

@@ -213,7 +213,7 @@ export function userDefined_<OptionsType, ArgsType>(
     ),
     (args2) =>
       T.chain_(
-        Opts.validate_(self.options, args2, config),
+        Opts.validate_(self.options, uncluster(args2), config),
         ({ tuple: [args1, opts1] }) => {
           return T.map_(
             T.mapError_(Arguments.validate_(self.args, args1, config), (helpDoc) =>
@@ -238,4 +238,18 @@ export function userDefined(
     self: Single<OptionsType, ArgsType>
   ): T.IO<ValidationError, CommandDirective<Tuple<[OptionsType, ArgsType]>>> =>
     userDefined_(self, args, config)
+}
+
+const clusteredOptionRegex = /^-{1}([^-]{2,}|$)/
+
+function isClustered(arg: string): boolean {
+  return clusteredOptionRegex.test(arg.trim())
+}
+
+function uncluster(args: Array<string>): Array<string> {
+  return A.chain_(args, (arg) => {
+    return isClustered(arg)
+      ? A.map_(arg.substring(1).split(""), (c) => `-${c}`)
+      : A.single(arg)
+  })
 }
