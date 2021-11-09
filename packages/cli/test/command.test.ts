@@ -157,9 +157,7 @@ describe("Command", () => {
 
       const result = yield* _(Command.parse_(orElseCommand, ["log"]))
 
-      expect(result).toEqual(
-        CommandDirective.userDefined(A.empty, Tp.tuple(undefined, undefined))
-      )
+      expect(result).toEqual(CommandDirective.userDefined(A.empty, undefined))
     }))
 
   it("should handle commands with clustered options", () =>
@@ -192,36 +190,21 @@ describe("Command", () => {
       T.gen(function* (_) {
         const result = yield* _(Command.parse_(git, ["git", "remote"]))
 
-        expect(result).toEqual(
-          CommandDirective.userDefined(
-            A.empty,
-            Tp.tuple(Tp.tuple(undefined, undefined), Tp.tuple(undefined, undefined))
-          )
-        )
+        expect(result).toEqual(CommandDirective.userDefined(A.empty, undefined))
       }))
 
     it("should match the first subcommand with surplus options", () =>
       T.gen(function* (_) {
         const result = yield* _(Command.parse_(git, ["git", "remote", "-v"]))
 
-        expect(result).toEqual(
-          CommandDirective.userDefined(
-            ["-v"],
-            Tp.tuple(Tp.tuple(undefined, undefined), Tp.tuple(undefined, undefined))
-          )
-        )
+        expect(result).toEqual(CommandDirective.userDefined(["-v"], undefined))
       }))
 
     it("should match the second subcommand without any surplus options", () =>
       T.gen(function* (_) {
         const result = yield* _(Command.parse_(git, ["git", "log"]))
 
-        expect(result).toEqual(
-          CommandDirective.userDefined(
-            A.empty,
-            Tp.tuple(Tp.tuple(undefined, undefined), Tp.tuple(undefined, undefined))
-          )
-        )
+        expect(result).toEqual(CommandDirective.userDefined(A.empty, undefined))
       }))
   })
 
@@ -246,10 +229,7 @@ describe("Command", () => {
         expect(result).toEqual(
           CommandDirective.userDefined(
             A.empty,
-            Tp.tuple(
-              Tp.tuple(undefined, undefined),
-              Tp.tuple(true, Tp.tuple("upstream", "branch"))
-            )
+            Tp.tuple(true, Tp.tuple("upstream", "branch"))
           )
         )
       }))
@@ -303,13 +283,7 @@ describe("Command", () => {
         )
 
         expect(result).toEqual(
-          CommandDirective.userDefined(
-            A.empty,
-            Tp.tuple(
-              Tp.tuple(undefined, undefined),
-              Tp.tuple(Tp.tuple(undefined, undefined), Tp.tuple(true, "text"))
-            )
-          )
+          CommandDirective.userDefined(A.empty, Tp.tuple(true, "text"))
         )
       }))
   })
@@ -326,9 +300,7 @@ describe("Command", () => {
         expect(Command.helpDoc(command)).toEqual(
           Help.sequence_(Help.h1("DESCRIPTION"), Help.p("this is some help"))
         )
-        expect(result).toEqual(
-          CommandDirective.userDefined(A.empty, Tp.tuple(undefined, undefined))
-        )
+        expect(result).toEqual(CommandDirective.userDefined(A.empty, undefined))
       }))
 
     it("should add help to subcommands", () =>
