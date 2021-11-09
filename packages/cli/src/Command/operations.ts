@@ -8,15 +8,20 @@ import * as T from "@effect-ts/core/Effect"
 import type { Either } from "@effect-ts/core/Either"
 import * as E from "@effect-ts/core/Either"
 import * as Equal from "@effect-ts/core/Equal"
+import { not, pipe } from "@effect-ts/core/Function"
+import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
+import * as Tp from "@effect-ts/system/Collections/Immutable/Tuple"
 import { matchTag_ } from "@effect-ts/system/Utils"
 
 import type { Args } from "../Args"
 import * as Arguments from "../Args"
+import * as BuiltIns from "../BuiltInOption"
 import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
 import type { CommandDirective } from "../CommandDirective"
+import * as Directive from "../CommandDirective"
 import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { Options } from "../Options"
@@ -25,10 +30,10 @@ import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
 import * as Validation from "../Validation"
-import * as Map from "./_internal/Map"
-import * as OrElse from "./_internal/OrElse"
-import * as Single from "./_internal/Single"
-import * as Subcommands from "./_internal/Subcommands"
+import { Map } from "./_internal/Map"
+import { OrElse } from "./_internal/OrElse"
+import { Single } from "./_internal/Single"
+import { Subcommands } from "./_internal/Subcommands"
 import type { Command, Instruction } from "./definition"
 
 // -----------------------------------------------------------------------------
@@ -49,7 +54,7 @@ export function command<OptionsType, ArgsType>(
   args: Args<ArgsType> = Arguments.none as Args<ArgsType>,
   helpDoc: HelpDoc = Help.empty
 ): Command<Tuple<[OptionsType, ArgsType]>> {
-  return new Single.Single(name, helpDoc, options, args)
+  return new Single(name, helpDoc, options, args)
 }
 
 // -----------------------------------------------------------------------------
@@ -62,14 +67,12 @@ export function command<OptionsType, ArgsType>(
 export function withHelp_<A>(self: Command<A>, help: string | HelpDoc): Command<A> {
   const helpDoc = typeof help === "string" ? Help.p(help) : help
   return matchTag_(instruction(self), {
-    Map: (_) => new Map.Map(withHelp_(_.command, helpDoc), _.map),
+    Map: (_) => new Map(withHelp_(_.command, helpDoc), _.map),
     // If the left and right already have a HelpDoc, it will be overwritten
     // by this function. Perhaps not the best idea...
-    OrElse: (_) =>
-      new OrElse.OrElse(withHelp_(_.left, helpDoc), withHelp_(_.right, helpDoc)),
-    Single: (_) => new Single.Single(_.name, helpDoc, _.options, _.args),
-    Subcommands: (_) =>
-      new Subcommands.Subcommands(withHelp_(_.parent, helpDoc), _.child)
+    OrElse: (_) => new OrElse(withHelp_(_.left, helpDoc), withHelp_(_.right, helpDoc)),
+    Single: (_) => new Single(_.name, helpDoc, _.options, _.args),
+    Subcommands: (_) => new Subcommands(withHelp_(_.parent, helpDoc), _.child)
   }) as Command<A>
 }
 
@@ -89,12 +92,9 @@ export function subcommands_<A, B>(
 ): Command<Tuple<[A, B]>> {
   return A.foldLeft_(
     subcommands,
-    () => new Subcommands.Subcommands(self, subcommand),
+    () => new Subcommands(self, subcommand),
     (head, tail) =>
-      new Subcommands.Subcommands(
-        self,
-        A.reduce_(tail, orElse_(subcommand, head), orElse_)
-      )
+      new Subcommands(self, A.reduce_(tail, orElse_(subcommand, head), orElse_))
   )
 }
 
@@ -122,7 +122,7 @@ export function instruction<A>(self: Command<A>): Instruction {
 }
 
 export function map_<A, B>(self: Command<A>, f: (a: A) => B): Command<B> {
-  return new Map.Map(self, f)
+  return new Map(self, f)
 }
 
 /**
@@ -133,7 +133,7 @@ export function map<A, B>(f: (a: A) => B) {
 }
 
 export function orElse_<A>(self: Command<A>, that: Command<A>): Command<A> {
-  return new OrElse.OrElse(self, that)
+  return new OrElse(self, that)
 }
 
 /**
@@ -176,8 +176,34 @@ export function helpDoc<A>(self: Command<A>): HelpDoc {
   return matchTag_(instruction(self), {
     Map: (_) => helpDoc(_.command),
     OrElse: (_) => Help.sequence_(helpDoc(_.left), helpDoc(_.right)),
-    Single: (_) => Single.helpDoc(_),
-    Subcommands: (_) => Subcommands.helpDoc_(_, helpDoc)
+    Single: (_) => {
+      const descriptionSection = Help.isEmpty(_.help)
+        ? Help.empty
+        : Help.sequence_(Help.h1("DESCRIPTION"), _.help)
+
+      const argsHelp = Arguments.helpDoc(_.args)
+      const argumentsSection = Help.isEmpty(argsHelp)
+        ? Help.empty
+        : Help.sequence_(Help.h1("ARGUMENTS"), argsHelp)
+
+      const optsHelp = Opts.helpDoc(_.options)
+      const optionsSection = Help.isEmpty(optsHelp)
+        ? Help.empty
+        : Help.sequence_(Help.h1("OPTIONS"), optsHelp)
+
+      return Help.blocks(
+        A.filter_(
+          [descriptionSection, argumentsSection, optionsSection],
+          not(Help.isEmpty)
+        )
+      )
+    },
+    Subcommands: (_) =>
+      Help.blocksT(
+        helpDoc(_.parent),
+        Help.h1("SUBCOMMANDS"),
+        subcommandsDescription_(_.child)
+      )
   })
 }
 
@@ -188,7 +214,12 @@ export function synopsis<A>(self: Command<A>): UsageSynopsis {
   return matchTag_(instruction(self), {
     Map: (_) => synopsis(_.command),
     OrElse: (_) => Synopsis.mixed,
-    Single: (_) => Single.synopsis(_),
+    Single: (_) =>
+      Synopsis.concatsT(
+        Synopsis.named(_.name, O.none),
+        Opts.synopsis(_.options),
+        Arguments.synopsis(_.args)
+      ),
     Subcommands: (_) => Synopsis.concat_(synopsis(_.parent), synopsis(_.child))
   })
 }
@@ -206,15 +237,63 @@ export function parse_<A>(
   config: CliConfig = Config.defaultConfig
 ): T.IO<ValidationError, CommandDirective<A>> {
   return matchTag_(instruction(self), {
-    Map: (_) => Map.parse_(_, args, parse_, config),
+    Map: (_) => pipe(parse_(_.command, args, config), T.map(Directive.map(_.map))),
     OrElse: (_) =>
       T.catchSome_(parse_(_.left, args, config), (err) =>
         Validation.isCommandMismatch(err)
           ? O.some(parse_(_.right, args, config))
           : O.none
       ),
-    Single: (_) => Single.parse_(_, args, config),
-    Subcommands: (_) => Subcommands.parse_(_, args, parse_, helpDoc)
+    Single: (_) =>
+      pipe(
+        parseBuiltInArgs(_, args, config),
+        T.orElse(() => userDefined_(_, args, config))
+      ),
+    Subcommands: (subcommand) =>
+      pipe(
+        parse_(subcommand.parent, args, config),
+        T.chain(
+          T.matchTag({
+            BuiltIn: (_) =>
+              _.option._tag === "ShowHelp"
+                ? pipe(
+                    parse_(subcommand.child, args.slice(1), config),
+                    T.orElse(() =>
+                      T.succeed(
+                        Directive.builtIn(BuiltIns.showHelp(helpDoc(subcommand)))
+                      )
+                    ),
+                    T.chain((help) =>
+                      help._tag === "BuiltIn" && help.option._tag === "ShowHelp"
+                        ? T.succeed(help.option.helpDoc)
+                        : T.fail(Validation.invalidArgument(Help.empty))
+                    ),
+                    T.map((help) => Directive.builtIn(BuiltIns.showHelp(help)))
+                  )
+                : T.succeed(Directive.builtIn(_.option)),
+            UserDefined: (_) =>
+              A.isNonEmpty(_.leftover)
+                ? T.map_(
+                    parse_(subcommand.child, _.leftover, config),
+                    Directive.map((b) => Tp.tuple(_.value, b))
+                  )
+                : T.succeed(Directive.builtIn(BuiltIns.showHelp(helpDoc(subcommand))))
+          })
+        ),
+        T.catchSome(() =>
+          A.isEmpty(args)
+            ? O.some(
+                T.succeed(
+                  Directive.builtIn(
+                    new BuiltIns.ShowHelp({
+                      helpDoc: helpDoc(subcommand)
+                    })
+                  )
+                )
+              )
+            : O.none
+        )
+      )
   })
 }
 
@@ -228,4 +307,163 @@ export function parse_<A>(
 export function parse(args: Array<string>, config: CliConfig = Config.defaultConfig) {
   return <A>(self: Command<A>): T.IO<ValidationError, CommandDirective<A>> =>
     parse_(self, args, config)
+}
+
+export function completions<OptionsType, ArgsType>(
+  self: Single<OptionsType, ArgsType>
+): () => Set<Array<string>> {
+  return () => {
+    throw new Error("Not implemented!")
+  }
+}
+
+export function builtInOptions<OptionsType, ArgsType>(
+  self: Single<OptionsType, ArgsType>
+): Options<Option<BuiltIns.BuiltInOption>> {
+  return BuiltIns.builtInOptionsFrom(helpDoc(self), completions(self))
+}
+
+export function builtIn_<OptionsType, ArgsType>(
+  self: Single<OptionsType, ArgsType>,
+  args: Array<string>,
+  config: CliConfig = Config.defaultConfig
+): T.IO<O.Option<HelpDoc>, CommandDirective<Tuple<[OptionsType, ArgsType]>>> {
+  return pipe(
+    Opts.validate_(builtInOptions(self), args, config),
+    T.bimap((e) => e.help, Tp.get(1)),
+    T.some,
+    T.map(Directive.builtIn)
+  )
+}
+
+/**
+ * @ets_data_first builtIn_
+ */
+export function builtIn(args: Array<string>, config: CliConfig = Config.defaultConfig) {
+  return <OptionsType, ArgsType>(
+    self: Single<OptionsType, ArgsType>
+  ): T.IO<O.Option<HelpDoc>, CommandDirective<Tuple<[OptionsType, ArgsType]>>> =>
+    builtIn_(self, args, config)
+}
+
+export function userDefined_<OptionsType, ArgsType>(
+  self: Single<OptionsType, ArgsType>,
+  args: Array<string>,
+  config: CliConfig = Config.defaultConfig
+): T.IO<ValidationError, CommandDirective<Tuple<[OptionsType, ArgsType]>>> {
+  return pipe(
+    A.foldLeft_<string, T.IO<ValidationError, Array<string>>>(
+      args,
+      () =>
+        T.fail(
+          Validation.commandMismatch(Help.p(`Missing command name: ${self.name}`))
+        ),
+      (head, tail) => {
+        if (
+          Config.normalizeCase_(config, head) ===
+          Config.normalizeCase_(config, self.name)
+        ) {
+          return T.succeed(tail)
+        } else {
+          return T.fail(
+            Validation.commandMismatch(Help.p(`Unexpected command name: ${head}`))
+          )
+        }
+      }
+    ),
+    T.chain((args2) =>
+      pipe(
+        Opts.validate_(self.options, uncluster(args2), config),
+        T.chain(({ tuple: [args1, opts1] }) =>
+          pipe(
+            Arguments.validate_(self.args, args1, config),
+            T.bimap(Validation.invalidArgument, ({ tuple: [args2, opts2] }) =>
+              Directive.userDefined(args2, Tp.tuple(opts1, opts2))
+            )
+          )
+        )
+      )
+    )
+  )
+}
+
+/**
+ * @ets_data_first userDefined_
+ */
+export function userDefined(
+  args: Array<string>,
+  config: CliConfig = Config.defaultConfig
+) {
+  return <OptionsType, ArgsType>(
+    self: Single<OptionsType, ArgsType>
+  ): T.IO<ValidationError, CommandDirective<Tuple<[OptionsType, ArgsType]>>> =>
+    userDefined_(self, args, config)
+}
+
+// -----------------------------------------------------------------------------
+// Utilities
+// -----------------------------------------------------------------------------
+
+const clusteredOptionRegex = /^-{1}([^-]{2,}|$)/
+
+function isClustered(arg: string): boolean {
+  return clusteredOptionRegex.test(arg.trim())
+}
+
+function uncluster(args: Array<string>): Array<string> {
+  return A.chain_(args, (arg) => {
+    return isClustered(arg)
+      ? A.map_(arg.substring(1).split(""), (c) => `-${c}`)
+      : A.single(arg)
+  })
+}
+
+function parseBuiltInArgs<OptionsType, ArgsType>(
+  self: Single<OptionsType, ArgsType>,
+  args: Array<string>,
+  config: CliConfig
+): T.IO<Option<HelpDoc>, CommandDirective<Tuple<[OptionsType, ArgsType]>>> {
+  const hasArg = pipe(
+    A.head(args),
+    O.map(
+      (_) =>
+        Config.normalizeCase_(config, _) === Config.normalizeCase_(config, self.name)
+    ),
+    O.getOrElse(() => false)
+  )
+  return hasArg ? builtIn_(self, args, config) : T.fail(O.none)
+}
+
+function getSubcommandsHelpDescription(helpDoc: HelpDoc): HelpDoc {
+  switch (helpDoc._tag) {
+    case "Header":
+      return helpDoc.value
+    case "Paragraph":
+      return helpDoc.value
+    default:
+      return Help.space
+  }
+}
+
+function subcommandsDescription_<A>(self: Command<A>): HelpDoc {
+  return matchTag_(
+    instruction(self),
+    {
+      Single: (_) =>
+        Help.p(
+          Help.spansT(
+            Help.text(_.name),
+            Help.text(" \t "),
+            getSubcommandsHelpDescription(_.help)
+          )
+        ),
+      Map: (_) => subcommandsDescription_(_.command),
+      OrElse: (_) =>
+        Help.enumeration([
+          subcommandsDescription_(_.left),
+          subcommandsDescription_(_.right)
+        ])
+    },
+    () => Help.empty
+  )
 }

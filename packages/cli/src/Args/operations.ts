@@ -295,9 +295,9 @@ export function validate_<A>(
     Both: (_) =>
       pipe(
         validate_(_.head, args, config),
-        T.chain(({ tuple: [, a] }) =>
+        T.chain(({ tuple: [args1, a] }) =>
           pipe(
-            validate_(_.tail, args, config),
+            validate_(_.tail, args1, config),
             T.map(({ tuple: [args2, b] }) => Tp.tuple(args2, Tp.tuple(a, b)))
           )
         )
