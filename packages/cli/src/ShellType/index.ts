@@ -1,6 +1,8 @@
 // ets_tracing: off
 
 import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
+import type { Show } from "@effect-ts/core/Show"
+import { makeShow } from "@effect-ts/core/Show"
 
 import type { Options } from "../Options"
 import * as Opts from "../Options"
@@ -36,3 +38,9 @@ export const option: Options<ShellType> = Opts.enumeration<ShellType>("shell-typ
   Tp.tuple("bash", bash),
   Tp.tuple("zsh", zShell)
 ])
+
+// -----------------------------------------------------------------------------
+// Instances
+// -----------------------------------------------------------------------------
+
+export const showShellType: Show<ShellType> = makeShow((x) => x._tag.toLowerCase())

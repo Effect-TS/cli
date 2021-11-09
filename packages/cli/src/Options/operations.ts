@@ -545,13 +545,13 @@ export function validate_<A>(
         (head, tail) => {
           if (supports(head, names, config)) {
             const PrimitiveInstruction = Primitive.instruction(_.primType)
-            if (PrimitiveInstruction._tag === "Bool")
+            if (PrimitiveInstruction._tag === "Bool") {
               return T.bimap_(
                 Primitive.validate_(_.primType, O.none, config),
                 (e) => Validation.invalidValue(Help.p(e)),
                 (a) => Tp.tuple(tail, a)
               )
-
+            }
             return T.bimap_(
               Primitive.validate_(_.primType, A.head(tail), config),
               (e) => Validation.invalidValue(Help.p(e)),

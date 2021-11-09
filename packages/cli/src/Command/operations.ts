@@ -320,7 +320,7 @@ export function completions<OptionsType, ArgsType>(
 export function builtInOptions<OptionsType, ArgsType>(
   self: Single<OptionsType, ArgsType>
 ): Options<Option<BuiltIns.BuiltInOption>> {
-  return BuiltIns.builtInOptionsFrom(helpDoc(self), completions(self))
+  return BuiltIns.withHelp(helpDoc(self))
 }
 
 export function builtIn_<OptionsType, ArgsType>(

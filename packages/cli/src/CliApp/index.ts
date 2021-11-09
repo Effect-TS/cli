@@ -4,12 +4,14 @@ import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
 import type { NonEmptyArray } from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
 import * as Set from "@effect-ts/core/Collections/Immutable/Set"
+import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
+import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import type { Effect } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
-import * as Equal from "@effect-ts/core/Equal"
 import { pipe } from "@effect-ts/core/Function"
 import * as IO from "@effect-ts/core/IO"
+import * as O from "@effect-ts/core/Option"
 import * as Ord from "@effect-ts/core/Ord"
 import { matchTag_ } from "@effect-ts/system/Utils"
 
@@ -18,6 +20,8 @@ import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
 import type { Command } from "../Command"
 import * as Cmd from "../Command"
+import * as Completion from "../Completion"
+import * as CompletionScript from "../CompletionScript"
 import * as FigletClient from "../figlet/client/FigletClient"
 import * as FontFileReader from "../figlet/client/FontFileReader"
 import * as OptionsBuilder from "../figlet/client/OptionsBuilder"
@@ -26,6 +30,7 @@ import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { HasConsole } from "../Internal/Console"
 import { Console, defaultConsole, putStrLn } from "../Internal/Console"
+import type { Integer } from "../Internal/NewType"
 import * as Synopsis from "../UsageSynopsis"
 
 // -----------------------------------------------------------------------------
@@ -123,11 +128,16 @@ export function executeBuiltIn_<A>(
   builtInOption: BuiltInOption
 ): Effect<HasConsole, NonEmptyArray<FigletException>, void> {
   return T.gen(function* (_) {
+    const names = Cmd.names(self.command)
+    const name = pipe(
+      names,
+      Set.toArray(Ord.string),
+      A.head,
+      O.getOrElse(() => self.name)
+    )
+
     switch (builtInOption._tag) {
       case "ShowHelp": {
-        const names = Cmd.names(self.command)
-        const name = names.size >= 1 ? Set.toArray_(names, Ord.string)[0] : self.name
-
         const fancyName = yield* _(
           pipe(
             OptionsBuilder.builder(),
@@ -161,17 +171,37 @@ export function executeBuiltIn_<A>(
 
         return yield* _(putStrLn(Help.render_(help, Help.plainMode(80))))
       }
+      case "ShowCompletionScript": {
+        const completionScript = CompletionScript.make(
+          builtInOption.pathToExecutable,
+          names.size > 0 ? names : Set.singleton(name),
+          builtInOption.shellType
+        )
+        return yield* _(putStrLn(completionScript))
+      }
       case "ShowCompletions": {
-        return yield* _(
-          putStrLn(
-            A.join_(
-              Set.toArray_(
-                Set.map_(Equal.string)(builtInOption.completions, A.join(" ")),
-                Ord.string
+        return pipe(
+          envs,
+          T.chain((env) => {
+            const compWords = pipe(
+              env,
+              A.filterMap(({ tuple: [key, word] }) =>
+                key.startsWith("COMP_WORD_")
+                  ? O.some(Tp.tuple(builtInOption.index, word))
+                  : O.none
               ),
-              "\n"
+              A.sort(
+                Ord.contramap_<number, Tuple<[Integer, string]>>(Ord.number, Tp.get(0))
+              ),
+              A.map(Tp.get(1))
             )
-          )
+            const completions = Completion.complete(
+              builtInOption.shellType,
+              compWords,
+              builtInOption.index
+            )
+            return pipe(completions, T.forEach(putStrLn))
+          })
         )
       }
     }
@@ -250,3 +280,12 @@ function prefixCommandNameRec<A>(command: Command<A>): IO.IO<Array<string>> {
 function prefixCommandName<A>(command: Command<A>): Array<string> {
   return IO.run(prefixCommandNameRec(command))
 }
+
+const envs: T.UIO<Array<Tuple<[string, string]>>> = T.orDie(
+  T.succeedWith(
+    () =>
+      Object.entries(process.env)
+        .filter(([, v]) => v != null)
+        .map(Tp.tuple) as any
+  )
+)
