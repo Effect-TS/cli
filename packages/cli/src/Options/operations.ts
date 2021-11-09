@@ -2,18 +2,21 @@
 
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
-import type * as PredefMap from "@effect-ts/core/Collections/Immutable/Map"
+import * as PredefMap from "@effect-ts/core/Collections/Immutable/Map"
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
-import type * as T from "@effect-ts/core/Effect"
+import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
+import * as T from "@effect-ts/core/Effect"
 import type { Either } from "@effect-ts/core/Either"
 import * as E from "@effect-ts/core/Either"
-import { identity } from "@effect-ts/core/Function"
+import * as Equal from "@effect-ts/core/Equal"
+import { identity, pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import type { Show } from "@effect-ts/core/Show"
 import { boolean as showBoolean } from "@effect-ts/core/Show"
 import { matchTag_ } from "@effect-ts/core/Utils"
 
+import * as AutoCorrect from "../AutoCorrect"
 import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
 import type { Exists } from "../Exists"
@@ -26,29 +29,30 @@ import * as Primitive from "../PrimType"
 import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
-import * as Both from "./_internal/Both"
-import * as Map from "./_internal/Map"
-import * as Mapping from "./_internal/Mapping"
-import * as None from "./_internal/None"
-import * as OrElse from "./_internal/OrElse"
-import * as Single from "./_internal/Single"
-import * as WithDefault from "./_internal/WithDefault"
+import * as Validation from "../Validation"
+import { Both } from "./_internal/Both"
+import { Map } from "./_internal/Map"
+import { Mapping } from "./_internal/Mapping"
+import { None } from "./_internal/None"
+import { OrElse } from "./_internal/OrElse"
+import { Single } from "./_internal/Single"
+import { WithDefault } from "./_internal/WithDefault"
 import type { Instruction, Options, SingleModifier } from "./definition"
 
 // -----------------------------------------------------------------------------
 // Constructors
 // -----------------------------------------------------------------------------
 
-export const none: Options<void> = new None.None()
+export const none: Options<void> = new None()
 
 function makeBoolean(name: string, ifPresent: boolean, negationNames: Array<string>) {
-  const option = new Single.Single(name, A.empty, new Primitive.Bool(O.some(ifPresent)))
+  const option = new Single(name, A.empty, new Primitive.Bool(O.some(ifPresent)))
 
   return A.foldLeft_(
     negationNames,
     () => withDefaultDescription_(option, !ifPresent, showBoolean, `${!ifPresent}`),
     (head, tail) => {
-      const negationOption = new Single.Single(
+      const negationOption = new Single(
         head,
         tail,
         new Primitive.Bool(O.some(!ifPresent))
@@ -94,14 +98,14 @@ export function enumeration<A>(
   name: string,
   cases: Array<Tuple<[string, A]>>
 ): Options<A> {
-  return new Single.Single(name, A.empty, new Primitive.Enumeration(cases))
+  return new Single(name, A.empty, new Primitive.Enumeration(cases))
 }
 
 /**
  * Creates a parameter which expects a path to a file.
  */
 export function file(name: string, exists: Exists = Exist.either): Options<string> {
-  return new Single.Single(name, A.empty, new Primitive.Path(PathType.file, exists))
+  return new Single(name, A.empty, new Primitive.Path(PathType.file, exists))
 }
 
 /**
@@ -111,49 +115,45 @@ export function directory(
   name: string,
   exists: Exists = Exist.either
 ): Options<string> {
-  return new Single.Single(
-    name,
-    A.empty,
-    new Primitive.Path(PathType.directory, exists)
-  )
+  return new Single(name, A.empty, new Primitive.Path(PathType.directory, exists))
 }
 
 /**
  * Creates a parameter expecting a text value.
  */
 export function text(name: string): Options<string> {
-  return new Single.Single(name, A.empty, new Primitive.Text())
+  return new Single(name, A.empty, new Primitive.Text())
 }
 
 /**
  * Creates a parameter expecting an float value.
  */
 export function float(name: string): Options<Float> {
-  return new Single.Single(name, A.empty, new Primitive.Float())
+  return new Single(name, A.empty, new Primitive.Float())
 }
 
 /**
  * Creates a parameter expecting an integer value.
  */
 export function integer(name: string): Options<Integer> {
-  return new Single.Single(name, A.empty, new Primitive.Integer())
+  return new Single(name, A.empty, new Primitive.Integer())
 }
 
 /**
  * Creates a parameter expecting a date value.
  */
 export function date(name: string): Options<Date> {
-  return new Single.Single(name, A.empty, new Primitive.Date())
+  return new Single(name, A.empty, new Primitive.Date())
 }
 
 export function mapping(name: string): Options<PredefMap.Map<string, string>> {
-  return mappingFromOption(new Single.Single(name, A.empty, new Primitive.Text()))
+  return mappingFromOption(new Single(name, A.empty, new Primitive.Text()))
 }
 
 export function mappingFromOption(
-  argumentOption: Single.Single<string>
+  argumentOption: Single<string>
 ): Options<PredefMap.Map<string, string>> {
-  return new Mapping.Mapping(argumentOption.name, argumentOption)
+  return new Mapping(argumentOption.name, argumentOption)
 }
 
 // -----------------------------------------------------------------------------
@@ -164,7 +164,7 @@ export function describe_<A>(self: Options<A>, description: string): Options<A> 
   return modifySingle_(
     self,
     (single) =>
-      new Single.Single(
+      new Single(
         single.name,
         single.aliases,
         single.primType,
@@ -185,7 +185,7 @@ export function withDefault_<A>(
   defaultValue: A,
   showDefaultValue: Show<A>
 ): Options<A> {
-  return new WithDefault.WithDefault(self, defaultValue, showDefaultValue, O.none)
+  return new WithDefault(self, defaultValue, showDefaultValue, O.none)
 }
 
 /**
@@ -202,12 +202,7 @@ export function withDefaultDescription_<A>(
   showDefaultValue: Show<A>,
   description: string
 ): Options<A> {
-  return new WithDefault.WithDefault(
-    self,
-    defaultValue,
-    showDefaultValue,
-    O.some(description)
-  )
+  return new WithDefault(self, defaultValue, showDefaultValue, O.some(description))
 }
 
 /**
@@ -265,7 +260,7 @@ export function alias_<A>(
   return modifySingle_(
     self,
     (single) =>
-      new Single.Single(
+      new Single(
         single.name,
         A.concatS_(A.cons_(names, name), single.aliases),
         single.primType,
@@ -294,7 +289,7 @@ export function instruction<A>(self: Options<A>): Instruction {
 }
 
 export function map_<A, B>(self: Options<A>, f: (a: A) => B): Options<B> {
-  return new Map.Map(self, (a) => E.right(f(a)))
+  return new Map(self, (a) => E.right(f(a)))
 }
 
 /**
@@ -308,7 +303,7 @@ export function mapOrFail_<A, B>(
   self: Options<A>,
   f: (a: A) => Either<ValidationError, B>
 ): Options<B> {
-  return new Map.Map(self, f)
+  return new Map(self, f)
 }
 
 /**
@@ -319,7 +314,7 @@ export function mapOrFail<A, B>(f: (a: A) => Either<ValidationError, B>) {
 }
 
 export function zip_<A, B>(self: Options<A>, that: Options<B>): Options<Tuple<[A, B]>> {
-  return new Both.Both(self, that)
+  return new Both(self, that)
 }
 
 /**
@@ -344,7 +339,7 @@ export function orElseEither_<A, B>(
   self: Options<A>,
   that: Options<B>
 ): Options<Either<A, B>> {
-  return new OrElse.OrElse(self, that)
+  return new OrElse(self, that)
 }
 
 /**
@@ -370,7 +365,7 @@ export function uid<A>(self: Options<A>): Option<string> {
       const uids = A.compact([uid(_.left), uid(_.right)])
       return uids.length === 0 ? O.none : O.some(uids.join(", "))
     },
-    Single: (_) => O.some(Single.fullName(_)),
+    Single: (_) => O.some(makeFullName(_.name)),
     WithDefault: (_) => uid(_.options)
   })
 }
@@ -385,8 +380,45 @@ export function helpDoc<A>(self: Options<A>): HelpDoc {
     Mapping: (_) => helpDoc(_.argumentOption),
     None: () => Help.empty,
     OrElse: (_) => Help.sequence_(helpDoc(_.left), helpDoc(_.right)),
-    Single: (_) => Single.helpDoc(_),
-    WithDefault: (_) => WithDefault.helpDoc_(_, helpDoc)
+    Single: (_) => {
+      const allNames = A.cons_(
+        A.map_(_.aliases, (alias) => `--${alias}`),
+        `--${_.name}`
+      )
+
+      const names = Help.spans(
+        A.mapWithIndex_(allNames, (index, span) =>
+          index !== allNames.length - 1
+            ? Help.concat_(Help.text(span), Help.text(", "))
+            : Help.text(span)
+        )
+      )
+
+      return Help.descriptionList(
+        A.single(
+          Tp.tuple(
+            names,
+            Help.sequence_(Help.p(Primitive.helpDoc(_.primType)), _.description)
+          )
+        )
+      )
+    },
+    WithDefault: (_) =>
+      Help.mapDescriptionList_(helpDoc(_.options), (definition) => {
+        const span = definition.get(0)
+        const block = definition.get(1)
+        return Tp.tuple(
+          span,
+          Help.sequence_(
+            block,
+            Help.p(
+              `This setting is optional. If unspecified, the default value of ` +
+                `this option is '${_.showDefaultValue.show(_.defaultValue)}'` +
+                `. ${O.getOrElse_(_.defaultDescription, () => "")}`
+            )
+          )
+        )
+      })
   })
 }
 
@@ -400,7 +432,7 @@ export function synopsis<A>(self: Options<A>): UsageSynopsis {
     Mapping: (_) => synopsis(_.argumentOption),
     None: () => Synopsis.none,
     OrElse: (_) => Synopsis.concat_(synopsis(_.left), synopsis(_.right)),
-    Single: (_) => Single.synopsis(_),
+    Single: (_) => Synopsis.named(makeFullName(_.name), Primitive.choices(_.primType)),
     WithDefault: (_) => synopsis(_.options)
   })
 }
@@ -418,13 +450,142 @@ export function validate_<A>(
   config: CliConfig = Config.defaultConfig
 ): T.IO<ValidationError, Tuple<[Array<string>, A]>> {
   return matchTag_(instruction(self), {
-    Both: (_) => Both.validate_(_, args, validate_, config),
-    Map: (_) => Map.validate_(_, args, validate_, config),
-    Mapping: (_) => Mapping.validate_(_, args, validate_, config),
-    None: () => None.validate(args),
-    OrElse: (_) => OrElse.validate_(_, args, validate_, uid, config),
-    Single: (_) => Single.validate_(_, args, validate_, config),
-    WithDefault: (_) => WithDefault.validate_(_, args, validate_, config)
+    Both: (_) =>
+      pipe(
+        validate_(_.head, args, config),
+        T.catchAll((err1) =>
+          pipe(
+            validate_(_.tail, args, config),
+            T.foldM(
+              (err2) =>
+                T.fail(Validation.missingValue(Help.sequence_(err1.help, err2.help))),
+              () => T.fail(err1)
+            )
+          )
+        ),
+        T.chain(({ tuple: [args1, a] }) =>
+          pipe(
+            validate_(_.tail, args1, config),
+            T.map(({ tuple: [args2, b] }) => Tp.tuple(args2, Tp.tuple(a, b)))
+          )
+        )
+      ),
+    Map: (_) =>
+      pipe(
+        validate_(_.value, args, config),
+        T.chain((result) =>
+          pipe(
+            _.map(result.get(1)),
+            E.fold(T.fail, (a) => T.succeed(Tp.tuple(result.get(0), a)))
+          )
+        )
+      ),
+    Mapping: (_) =>
+      pipe(
+        validate_(_.argumentOption, args, config),
+        T.map(({ tuple: [args, first] }) =>
+          processMappingArguments(_, args, first, config)
+        )
+      ),
+    None: () => T.succeed(Tp.tuple(args, undefined)),
+    OrElse: (_) =>
+      pipe(
+        validate_(_.left, args, config),
+        T.foldM(
+          (err1) =>
+            pipe(
+              validate_(_.right, args, config),
+              T.foldM(
+                (err2) => {
+                  if (err1._tag === "MissingValue" && err2._tag === "MissingValue") {
+                    return T.fail(
+                      Validation.missingValue(Help.sequence_(err1.help, err2.help))
+                    )
+                  } else {
+                    return T.fail(
+                      Validation.invalidValue(Help.sequence_(err1.help, err2.help))
+                    )
+                  }
+                },
+                (a) => T.succeed(Tp.tuple(a.get(0), E.right(a.get(1))))
+              )
+            ),
+          (result) =>
+            pipe(
+              validate_(_.right, result.get(0), config),
+              T.foldM(
+                () => T.succeed(Tp.tuple(result.get(0), E.left(result.get(1)))),
+                () =>
+                  T.fail(
+                    Validation.invalidValue(
+                      Help.p(
+                        Help.error(
+                          "Options collision detected. You can only specify " +
+                            `either '${O.getOrElse_(uid(_.left), () => "unknown")}' ` +
+                            `or '${O.getOrElse_(uid(_.right), () => "unknown")}'.`
+                        )
+                      )
+                    )
+                  )
+              )
+            )
+        )
+      ),
+    Single: (_) => {
+      const name = makeFullName(_.name)
+      const names = A.cons_(A.map_(_.aliases, makeFullName), name)
+      return A.foldLeft_(
+        args,
+        () =>
+          T.fail(
+            Validation.missingValue(
+              Help.p(Help.error(`Expected to find '${name}' option.`))
+            )
+          ),
+        (head, tail) => {
+          if (supports(head, names, config)) {
+            const PrimitiveInstruction = Primitive.instruction(_.primType)
+            if (PrimitiveInstruction._tag === "Bool")
+              return T.bimap_(
+                Primitive.validate_(_.primType, O.none, config),
+                (e) => Validation.invalidValue(Help.p(e)),
+                (a) => Tp.tuple(tail, a)
+              )
+
+            return T.bimap_(
+              Primitive.validate_(_.primType, A.head(tail), config),
+              (e) => Validation.invalidValue(Help.p(e)),
+              (a) => Tp.tuple(A.dropLeft_(tail, 1), a)
+            )
+          }
+          if (
+            _.name.length > config.autoCorrectLimit + 1 &&
+            AutoCorrect.levensteinDistance(head, name, config) <=
+              config.autoCorrectLimit
+          ) {
+            return T.fail(
+              Validation.missingValue(
+                Help.p(
+                  Help.error(
+                    `The flag '${head}' is not recognized. Did you mean '${name}'?`
+                  )
+                )
+              )
+            )
+          }
+          return pipe(validate_(_, tail, config), T.map(Tp.update(0, A.cons(head))))
+        }
+      )
+    },
+    WithDefault: (_) =>
+      pipe(
+        validate_(_.options, args, config),
+        T.catchSome((err) =>
+          Validation.isMissingValue(err)
+            ? O.some(T.succeed(Tp.tuple(args, _.defaultValue)))
+            : O.none
+        )
+      )
   })
 }
 
@@ -454,13 +615,21 @@ export function modifySingle_<A>(
   modifier: SingleModifier
 ): Options<A> {
   return matchTag_(instruction(self), {
-    Both: (_) => Both.modifySingle_(_, modifier, modifySingle_),
-    Map: (_) => Map.modifySingle_(_, modifier, modifySingle_),
-    Mapping: (_) => Mapping.modifySingle_(_, modifier),
+    Both: (_) =>
+      new Both(modifySingle_(_.head, modifier), modifySingle_(_.tail, modifier)),
+    Map: (_) => new Map(modifySingle_(_.value, modifier), _.map),
+    Mapping: (_) => new Mapping(_.argumentName, modifier(_.argumentOption)),
     None: identity,
-    OrElse: (_) => OrElse.modifySingle_(_, modifier, modifySingle_),
-    Single: (_) => Single.modifySingle_(_, modifier),
-    WithDefault: (_) => WithDefault.modifySingle_(_, modifier, modifySingle_)
+    OrElse: (_) =>
+      new OrElse(modifySingle_(_.left, modifier), modifySingle_(_.right, modifier)),
+    Single: modifier,
+    WithDefault: (_) =>
+      new WithDefault(
+        modifySingle_(_.options, modifier),
+        _.defaultValue,
+        _.showDefaultValue,
+        _.defaultDescription
+      )
   }) as Options<A>
 }
 
@@ -472,4 +641,57 @@ export function modifySingle_<A>(
  */
 export function modifySingle(modifier: SingleModifier) {
   return <A>(self: Options<A>): Options<A> => modifySingle_(self, modifier)
+}
+
+// -----------------------------------------------------------------------------
+// Utilities
+// -----------------------------------------------------------------------------
+
+function makeFullName(s: string): string {
+  return s.length === 1 ? `-${s}` : `--${s}`
+}
+
+const equalsIgnoreCase: Equal.Equal<string> = Equal.contramap((s: string) =>
+  s.toLowerCase()
+)(Equal.string)
+
+function supports(name: string, names: Array<string>, conf: CliConfig): boolean {
+  return conf.caseSensitive
+    ? A.elem_(Equal.string)(names, name)
+    : A.elem_(equalsIgnoreCase)(names, name)
+}
+
+function createMapEntry(args: string): Tuple<[string, string]> {
+  const arr = A.takeLeft_(args.split("="), 2)
+  return Tp.tuple(arr[0], arr[1])
+}
+
+function createMapEntries(args: Array<string>): Array<Tuple<[string, string]>> {
+  return pipe(
+    args,
+    A.filter((s) => !s.startsWith("-")),
+    A.map(createMapEntry)
+  )
+}
+
+function processMappingArguments(
+  self: Mapping,
+  args: Array<string>,
+  first: string,
+  config: CliConfig
+): Tuple<[Array<string>, PredefMap.Map<string, string>]> {
+  const names = pipe(
+    self.argumentOption.aliases,
+    A.map(makeFullName),
+    A.cons(makeFullName(self.argumentName))
+  )
+  return pipe(
+    args,
+    A.spanLeft((name) => !name.startsWith("-") || supports(name, names, config)),
+    ({ init, rest }) =>
+      Tp.tuple(
+        rest,
+        PredefMap.make(A.snoc_(createMapEntries(init), createMapEntry(first)))
+      )
+  )
 }
