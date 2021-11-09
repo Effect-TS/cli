@@ -1,20 +1,20 @@
 // ets_tracing: off
 
-import type * as T from "@effect-ts/core/Effect"
+import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
+import * as T from "@effect-ts/core/Effect"
+import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import { matchTag_ } from "@effect-ts/core/Utils"
 
 import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
+import type { Exists } from "../Exists"
 import type { HelpDoc } from "../Help"
-import * as Bool from "./_internal/Bool"
-import * as Date from "./_internal/Date"
-import * as Enumeration from "./_internal/Enumeration"
-import * as Float from "./_internal/Float"
-import * as Integer from "./_internal/Integer"
-import * as Path from "./_internal/Path"
-import * as Text from "./_internal/Text"
+import * as Help from "../Help"
+import * as NewType from "../Internal/NewType"
+import type { Path } from "./_internal/Path"
 import type { Instruction, PrimType } from "./definition"
 
 // -----------------------------------------------------------------------------
@@ -34,13 +34,18 @@ export function instruction<A>(self: PrimType<A>): Instruction {
  */
 export function typeName<A>(self: PrimType<A>): string {
   return matchTag_(instruction(self), {
-    Bool: () => Bool.typeName,
-    Date: () => Date.typeName,
-    Enumeration: (_) => Enumeration.typeName,
-    Float: () => Float.typeName,
-    Integer: () => Integer.typeName,
-    Path: (_) => Path.typeName(_),
-    Text: () => Text.typeName
+    Bool: () => "boolean",
+    Date: () => "date",
+    Enumeration: (_) => "choice",
+    Float: () => "float",
+    Integer: () => "integer",
+    Path: (_) =>
+      matchTag_(_.pathType, {
+        File: () => "file",
+        Directory: () => "directory",
+        Either: () => "path"
+      }),
+    Text: () => "text"
   })
 }
 
@@ -49,13 +54,36 @@ export function typeName<A>(self: PrimType<A>): string {
  */
 export function helpDoc<A>(self: PrimType<A>): HelpDoc {
   return matchTag_(instruction(self), {
-    Bool: () => Bool.helpDoc,
-    Date: () => Date.helpDoc,
-    Enumeration: (_) => Enumeration.helpDoc(_),
-    Float: () => Float.helpDoc,
-    Integer: () => Integer.helpDoc,
-    Path: (_) => Path.helpDoc(_),
-    Text: () => Text.helpDoc
+    Bool: () => Help.text("A true or false value."),
+    Date: () => Help.text("A valid string representation of a date."),
+    Enumeration: (_) =>
+      Help.text(
+        `One of the following cases: ${A.join_(A.map_(_.cases, Tp.get(0)), ", ")}`
+      ),
+    Float: () => Help.text("A floating point number."),
+    Integer: () => Help.text("An integer."),
+    Path: (_) =>
+      matchTag_(_.shouldExist, {
+        Yes: () =>
+          matchTag_(_.pathType, {
+            File: () => Help.text("An existing file."),
+            Directory: () => Help.text("An existing directory."),
+            Either: () => Help.text("An existing file or directory.")
+          }),
+        No: () =>
+          matchTag_(_.pathType, {
+            File: () => Help.text("A file that must not exist."),
+            Directory: () => Help.text("A directory that must not exist."),
+            Either: () => Help.text("A file or directory that must not exist.")
+          }),
+        Either: () =>
+          matchTag_(_.pathType, {
+            File: () => Help.text("A file."),
+            Directory: () => Help.text("A directory."),
+            Either: () => Help.text("A file or directory.")
+          })
+      }),
+    Text: () => Help.text("A user-defined piece of text.")
   })
 }
 
@@ -64,7 +92,9 @@ export function helpDoc<A>(self: PrimType<A>): HelpDoc {
  */
 export function choices<A>(self: PrimType<A>): Option<string> {
   const I = instruction(self)
-  return I._tag === "Enumeration" ? O.some(Enumeration.choices(I)) : O.none
+  return I._tag === "Enumeration"
+    ? O.some(A.join_(A.map_(I.cases, Tp.get(0)), " | "))
+    : O.none
 }
 
 /**
@@ -76,13 +106,72 @@ export function validate_<A>(
   config: CliConfig = Config.defaultConfig
 ): T.IO<string, A> {
   return matchTag_(instruction(self), {
-    Bool: (_) => Bool.validate_(_, value, config),
-    Date: () => Date.validate(value),
-    Enumeration: (_) => Enumeration.validate_(_, value),
-    Float: () => Float.validate(value),
-    Integer: () => Integer.validate(value),
-    Path: (_) => Path.validate_(_, value),
-    Text: () => Text.validate(value)
+    Bool: (_) =>
+      pipe(
+        O.map_(value, (text) => Config.normalizeCase_(config, text)),
+        O.fold(
+          () =>
+            T.orElseFail_(
+              T.fromOption(_.defaultValue),
+              `Missing default value for boolean parameter`
+            ),
+          (a) =>
+            ["true", "1", "y", "yes", "on"].indexOf(a) !== -1
+              ? T.succeed(true)
+              : ["false", "0", "n", "no", "off"].indexOf(a) !== -1
+              ? T.succeed(false)
+              : T.fail(`'${a}' was not recognized as a valid boolean`)
+        )
+      ),
+    Date: () =>
+      attemptParse(
+        value,
+        (u) => {
+          const ms = globalThis.Date.parse(u)
+          return Number.isNaN(ms)
+            ? T.fail("invalid date")
+            : T.succeed(new globalThis.Date(ms))
+        },
+        "date"
+      ),
+    Enumeration: (_) =>
+      pipe(
+        T.fromOption(value),
+        T.orElseFail("Enumeration options do not have a default value"),
+        T.chain((value) =>
+          pipe(
+            _.cases,
+            A.findFirstMap((c) => (c.get(0) === value ? O.some(c) : O.none)),
+            O.fold(
+              () =>
+                T.fail(
+                  "Expected one of the following cases: " +
+                    A.join_(A.map_(_.cases, Tp.get(0)), ", ")
+                ),
+              (c) => T.succeed(c.get(1))
+            )
+          )
+        )
+      ),
+    Float: () => attemptParse(value, NewType.parseFloat, "float"),
+    Integer: () => attemptParse(value, NewType.parseInteger, "integer"),
+    Path: (p) =>
+      T.gen(function* (_) {
+        const path = yield* _(
+          T.orElseFail_(
+            T.fromOption(value),
+            "Path options do not have a default value."
+          )
+        )
+        const exists = yield* _(p.fileSystem.exists(path))
+
+        yield* _(validatePathExistence(path, p.shouldExist, exists))
+
+        yield* _(T.when_(validatePathType(p, path), () => p.shouldExist._tag !== "No"))
+
+        return path
+      }),
+    Text: () => attemptParse(value, T.succeed, "text")
   }) as T.IO<string, A>
 }
 
@@ -96,4 +185,53 @@ export function validate(
   config: CliConfig = Config.defaultConfig
 ) {
   return <A>(self: PrimType<A>): T.IO<string, A> => validate_(self, value, config)
+}
+
+// -----------------------------------------------------------------------------
+// Utilities
+// -----------------------------------------------------------------------------
+
+function attemptParse<E, A>(
+  value: Option<string>,
+  parser: (value: string) => T.IO<E, A>,
+  typeName: string
+): T.IO<string, A> {
+  return T.chain_(
+    T.orElseFail_(
+      T.fromOption(value),
+      `${typeName} options do not have a default value`
+    ),
+    (value) => T.orElseFail_(parser(value), `'${value}' is not a ${typeName}`)
+  )
+}
+
+function validatePathExistence(
+  path: string,
+  expected: Exists,
+  actual: boolean
+): T.IO<string, void> {
+  return matchTag_(
+    expected,
+    {
+      No: () => (actual ? T.fail(`Path '${path}' must not exist.`) : T.unit),
+      Yes: () => (actual ? T.unit : T.fail(`Path '${path}' must exist.`))
+    },
+    () => T.succeed(path)
+  )
+}
+
+function validatePathType(self: Path, path: string): T.IO<string, void> {
+  return matchTag_(self.pathType, {
+    File: () =>
+      T.unlessM_(
+        T.fail(`Expected path '${path}' to be a regular file.`),
+        self.fileSystem.isRegularFile(path)
+      ),
+    Directory: () =>
+      T.unlessM_(
+        T.fail(`Expected path '${path}' to be a directory.`),
+        self.fileSystem.isDirectory(path)
+      ),
+    Either: () => T.unit
+  })
 }
