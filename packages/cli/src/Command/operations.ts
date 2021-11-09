@@ -26,6 +26,8 @@ import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { Options } from "../Options"
 import * as Opts from "../Options"
+import type { Reducable } from "../Reducable"
+import * as Reduce from "../Reducable"
 import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
@@ -48,13 +50,13 @@ import type { Command, Instruction } from "./definition"
  * @param args The command-line arguments that can be passed to the command.
  * @param helpDoc The description for the command.
  */
-export function command<OptionsType, ArgsType>(
+export function command<OptionsType = void, ArgsType = void>(
   name: string,
   options: Options<OptionsType> = Opts.none as Options<OptionsType>,
   args: Args<ArgsType> = Arguments.none as Args<ArgsType>,
   helpDoc: HelpDoc = Help.empty
-): Command<Tuple<[OptionsType, ArgsType]>> {
-  return new Single(name, helpDoc, options, args)
+): Command<Reducable<OptionsType, ArgsType>> {
+  return pipe(new Single(name, helpDoc, options, args), map(Reduce.fromTuple))
 }
 
 // -----------------------------------------------------------------------------
@@ -89,12 +91,15 @@ export function subcommands_<A, B>(
   self: Command<A>,
   subcommand: Command<B>,
   ...subcommands: Array<Command<B>>
-): Command<Tuple<[A, B]>> {
+): Command<Reducable<A, B>> {
   return A.foldLeft_(
     subcommands,
-    () => new Subcommands(self, subcommand),
+    () => pipe(new Subcommands(self, subcommand), map(Reduce.fromTuple)),
     (head, tail) =>
-      new Subcommands(self, A.reduce_(tail, orElse_(subcommand, head), orElse_))
+      pipe(
+        new Subcommands(self, A.reduce_(tail, orElse_(subcommand, head), orElse_)),
+        map(Reduce.fromTuple)
+      )
   )
 }
 
@@ -105,7 +110,7 @@ export function subcommands<B>(
   subcommand: Command<B>,
   ...subcommands: Array<Command<B>>
 ) {
-  return <A>(self: Command<A>): Command<Tuple<[A, B]>> =>
+  return <A>(self: Command<A>): Command<Reducable<A, B>> =>
     subcommands_(self, subcommand, ...subcommands)
 }
 
@@ -425,11 +430,10 @@ function parseBuiltInArgs<OptionsType, ArgsType>(
 ): T.IO<Option<HelpDoc>, CommandDirective<Tuple<[OptionsType, ArgsType]>>> {
   const hasArg = pipe(
     A.head(args),
-    O.map(
+    O.exists(
       (_) =>
         Config.normalizeCase_(config, _) === Config.normalizeCase_(config, self.name)
-    ),
-    O.getOrElse(() => false)
+    )
   )
   return hasArg ? builtIn_(self, args, config) : T.fail(O.none)
 }
