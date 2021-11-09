@@ -3,6 +3,28 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.2.0...@effect-ts/cli@0.3.0) (2021-11-09)
+
+
+### Bug Fixes
+
+* **examples:** fix the word count in the wc example ([aa2e315](https://github.com/Effect-TS/cli/commit/aa2e315ffcfcb8afe3d4af40931240ddd6aec55f))
+
+
+### Features
+
+* **cli:** add rough implementation to support display of help for subcommands ([6c9b757](https://github.com/Effect-TS/cli/commit/6c9b75782e9c34b1603742f1381b6cff7e7495b7))
+* **cli:** add support for boolean option grouping ([6a78219](https://github.com/Effect-TS/cli/commit/6a7821990b49296ad74481f33a2f231bebbe662a))
+* **cli:** add support for generating bash shell completions ([b77dc94](https://github.com/Effect-TS/cli/commit/b77dc94929ead617f2fa11667d3737d3dff5e613))
+* **cli:** add support for option mappings ([906a919](https://github.com/Effect-TS/cli/commit/906a91900e30e7eb033fbde988b88acad4321f55))
+* **cli:** flatten undefined values in commands and subcommands ([3d75d8a](https://github.com/Effect-TS/cli/commit/3d75d8a0a500e66f8623bf0acdcfedd7bf6a74ce))
+* **cli:** refactor the ValidationError model ([53f2d1d](https://github.com/Effect-TS/cli/commit/53f2d1d1c9bad6e08bf522abc8dd9ffba8dad182))
+* **cli:** remove need for explicitly specifying options and args for a command ([7b0168e](https://github.com/Effect-TS/cli/commit/7b0168ea35bced9f0c6cba2bc8f050a60a5f794d))
+
+
+
+
+
 # 0.2.0 (2021-10-08)
 
 
