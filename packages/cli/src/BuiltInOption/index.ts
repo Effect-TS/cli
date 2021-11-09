@@ -1,13 +1,13 @@
 // ets_tracing: off
 
 import { Tagged } from "@effect-ts/core/Case"
-import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
-import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
+import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
-import { makeShow } from "@effect-ts/core/Show"
+import * as Show from "@effect-ts/core/Show"
 
 import type { HelpDoc } from "../Help"
+import type { Integer } from "../Internal/NewType"
 import type { Options } from "../Options"
 import * as Opts from "../Options"
 import type { ShellType } from "../ShellType"
@@ -17,19 +17,27 @@ import * as Shell from "../ShellType"
 // Model
 // -----------------------------------------------------------------------------
 
-export type BuiltInOption = ShowHelp | ShowCompletions
+export type BuiltInOption = ShowHelp | ShowCompletionScript | ShowCompletions
 
 export class ShowHelp extends Tagged("ShowHelp")<{
   readonly helpDoc: HelpDoc
 }> {}
 
+export class ShowCompletionScript extends Tagged("ShowCompletionScript")<{
+  readonly pathToExecutable: string
+  readonly shellType: ShellType
+}> {}
+
 export class ShowCompletions extends Tagged("ShowCompletions")<{
-  readonly completions: Set<Array<string>>
+  readonly index: Integer
+  readonly shellType: ShellType
 }> {}
 
 export interface BuiltIn {
   readonly help: boolean
+  readonly shellCompletionScriptPath: Option<string>
   readonly shellCompletions: Option<ShellType>
+  readonly shellCompletionIndex: Option<Integer>
 }
 
 // -----------------------------------------------------------------------------
@@ -40,39 +48,63 @@ export function showHelp(helpDoc: HelpDoc): BuiltInOption {
   return new ShowHelp({ helpDoc })
 }
 
-export function showCompletions(completions: Set<Array<string>>): BuiltInOption {
-  return new ShowCompletions({ completions })
+export function showCompletionScript(
+  pathToExecutable: string,
+  shellType: ShellType
+): BuiltInOption {
+  return new ShowCompletionScript({ pathToExecutable, shellType })
 }
 
-export const helpOption: Options<boolean> = Opts.boolean("help")
+export function showCompletions(index: Integer, shellType: ShellType): BuiltInOption {
+  return new ShowCompletions({ index, shellType })
+}
 
-export const shellCompletionsOption: Options<Option<ShellType>> =
-  Opts.optionalDescription_(
+export const builtInOptions: Options<BuiltIn> = Opts.struct({
+  help: Opts.boolean("help"),
+  shellCompletionScriptPath: pipe(
+    Opts.file("shell-completion-script"),
+    Opts.optionalDescription(Show.string, "N/A")
+  ),
+  shellCompletions: pipe(
     Shell.option,
-    makeShow(() => "N/A"),
-    "N/A"
+    Opts.optionalDescription(Shell.showShellType, "N/A")
+  ),
+  shellCompletionIndex: pipe(
+    Opts.integer("shell-completion-index"),
+    Opts.optionalDescription<Integer>(Show.number, "N/A")
   )
+})
 
-export const builtInOptions: Options<BuiltIn> = Opts.map_(
-  Opts.zip_(helpOption, shellCompletionsOption),
-  ({ tuple: [help, shellCompletions] }) => ({ help, shellCompletions })
-)
-
-export function builtInOptionsFrom(
-  helpDoc: HelpDoc,
-  completions: (shellType: ShellType) => Set<Array<string>>
-): Options<Option<BuiltInOption>> {
-  return Opts.map_(builtInOptions, (builtIn) => {
-    if (builtIn.help) {
-      return O.some(new ShowHelp({ helpDoc }))
-    }
-    if (O.isSome(builtIn.shellCompletions)) {
-      return O.some(
-        new ShowCompletions({
-          completions: completions(builtIn.shellCompletions.value)
-        })
-      )
-    }
-    return O.none
-  })
+export function withHelp(helpDoc: HelpDoc): Options<Option<BuiltInOption>> {
+  return pipe(
+    builtInOptions,
+    Opts.map((builtIn) => {
+      if (builtIn.help) {
+        return O.some(showHelp(helpDoc))
+      }
+      if (
+        O.isSome(builtIn.shellCompletionScriptPath) &&
+        O.isSome(builtIn.shellCompletions)
+      ) {
+        return O.some(
+          showCompletionScript(
+            builtIn.shellCompletionScriptPath.value,
+            builtIn.shellCompletions.value
+          )
+        )
+      }
+      if (
+        O.isSome(builtIn.shellCompletionIndex) &&
+        O.isSome(builtIn.shellCompletions)
+      ) {
+        return O.some(
+          showCompletions(
+            builtIn.shellCompletionIndex.value,
+            builtIn.shellCompletions.value
+          )
+        )
+      }
+      return O.none
+    })
+  )
 }
