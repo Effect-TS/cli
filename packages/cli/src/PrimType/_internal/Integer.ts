@@ -1,13 +1,7 @@
 // ets_tracing: off
 
-import type * as T from "@effect-ts/core/Effect"
-import type { Option } from "@effect-ts/core/Option"
-
-import type { HelpDoc } from "../../Help"
-import * as Help from "../../Help"
-import * as NewType from "../../Internal/NewType"
+import type * as NewType from "../../Internal/NewType"
 import { Base } from "./Base"
-import { attemptParse } from "./utils"
 
 // -----------------------------------------------------------------------------
 // Model
@@ -18,24 +12,4 @@ import { attemptParse } from "./utils"
  */
 export class Integer extends Base<NewType.Integer> {
   readonly _tag = "Integer"
-}
-
-// -----------------------------------------------------------------------------
-// Type Name
-// -----------------------------------------------------------------------------
-
-export const typeName = "integer"
-
-// -----------------------------------------------------------------------------
-// HelpDoc
-// -----------------------------------------------------------------------------
-
-export const helpDoc: HelpDoc = Help.text("An integer.")
-
-// -----------------------------------------------------------------------------
-// Validation
-// -----------------------------------------------------------------------------
-
-export function validate(value: Option<string>): T.IO<string, NewType.Integer> {
-  return attemptParse(value, NewType.parseInteger, typeName)
 }

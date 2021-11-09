@@ -8,6 +8,7 @@ import * as NA from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
 import * as E from "@effect-ts/core/Either"
 import type { Equal } from "@effect-ts/core/Equal"
 import * as Eq from "@effect-ts/core/Equal"
+import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import * as String from "@effect-ts/core/String"
@@ -101,26 +102,30 @@ export function make(
   const endmarkV = validateEndmark(name, position, lines)
   const cleanLinesV = E.chain_(endmarkV, (endmark) => cleanLines(endmark, lines))
   const argHeightV = validateHeightArg(height)
-  const widthV = E.chain_(maxWidthV, (maxWidth) =>
-    E.chain_(cleanLinesV, (lines) => validateWidth(name, maxWidth, position, lines))
+  const widthV = pipe(
+    E.tuple(maxWidthV, cleanLinesV),
+    E.chain(([maxWidth, lines]) => validateWidth(name, maxWidth, position, lines))
   )
-  const heightV = E.chain_(argHeightV, (height) =>
-    E.chain_(cleanLinesV, (lines) => validateHeight(name, position, height, lines))
+  const heightV = pipe(
+    E.tuple(argHeightV, cleanLinesV),
+    E.chain(([height, lines]) => validateHeight(name, position, height, lines))
   )
 
-  return E.zipSecond_(
+  return pipe(
     heightV,
-    E.map_(
-      E.struct({
-        fontId: E.right(fontId),
-        name: nameV,
-        lines: cleanLinesV,
-        endmark: endmarkV,
-        width: widthV,
-        comment: E.right(comment),
-        position: E.right(position)
-      }),
-      (_) => new FigCharacter(_)
+    E.chain(() =>
+      pipe(
+        E.struct({
+          fontId: E.right(fontId),
+          name: nameV,
+          lines: cleanLinesV,
+          endmark: endmarkV,
+          width: widthV,
+          comment: E.right(comment),
+          position: E.right(position)
+        }),
+        E.map((_) => new FigCharacter(_))
+      )
     )
   )
 }
@@ -168,11 +173,9 @@ export function columns(self: FigCharacter): SubColumns {
  * Removes the endmarks from the lines of the character.
  */
 function cleanLines(endmark: string, lines: SubLines): FigletResult<SubLines> {
-  const find = new RegExp(
-    endmark.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "{1,2}$",
-    "g"
-  )
-  return E.right(SL.map_(lines, (_) => _.replace(find, "")))
+  const regex = endmark.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "{1,2}$"
+  const find = new RegExp(regex, "g")
+  return pipe(lines, SL.map(String.replace(find, "")), E.right)
 }
 
 /**
@@ -221,21 +224,23 @@ function validateEndmark(
   position: number,
   lines: SubLines
 ): FigletResult<string> {
-  const linesTerminations = A.map_(
-    A.chain_(C.toArray(lines.value), (_) =>
-      O.fold_(
-        A.head(O.getOrElse_(String.match_(_, /(.)\1?$/), () => A.emptyOf<string>())),
-        () => A.emptyOf<string>(),
-        A.single
+  const linesTerminations = pipe(
+    C.toArray(lines.value),
+    A.chain((line) =>
+      pipe(
+        String.match_(line, /(.)\1?$/),
+        O.getOrElse(() => A.emptyOf<string>()),
+        A.head,
+        O.fold(() => A.emptyOf<string>(), A.single)
       )
     ),
-    (_) => _.trim()
+    A.map(String.trim)
   )
 
   const extractedEndmarksV: FigletResult<Array<string>> = linesTerminations.every(
     (l) => l.length > 0 && l.length <= 2
   )
-    ? E.right(A.uniq(Eq.string)(A.chain_(linesTerminations, (_) => _.split(""))))
+    ? E.right(A.uniq(Eq.string)(A.chain_(linesTerminations, String.split(""))))
     : E.left(
         NA.single(
           new FigCharacterError({
@@ -300,28 +305,31 @@ function validateWidth(
     )
   }
 
-  return O.fold_(
-    O.filter_(A.head(allLinesWidth), (_) => allLinesWidth.length === 1),
-    () =>
-      E.left(
-        NA.single(
-          new FigCharacterError({
-            message:
-              `Lines for character "${name}" defined at line ${position + 1} ` +
-              `are of different width: ${SL.showSubLines.show(cleanLines)}`
-          })
-        )
-      ),
-    (width) =>
-      width <= maxLength
-        ? E.right(width)
-        : E.left(
-            NA.single(
-              new FigCharacterError({
-                message: `Maximum character width exceeded at line ${position + 1}`
-              })
-            )
+  return pipe(
+    A.head(allLinesWidth),
+    O.filter(() => allLinesWidth.length === 1),
+    O.fold(
+      () =>
+        E.left(
+          NA.single(
+            new FigCharacterError({
+              message:
+                `Lines for character "${name}" defined at line ${position + 1} ` +
+                `are of different width: ${SL.showSubLines.show(cleanLines)}`
+            })
           )
+        ),
+      (width) =>
+        width <= maxLength
+          ? E.right(width)
+          : E.left(
+              NA.single(
+                new FigCharacterError({
+                  message: `Maximum character width exceeded at line ${position + 1}`
+                })
+              )
+            )
+    )
   )
 }
 

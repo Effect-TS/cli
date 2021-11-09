@@ -8,8 +8,10 @@ import type { Effect } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as Equal from "@effect-ts/core/Equal"
+import { pipe } from "@effect-ts/core/Function"
 import * as IO from "@effect-ts/core/IO"
 import * as Ord from "@effect-ts/core/Ord"
+import { matchTag_ } from "@effect-ts/system/Utils"
 
 import type { BuiltInOption } from "../BuiltInOption"
 import type { CliConfig } from "../CliConfig"
@@ -124,22 +126,18 @@ export function executeBuiltIn_<A>(
     switch (builtInOption._tag) {
       case "ShowHelp": {
         const names = Cmd.names(self.command)
+        const name = names.size >= 1 ? Set.toArray_(names, Ord.string)[0] : self.name
 
         const fancyName = yield* _(
-          T.map_(
-            T.provideSomeLayer_(
-              OptionsBuilder.print(
-                OptionsBuilder.withInternalFont_(
-                  OptionsBuilder.text_(
-                    OptionsBuilder.builder(),
-                    names.size >= 1 ? Set.toArray_(names, Ord.string)[0] : self.name
-                  ),
-                  "slant"
-                )
-              ),
+          pipe(
+            OptionsBuilder.builder(),
+            OptionsBuilder.text(name),
+            OptionsBuilder.withInternalFont("slant"),
+            OptionsBuilder.print,
+            T.provideSomeLayer(
               FontFileReader.LiveFontFileReader[">>>"](FigletClient.LiveFigletClient)
             ),
-            (name) => Help.code(name)
+            T.map(Help.code)
           )
         )
 
@@ -195,34 +193,22 @@ export function run_<R, E, A>(
   args: Array<string>,
   execute: (a: A) => Effect<R & HasConsole, E, void>
 ): Effect<R, E | NonEmptyArray<FigletException>, void> {
-  return T.foldM_(
-    Cmd.parse_(
-      self.command,
-      A.concat_(prefixCommandName(self.command), args),
-      self.config
-    ),
-    (e) => T.provideLayer_(printDocs_(e.help), L.pure(Console)(self.console)),
-    (directive) => {
-      switch (directive._tag) {
-        case "BuiltIn":
-          return T.provideLayer_<
-            unknown,
-            never,
-            HasConsole,
-            E | NonEmptyArray<FigletException>,
-            void
-          >(executeBuiltIn_(self, directive.option), L.pure(Console)(self.console))
-        case "UserDefined":
-          return T.provideSomeLayer_<
-            R,
-            E | NonEmptyArray<FigletException>,
-            void,
-            unknown,
-            never,
-            HasConsole
-          >(execute(directive.value), L.pure(Console)(self.console))
-      }
-    }
+  const argsWithCmd = A.concat_(prefixCommandName(self.command), args)
+  return pipe(
+    Cmd.parse_(self.command, argsWithCmd, self.config),
+    T.foldM(
+      (e) => pipe(printDocs_(e.help), T.provideLayer(L.pure(Console)(self.console))),
+      (directive) =>
+        matchTag_(directive, {
+          BuiltIn: (_) =>
+            pipe(
+              executeBuiltIn_(self, _.option),
+              T.provideLayer(L.pure(Console)(self.console))
+            ),
+          UserDefined: (_) =>
+            pipe(execute(_.value), T.provideSomeLayer(L.pure(Console)(self.console)))
+        })
+    )
   )
 }
 
@@ -243,19 +229,14 @@ export function run<R, E, A>(
 
 function prefixCommandNameRec<A>(command: Command<A>): IO.IO<Array<string>> {
   return IO.gen(function* (_) {
-    if (command instanceof Cmd.Single) {
-      return A.single(command.name)
-    }
-    if (command instanceof Cmd.Map) {
-      return yield* _(prefixCommandNameRec(command.command))
-    }
-    if (command instanceof Cmd.OrElse) {
-      return A.empty
-    }
-    if (command instanceof Cmd.Subcommands) {
-      return yield* _(prefixCommandNameRec(command.parent))
-    }
-    throw new Error("bug, an invalid command was specified")
+    return yield* _(
+      matchTag_(Cmd.instruction(command), {
+        Map: (_) => prefixCommandNameRec(_.command),
+        OrElse: (_) => IO.succeed(A.empty),
+        Single: (_) => IO.succeed(A.single(_.name)),
+        Subcommands: (_) => prefixCommandNameRec(_.parent)
+      })
+    )
   })
 }
 

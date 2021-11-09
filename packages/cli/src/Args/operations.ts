@@ -4,10 +4,11 @@ import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
 import type { NonEmptyArray } from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
-import type * as T from "@effect-ts/core/Effect"
+import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
+import * as T from "@effect-ts/core/Effect"
 import { _A } from "@effect-ts/core/Effect"
 import * as E from "@effect-ts/core/Either"
-import { identity } from "@effect-ts/core/Function"
+import { identity, pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
 import { matchTag_ } from "@effect-ts/core/Utils"
 
@@ -16,25 +17,27 @@ import * as Config from "../CliConfig"
 import type { Exists } from "../Exists"
 import * as Exist from "../Exists"
 import type { HelpDoc } from "../Help"
+import * as Help from "../Help"
 import type { Float, Integer } from "../Internal/NewType"
 import * as PathType from "../PathType"
 import * as Primitive from "../PrimType"
 import type { UsageSynopsis } from "../UsageSynopsis"
-import * as Both from "./_internal/Both"
-import * as Map from "./_internal/Map"
-import * as None from "./_internal/None"
-import * as Single from "./_internal/Single"
-import * as Variadic from "./_internal/Variadic"
+import * as Synopsis from "../UsageSynopsis"
+import { Both } from "./_internal/Both"
+import { Map } from "./_internal/Map"
+import { None } from "./_internal/None"
+import { Single } from "./_internal/Single"
+import { Variadic } from "./_internal/Variadic"
 import type { Args, Instruction } from "./definition"
 
 // -----------------------------------------------------------------------------
 // Constructors
 // -----------------------------------------------------------------------------
 
-export const none: Args<void> = new None.None()
+export const none: Args<void> = new None()
 
 export function both_<A, B>(self: Args<A>, that: Args<B>): Args<Tuple<[A, B]>> {
-  return new Both.Both(self, that)
+  return new Both(self, that)
 }
 
 /**
@@ -48,13 +51,13 @@ export function both<B>(that: Args<B>) {
  * Creates a boolean argument with a custom argument name.
  */
 export function namedBool(name: string): Args<boolean> {
-  return new Single.Single(O.some(name), new Primitive.Bool(O.none))
+  return new Single(O.some(name), new Primitive.Bool(O.none))
 }
 
 /**
  * Creates a boolean argument with `"boolean"` as the argument name.
  */
-export const bool: Args<boolean> = new Single.Single(O.none, new Primitive.Bool(O.none))
+export const bool: Args<boolean> = new Single(O.none, new Primitive.Bool(O.none))
 
 /**
  * Creates an enumeration argument with a custom argument name.
@@ -64,10 +67,7 @@ export function namedEnumeration<A>(
   case0: Tuple<[string, A]>,
   ...cases: Array<Tuple<[string, A]>>
 ): Args<A> {
-  return new Single.Single(
-    O.some(name),
-    new Primitive.Enumeration(A.cons_(cases, case0))
-  )
+  return new Single(O.some(name), new Primitive.Enumeration(A.cons_(cases, case0)))
 }
 
 /**
@@ -77,21 +77,21 @@ export function enumeration<A>(
   case0: Tuple<[string, A]>,
   ...cases: Array<Tuple<[string, A]>>
 ): Args<A> {
-  return new Single.Single(O.none, new Primitive.Enumeration(A.cons_(cases, case0)))
+  return new Single(O.none, new Primitive.Enumeration(A.cons_(cases, case0)))
 }
 
 /**
  * Creates a file argument with a custom argument name.
  */
 export function namedFile(name: string, exists: Exists = Exist.either): Args<string> {
-  return new Single.Single(O.some(name), new Primitive.Path(PathType.file, exists))
+  return new Single(O.some(name), new Primitive.Path(PathType.file, exists))
 }
 
 /**
  * Creates a file argument with `"file"` as the argument name.
  */
 export function file(exists: Exists = Exist.either): Args<string> {
-  return new Single.Single(O.none, new Primitive.Path(PathType.file, exists))
+  return new Single(O.none, new Primitive.Path(PathType.file, exists))
 }
 
 /**
@@ -101,63 +101,63 @@ export function namedDirectory(
   name: string,
   exists: Exists = Exist.either
 ): Args<string> {
-  return new Single.Single(O.some(name), new Primitive.Path(PathType.directory, exists))
+  return new Single(O.some(name), new Primitive.Path(PathType.directory, exists))
 }
 
 /**
  * Creates a directory argument with `"directory"` as the argument name.
  */
 export function directory(exists: Exists = Exist.either): Args<string> {
-  return new Single.Single(O.none, new Primitive.Path(PathType.directory, exists))
+  return new Single(O.none, new Primitive.Path(PathType.directory, exists))
 }
 
 /**
  * Creates a text argument with a custom argument name.
  */
 export function namedText(name: string): Args<string> {
-  return new Single.Single(O.some(name), new Primitive.Text())
+  return new Single(O.some(name), new Primitive.Text())
 }
 
 /**
  * Creates a text argument with `"text"` as the argument name.
  */
-export const text: Args<string> = new Single.Single(O.none, new Primitive.Text())
+export const text: Args<string> = new Single(O.none, new Primitive.Text())
 
 /**
  * Creates a float argument with a custom argument name.
  */
 export function namedFloat(name: string): Args<Float> {
-  return new Single.Single(O.some(name), new Primitive.Float())
+  return new Single(O.some(name), new Primitive.Float())
 }
 
 /**
  * Creates a float argument with `"float"` as the argument name.
  */
-export const float: Args<Float> = new Single.Single(O.none, new Primitive.Float())
+export const float: Args<Float> = new Single(O.none, new Primitive.Float())
 
 /**
  * Creates an integer argument with a custom argument name.
  */
 export function namedInteger(name: string): Args<Integer> {
-  return new Single.Single(O.some(name), new Primitive.Integer())
+  return new Single(O.some(name), new Primitive.Integer())
 }
 
 /**
  * Creates an integer argument with `"integer"` as the argument name.
  */
-export const integer: Args<Integer> = new Single.Single(O.none, new Primitive.Integer())
+export const integer: Args<Integer> = new Single(O.none, new Primitive.Integer())
 
 /**
  * Creates a date argument with a custom argument name.
  */
 export function namedDate(name: string): Args<Date> {
-  return new Single.Single(O.some(name), new Primitive.Date())
+  return new Single(O.some(name), new Primitive.Date())
 }
 
 /**
  * Creates a date argument with `"date"` as the argument name.
  */
-export const date: Args<Date> = new Single.Single(O.none, new Primitive.Date())
+export const date: Args<Date> = new Single(O.none, new Primitive.Date())
 
 // -----------------------------------------------------------------------------
 // Operations
@@ -176,11 +176,11 @@ export function instruction<A>(self: Args<A>): Instruction {
  */
 export function minSize<A>(self: Args<A>): number {
   return matchTag_(instruction(self), {
-    Both: (_) => Both.minSize_(_, minSize),
-    Map: (_) => Map.minSize_(_, minSize),
-    None: () => None.minSize,
-    Single: () => Single.minSize,
-    Variadic: (_) => Variadic.minSize_(_, minSize)
+    Both: (_) => minSize(_.head) + minSize(_.tail),
+    Map: (_) => minSize(_.value),
+    None: () => 0,
+    Single: () => 1,
+    Variadic: (_) => O.getOrElse_(_.min, () => 0) * minSize(_.value)
   })
 }
 
@@ -189,11 +189,12 @@ export function minSize<A>(self: Args<A>): number {
  */
 export function maxSize<A>(self: Args<A>): number {
   return matchTag_(instruction(self), {
-    Both: (_) => Both.maxSize_(_, maxSize),
-    Map: (_) => Map.maxSize_(_, maxSize),
-    None: () => None.maxSize,
-    Single: () => Single.maxSize,
-    Variadic: (_) => Variadic.maxSize_(_, maxSize)
+    Both: (_) => maxSize(_.head) + maxSize(_.tail),
+    Map: (_) => maxSize(_.value),
+    None: () => 0,
+    Single: () => 1,
+    Variadic: (_) =>
+      O.getOrElse_(_.min, () => Number.MAX_SAFE_INTEGER / 2) * maxSize(_.value)
   })
 }
 
@@ -202,11 +203,46 @@ export function maxSize<A>(self: Args<A>): number {
  */
 export function helpDoc<A>(self: Args<A>): HelpDoc {
   return matchTag_(instruction(self), {
-    Both: (_) => Both.helpDoc_(_, helpDoc),
-    Map: (_) => Map.helpDoc_(_, helpDoc),
-    None: () => None.helpDoc,
-    Single: (_) => Single.helpDoc(_),
-    Variadic: (_) => Variadic.helpDoc_(_, helpDoc, minSize, maxSize)
+    Both: (_) => Help.concat_(helpDoc(_.head), helpDoc(_.tail)),
+    Map: (_) => helpDoc(_.value),
+    None: () => Help.empty,
+    Single: (_) =>
+      Help.descriptionList(
+        A.single(
+          Tp.tuple(
+            Help.text(_.name),
+            Help.orElse_(_.description, () => Help.p(Primitive.helpDoc(_.primType)))
+          )
+        )
+      ),
+    Variadic: (_) =>
+      Help.mapDescriptionList_(helpDoc(_.value), ({ tuple: [name, description] }) => {
+        const newName = Help.concat_(
+          name,
+          Help.text(
+            O.isSome(_.max)
+              ? ` ${minSize(_)} - ${maxSize(_)}`
+              : minSize(_) === 0
+              ? "..."
+              : ` ${minSize(_)}+`
+          )
+        )
+
+        const newDescription = Help.blocksT(
+          description,
+          Help.empty,
+          Help.p(
+            O.isSome(_.max)
+              ? `This argument must be repeated at least ${minSize(_)} ` +
+                  `times and may be repeated up to ${maxSize(_)} times.`
+              : minSize(_) === 0
+              ? `This argument may be repeated zero or more times.`
+              : `This argument must be repeated at least ${minSize(_)} times.`
+          )
+        )
+
+        return Tp.tuple(newName, newDescription)
+      })
   })
 }
 
@@ -215,32 +251,33 @@ export function helpDoc<A>(self: Args<A>): HelpDoc {
  */
 export function synopsis<A>(self: Args<A>): UsageSynopsis {
   return matchTag_(instruction(self), {
-    Both: (_) => Both.synopsis_(_, synopsis),
-    Map: (_) => Map.synopsis_(_, synopsis),
-    None: () => None.synopsis,
-    Single: (_) => Single.synopsis(_),
-    Variadic: (_) => Variadic.synopsis_(_, synopsis)
+    Both: (_) => Synopsis.concat_(synopsis(_.head), synopsis(_.tail)),
+    Map: (_) => synopsis(_.value),
+    None: () => Synopsis.none,
+    Single: (_) => Synopsis.named(_.name, Primitive.choices(_.primType)),
+    Variadic: (_) => Synopsis.repeated(synopsis(_.value))
   })
 }
 
-export function addDescription_<A>(self: Args<A>, text: string): Args<A> {
+export function addHelp_<A>(self: Args<A>, text: string): Args<A> {
   return matchTag_(instruction(self), {
-    Both: (_) => Both.addDescription_(_, text, addDescription(text)),
-    Map: (_) => Map.addDescription_(_, text, addDescription(text)),
+    Both: (_) => new Both(addHelp_(_.head, text), addHelp_(_.tail, text)),
+    Map: (_) => new Map(addHelp_(_.value, text), _.map),
     None: identity,
-    Single: (_) => Single.addDescription_(_, text),
-    Variadic: (_) => Variadic.addDescription_(_, text, addDescription(text))
+    Single: (_) =>
+      new Single(_.pseudoName, _.primType, Help.concat_(_.description, Help.p(text))),
+    Variadic: (_) => new Variadic(addHelp_(_.value, text), _.min, _.max)
   }) as Args<A>
 }
 
 /**
  * Adds an additional description block to the `HelpDoc` for an argument.
  *
- * @ets_data_first addDescription_
+ * @ets_data_first addHelp_
  * @param text The description to add.
  */
-export function addDescription(text: string) {
-  return <A>(self: Args<A>): Args<A> => addDescription_(self, text)
+export function addHelp(text: string) {
+  return <A>(self: Args<A>): Args<A> => addHelp_(self, text)
 }
 
 /**
@@ -255,16 +292,92 @@ export function validate_<A>(
   config: CliConfig = Config.defaultConfig
 ): T.IO<HelpDoc, Tuple<[Array<string>, A]>> {
   return matchTag_(instruction(self), {
-    Both: (_) => Both.validate_(_, args, config, validate_),
-    Map: (_) => Map.validate_(_, args, config, validate_),
-    None: () => None.validate(args),
-    Single: (_) => Single.validate_(_, args, config),
-    Variadic: (_) => Variadic.validate_(_, args, config, validate_)
+    Both: (_) =>
+      pipe(
+        validate_(_.head, args, config),
+        T.chain(({ tuple: [args1, a] }) =>
+          pipe(
+            validate_(_.tail, args1, config),
+            T.map(({ tuple: [args2, b] }) => Tp.tuple(args2, Tp.tuple(a, b)))
+          )
+        )
+      ),
+    Map: (_) =>
+      pipe(
+        validate_(_.value, args, config),
+        T.chain(({ tuple: [args, value] }) =>
+          pipe(
+            _.map(value),
+            E.fold(T.fail, (b) => T.succeed(Tp.tuple(args, b)))
+          )
+        )
+      ),
+    None: () => T.succeed(Tp.tuple(args, undefined)),
+    Single: (_) =>
+      A.foldLeft_(
+        args,
+        () => {
+          const pseudoName = _.pseudoName
+          const choices = Primitive.choices(_.primType)
+
+          if (O.isSome(pseudoName) && O.isSome(choices)) {
+            return T.fail(
+              Help.p(
+                `Missing argument <${pseudoName.value}> with values ${choices.value}`
+              )
+            )
+          }
+
+          if (O.isSome(pseudoName)) {
+            return T.fail(Help.p(`Missing argument <${pseudoName.value}>`))
+          }
+
+          if (O.isSome(choices)) {
+            const typeName = Primitive.typeName(_.primType)
+            return T.fail(
+              Help.p(`Missing argument ${typeName} with values ${choices.value}`)
+            )
+          }
+
+          const typeName = Primitive.typeName(_.primType)
+          return T.fail(Help.p(`Missing argument ${typeName}`))
+        },
+        (head, tail) =>
+          pipe(
+            Primitive.validate_(_.primType, O.some(head), config),
+            T.bimap(Help.p, (a) => Tp.tuple(tail, a))
+          )
+      ),
+    Variadic: (_) => {
+      const min = O.getOrElse_(_.min, () => 0)
+      const max = O.getOrElse_(_.max, () => Number.MAX_SAFE_INTEGER)
+      const value = _.value
+
+      function loop(
+        args: Array<string>,
+        acc: Array<A>
+      ): T.IO<HelpDoc, Tuple<[Array<string>, Array<A>]>> {
+        if (acc.length >= max) {
+          return T.succeed(Tp.tuple(args, acc))
+        } else {
+          return T.foldM_(
+            validate_(value, args, config),
+            (failure) =>
+              acc.length >= min && A.isEmpty(args)
+                ? T.succeed(Tp.tuple(args, acc))
+                : T.fail(failure),
+            ({ tuple: [args, a] }) => loop(args, A.cons_(acc, a))
+          )
+        }
+      }
+
+      return T.map_(loop(args, A.emptyOf<A>()), Tp.update(1, A.reverse))
+    }
   })
 }
 
 export function map_<A, B>(self: Args<A>, f: (a: A) => B): Args<B> {
-  return new Map.Map(self, (a) => E.right(f(a)))
+  return new Map(self, (a) => E.right(f(a)))
 }
 
 /**
@@ -279,7 +392,7 @@ export function map<A, B>(f: (a: A) => B) {
 // -----------------------------------------------------------------------------
 
 export function atLeast_<A>(self: Args<A>, min: number): Args<Array<A>> {
-  return new Variadic.Variadic(self, O.some(min), O.none)
+  return new Variadic(self, O.some(min), O.none)
 }
 
 /**
@@ -290,7 +403,7 @@ export function atLeast(min: number) {
 }
 
 export function atMost_<A>(self: Args<A>, max: number): Args<Array<A>> {
-  return new Variadic.Variadic(self, O.none, O.some(max))
+  return new Variadic(self, O.none, O.some(max))
 }
 
 /**
@@ -301,7 +414,7 @@ export function atMost(min: number) {
 }
 
 export function between_<A>(self: Args<A>, min: number, max: number): Args<Array<A>> {
-  return new Variadic.Variadic(self, O.some(min), O.some(max))
+  return new Variadic(self, O.some(min), O.some(max))
 }
 
 /**
@@ -312,11 +425,11 @@ export function between(min: number, max: number) {
 }
 
 export function repeat<A>(self: Args<A>): Args<Array<A>> {
-  return new Variadic.Variadic(self, O.none, O.none)
+  return new Variadic(self, O.none, O.none)
 }
 
 export function repeat1<A>(self: Args<A>): Args<NonEmptyArray<A>> {
-  return map_(new Variadic.Variadic(self, O.some(1), O.none), (as) => {
+  return map_(new Variadic(self, O.some(1), O.none), (as) => {
     if (A.isNonEmpty(as)) {
       return as
     }

@@ -3,7 +3,7 @@
 import { Case } from "@effect-ts/core/Case"
 import type { Chunk } from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
-import { constVoid } from "@effect-ts/core/Function"
+import { constVoid, pipe } from "@effect-ts/core/Function"
 import * as IO from "@effect-ts/core/IO"
 
 import type { RenderOptions } from "../../client/RenderOptions"
@@ -241,17 +241,19 @@ function mergeOverlappingSections(
   aSection: Columns,
   bSection: Columns
 ): MergeAction<Columns> {
-  return C.forEachF_(
+  return pipe(
     C.zip_(aSection, bSection),
-    MA.Applicative
-  )(({ tuple: [aActiveColumn, bActiveColumn] }) =>
-    MA.map_(
-      C.forEachF_(
-        C.zip_(C.from(aActiveColumn.split("")), C.from(bActiveColumn.split(""))),
-        MA.Applicative
-      )(({ tuple: [aChar, bChar] }) => mergeStrategy(options)(state)(aChar, bChar)),
-      C.join("")
-    )
+    C.forEachF(MA.Applicative)(({ tuple: [aActiveColumn, bActiveColumn] }) => {
+      const aColumnSplit = C.from(aActiveColumn.split(""))
+      const bColumnSplit = C.from(bActiveColumn.split(""))
+      return pipe(
+        C.zip_(aColumnSplit, bColumnSplit),
+        C.forEachF(MA.Applicative)(({ tuple: [aChar, bChar] }) =>
+          mergeStrategy(options)(state)(aChar, bChar)
+        ),
+        MA.map(C.join(""))
+      )
+    })
   )
 }
 
@@ -263,20 +265,18 @@ function mergeOnLeftBorder(
   state: MergeState,
   section: Columns
 ): MergeAction<void> {
-  return MA.map_(
-    C.forEachF_(
-      section,
-      MA.Applicative
-    )((_) =>
-      C.forEachF_(
-        C.from(_.split("")),
-        MA.Applicative
-      )((_) =>
-        _ === " "
-          ? mergeStrategy(options)(state)(options.font.header.hardblank, " ")
-          : new MA.Stop()
+  return pipe(
+    section,
+    C.forEachF(MA.Applicative)((col) =>
+      pipe(
+        C.from(col.split("")),
+        C.forEachF(MA.Applicative)((char) =>
+          char === " "
+            ? mergeStrategy(options)(state)(options.font.header.hardblank, " ")
+            : new MA.Stop()
+        )
       )
     ),
-    constVoid
+    MA.map(constVoid)
   )
 }

@@ -9,8 +9,9 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import * as S from "@effect-ts/core/Effect/Stream"
 import * as Sink from "@effect-ts/core/Effect/Stream/Sink"
 import * as Transducer from "@effect-ts/core/Effect/Stream/Transducer"
-import { identity } from "@effect-ts/core/Function"
+import { identity, pipe } from "@effect-ts/core/Function"
 import { tag } from "@effect-ts/core/Has"
+import * as String from "@effect-ts/core/String"
 import type { _A } from "@effect-ts/core/Utils"
 import type { Byte } from "@effect-ts/node/Byte"
 import * as NodeJSFileSystem from "fs"
@@ -52,7 +53,7 @@ export const makeFigletClient = T.gen(function* (_) {
     [FigletClientSymbol]: FigletClientSymbol,
     defaultFont: "standard",
     defaultMaxWidth: 80,
-    internalFonts: T.map_(
+    internalFonts: pipe(
       T.effectAsync<unknown, FigletException, Chunk<string>>((cb) => {
         NodeJSFileSystem.readdir(
           NodeJSPath.join(__dirname, "../..", "fonts"),
@@ -64,7 +65,7 @@ export const makeFigletClient = T.gen(function* (_) {
           }
         )
       }),
-      C.map((_) => _.replace(".flf", ""))
+      T.map(C.map(String.replace(".flf", "")))
     ),
     loadFont: (path) => read(path, createFigFont),
     loadFontInternal: (name) =>
@@ -94,8 +95,11 @@ function createFigFont(
   buffer: S.IO<FigletException, Byte>
 ): T.IO<NonEmptyArray<FigletException>, FigFont> {
   const transducer = Transducer.then(splitLines)(utf8Decode)
-  return T.chain_(
-    T.mapError_(S.run_(S.aggregate_(buffer, transducer), Sink.collectAll()), NA.single),
-    (lines) => T.fromEither(() => FF.fromFile(file, lines))
+  return pipe(
+    buffer,
+    S.aggregate(transducer),
+    S.run(Sink.collectAll()),
+    T.mapError(NA.single),
+    T.chain((lines) => T.fromEither(() => FF.fromFile(file, lines)))
   )
 }

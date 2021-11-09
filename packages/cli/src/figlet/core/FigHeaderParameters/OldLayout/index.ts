@@ -5,6 +5,7 @@ import type { Chunk } from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as E from "@effect-ts/core/Either"
 import type { Equal } from "@effect-ts/core/Equal"
+import { pipe } from "@effect-ts/core/Function"
 import { makeEqual } from "@effect-ts/system/Equal"
 
 import type { FigletResult } from "../../../error/FigletException"
@@ -100,12 +101,14 @@ export function fromValue(requestedSettings: number): FigletResult<Chunk<OldLayo
     return E.right(C.single(new HorizontalFitting()))
   }
 
-  const result = C.chain_(
-    C.filter_(values, (setting) => setting.value !== 0),
-    (setting) =>
+  const result = pipe(
+    values,
+    C.filter((setting) => setting.value !== 0),
+    C.chain((setting) =>
       (requestedSettings & setting.value) === setting.value
         ? C.single(setting)
         : C.empty<OldLayout>()
+    )
   )
 
   return E.right(result)

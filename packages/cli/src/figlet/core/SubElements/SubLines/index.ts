@@ -6,9 +6,11 @@ import type { Chunk } from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import type { Equal } from "@effect-ts/core/Equal"
 import * as Eq from "@effect-ts/core/Equal"
+import { pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
 import type { Show } from "@effect-ts/core/Show"
 import { makeShow } from "@effect-ts/core/Show"
+import * as String from "@effect-ts/core/String"
 import * as Structural from "@effect-ts/core/Structural"
 
 import { escapeRegExp, transpose } from "../_internal"
@@ -64,12 +66,12 @@ export function width(self: SubLines): number {
  */
 export function toSubcolumns(self: SubLines): SubColumns {
   return new SubColumns({
-    value: C.from(
-      C.from(
-        A.map_(transpose(A.map_(C.toArray(self.value), (_) => _.split(""))), (_) =>
-          _.join("")
-        )
-      )
+    value: pipe(
+      C.toArray(self.value),
+      A.map(String.split("")),
+      transpose,
+      A.map(A.join("")),
+      C.from
     )
   })
 }
@@ -117,10 +119,10 @@ export function foreach<U>(f: (s: string) => U) {
  * Replaces a string value looking inside each element of the `SubLines`.
  */
 export function replace_(self: SubLines, oldValue: string, newValue: string): SubLines {
-  return fromValue(
-    C.map_(self.value, (_) =>
-      _.replace(new RegExp(escapeRegExp(oldValue), "g"), newValue)
-    )
+  return pipe(
+    self.value,
+    C.map(String.replace(new RegExp(escapeRegExp(oldValue), "g"), newValue)),
+    fromValue
   )
 }
 
@@ -142,8 +144,9 @@ export const equalSubLines: Equal<SubLines> = Eq.makeEqual((x, y) =>
 )
 
 export const showSubLines: Show<SubLines> = makeShow((x) =>
-  C.join_(
-    C.map_(x.value, (_) => `|${_}|`),
-    "\n"
+  pipe(
+    x.value,
+    C.map((_) => `|${_}|`),
+    C.join("\n")
   )
 )

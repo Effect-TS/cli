@@ -3,6 +3,7 @@
 import { Case } from "@effect-ts/core/Case"
 import type { Chunk } from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
+import { pipe } from "@effect-ts/core/Function"
 import * as Identity from "@effect-ts/core/Identity"
 import * as Ord from "@effect-ts/core/Ord"
 import type { Show } from "@effect-ts/core/Show"
@@ -108,10 +109,10 @@ export function cleanColumns(self: Figure): Chunk<SubColumns> {
  */
 export function width(self: Figure): number {
   const f = Ord.max(Ord.number)
-  return C.reduce_(
-    C.chain_(lines(self), (_) => C.map_(_.value, (_) => _.length)),
-    0,
-    f
+  return pipe(
+    lines(self),
+    C.chain((line) => C.map_(line.value, (_) => _.length)),
+    C.reduce(0, f)
   )
 }
 
@@ -119,7 +120,10 @@ export function width(self: Figure): number {
  * Print the figure to a string.
  */
 export function print(self: Figure): string {
-  return C.foldMap_(cleanLines(self), Identity.string, (_) => C.join_(_.value, "\n"))
+  return pipe(
+    cleanLines(self),
+    C.foldMap(Identity.string)((_) => C.join_(_.value, "\n"))
+  )
 }
 
 // -----------------------------------------------------------------------------
@@ -127,8 +131,9 @@ export function print(self: Figure): string {
 // -----------------------------------------------------------------------------
 
 export const showFigure: Show<Figure> = makeShow((self) => {
-  return C.join_(
-    C.map_(cleanLines(self), (_) => C.join_(_.value, "\n")),
-    "\n"
+  return pipe(
+    cleanLines(self),
+    C.map((_) => C.join_(_.value, "\n")),
+    C.join("\n")
   )
 })

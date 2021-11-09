@@ -2,6 +2,7 @@
 
 import type { Chunk } from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
+import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 
@@ -98,14 +99,16 @@ function controlledHorizontalSmushingStrategy(
     if (b === " ") return new MergeAction.Continue({ value: a })
     if (a === " ") return new MergeAction.Continue({ value: b })
     if (skipSmushing(state)) return new MergeAction.Stop()
-    return O.fold_(
-      C.head(
-        C.compact(
-          C.map_(C.map_(rules, ruleToSmushingStrategy(hardblank)), (f) => f(a, b))
-        )
-      ),
-      () => new MergeAction.Stop(),
-      (value) => new MergeAction.CurrentLast({ value })
+    return pipe(
+      rules,
+      C.map(ruleToSmushingStrategy(hardblank)),
+      C.map((f) => f(a, b)),
+      C.compact,
+      C.head,
+      O.fold(
+        () => new MergeAction.Stop(),
+        (value) => new MergeAction.CurrentLast({ value })
+      )
     )
   }
 }
