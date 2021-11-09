@@ -6,6 +6,7 @@ import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as E from "@effect-ts/core/Either"
 import type { Equal } from "@effect-ts/core/Equal"
 import * as Eq from "@effect-ts/core/Equal"
+import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import * as Structural from "@effect-ts/core/Structural"
@@ -123,12 +124,12 @@ export function fromLine(line: string): FigletResult<FigHeader> {
     ])
   }
 
-  const [signatureText, hardblankText] = C.splitAt_(
+  const [signatureText, hardblankText] = pipe(
     C.from(C.unsafeGet_(splitLine, SIGNATURE_INDEX).split("")),
-    5
+    C.splitAt(5)
   )
 
-  return E.map_(
+  return pipe(
     E.struct({
       signature: validateSignature(C.join_(signatureText, "")),
       hardblank: validateHardblank(C.join_(hardblankText, "")),
@@ -141,7 +142,7 @@ export function fromLine(line: string): FigletResult<FigHeader> {
       fullLayout: validateFullLayout(C.get_(splitLine, FULLLAYOUT_INDEX)),
       codeTagCount: validateCodetagCount(C.get_(splitLine, CODETAGCOUNT_INDEX))
     }),
-    (_) => new FigHeader(_)
+    E.map((_) => new FigHeader(_))
   )
 }
 

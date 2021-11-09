@@ -9,6 +9,7 @@ import * as NA from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
 import * as Set from "@effect-ts/core/Collections/Immutable/Set"
 import * as E from "@effect-ts/core/Either"
 import * as Equal from "@effect-ts/core/Equal"
+import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import * as Ord from "@effect-ts/core/Ord"
@@ -126,46 +127,43 @@ export function buildFont(fontState: FontBuilderState): FigletResult<FigFont> {
   const fileV = E.right(fontState.file)
   const hashV = E.right(fontState.hash)
   const commentV = E.right(C.join_(fontState.commentLines, "\n"))
-  const settingsV = E.map_(
+  const settingsV = pipe(
     E.struct({
       hLayout: HorizontalLayout.fromHeader(header),
       vLayout: VerticalLayout.fromHeader(header),
       printDirection: PrintDirection.fromHeader(header)
     }),
-    (_) => new FigFontSettings(_)
+    E.map((_) => new FigFontSettings(_))
   )
-  const charsV = E.map_(
-    E.chain_(
-      E.chain_(
-        C.forEachF(FigletExceptionApplicative)((charState: CharBuilderState) =>
-          buildChar(fontState, charState)
-        )(fontState.loadedChars),
-        validateRequiredCharacters
-      ),
-      (chars) => {
-        const loadedTaggedCount = C.size(chars) - C.size(requiredCharacters)
-        const codetagCount = O.getOrElse_(header.codeTagCount, () => loadedTaggedCount)
-
-        if (loadedTaggedCount === codetagCount) {
-          return E.right(chars)
-        }
-
-        return E.left(
-          NA.single(
-            new FigFontError({
-              message:
-                `The number of loaded tagged fonts (${loadedTaggedCount}) ` +
-                `does not correspond with the value indicated in the header ` +
-                `(${codetagCount})`
-            })
-          )
-        )
-      }
+  const charsV = pipe(
+    fontState.loadedChars,
+    C.forEachF(FigletExceptionApplicative)((charState) =>
+      buildChar(fontState, charState)
     ),
-    (chars) => Map.make(C.map_(chars, (char) => [char.name, char]))
+    E.chain(validateRequiredCharacters),
+    E.chain((chars) => {
+      const loadedTaggedCount = C.size(chars) - C.size(requiredCharacters)
+      const codetagCount = O.getOrElse_(header.codeTagCount, () => loadedTaggedCount)
+
+      if (loadedTaggedCount === codetagCount) {
+        return E.right(chars)
+      }
+
+      return E.left(
+        NA.single(
+          new FigFontError({
+            message:
+              `The number of loaded tagged fonts (${loadedTaggedCount}) ` +
+              `does not correspond with the value indicated in the header ` +
+              `(${codetagCount})`
+          })
+        )
+      )
+    }),
+    E.map((chars) => Map.make(C.map_(chars, (char) => [char.name, char])))
   )
 
-  return E.map_(
+  return pipe(
     E.struct({
       id: hashV,
       name: nameV,
@@ -175,7 +173,7 @@ export function buildFont(fontState: FontBuilderState): FigletResult<FigFont> {
       settings: settingsV,
       characters: charsV
     }),
-    (_) => new FigFont(_)
+    E.map((_) => new FigFont(_))
   )
 }
 
@@ -346,14 +344,14 @@ function buildTaggedCharacter(
   const commentV = parseTagComment(C.head(state.loadedCharLines))
   const loadedCharLines = C.append_(C.drop_(state.loadedCharLines, 1), line)
 
-  return E.map_(
+  return pipe(
     E.struct({
       name: nameV,
       lines: E.right(loadedCharLines),
       comment: commentV,
       position: E.right(tagLineIndex)
     }),
-    (_) => {
+    E.map((_) => {
       const charBuilder = new CharBuilderState(_)
 
       return state.copy({
@@ -362,7 +360,7 @@ function buildTaggedCharacter(
         loadedNames: Set.insert_(Equal.string)(state.loadedNames, charBuilder.name),
         loadedChars: C.append_(state.loadedChars, charBuilder)
       })
-    }
+    })
   )
 }
 
@@ -383,8 +381,9 @@ function parseTagName(
 
   const splitFontTag = C.from(tagLine.value.replace(/\s+/, "###").split("###"))
 
-  return E.chain_(
-    E.fromOption_(C.get_(splitFontTag, 0), () =>
+  return pipe(
+    C.get_(splitFontTag, 0),
+    E.fromOption(() =>
       NA.single(
         new FigCharacterError({
           message:
@@ -393,7 +392,7 @@ function parseTagName(
         })
       )
     ),
-    (code) => parseCharCode(tagLineIndex, code)
+    E.chain((code) => parseCharCode(tagLineIndex, code))
   )
 }
 
@@ -411,7 +410,12 @@ function parseTagComment(tagLine: Option<string>): FigletResult<Option<string>> 
 
   const splitFontTag = C.from(tagLine.value.replace(/\s+/, "###").split("###"))
 
-  return E.map_(E.right(O.getOrElse_(C.get_(splitFontTag, 1), () => "")), O.some)
+  return pipe(
+    C.get_(splitFontTag, 1),
+    O.getOrElse(() => ""),
+    E.right,
+    E.map(O.some)
+  )
 }
 
 /**

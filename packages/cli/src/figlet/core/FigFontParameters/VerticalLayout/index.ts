@@ -7,6 +7,7 @@ import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as E from "@effect-ts/core/Either"
 import type { Equal } from "@effect-ts/core/Equal"
 import * as Eq from "@effect-ts/core/Equal"
+import { pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
 import * as Structural from "@effect-ts/core/Structural"
 
@@ -48,8 +49,9 @@ export class ControlledSmushing extends Tagged("ControlledSmushing")<{
  * a list of `FigletException`s that occurred during parsing.
  */
 export function fromHeader(header: FigHeader): FigletResult<VerticalLayout> {
-  return O.getOrElse_(
-    O.map_(header.fullLayout, (settings) => {
+  return pipe(
+    header.fullLayout,
+    O.map((settings) => {
       if (
         !hasLayout(settings, new FullLayout.VerticalFitting()) &&
         !hasLayout(settings, new FullLayout.VerticalSmushing())
@@ -81,7 +83,7 @@ export function fromHeader(header: FigHeader): FigletResult<VerticalLayout> {
 
       return E.right(new UniversalSmushing())
     }),
-    () => E.right(new FullHeight())
+    O.getOrElse(() => E.right(new FullHeight()))
   )
 }
 

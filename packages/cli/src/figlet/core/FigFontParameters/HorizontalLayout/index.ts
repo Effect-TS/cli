@@ -7,6 +7,7 @@ import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as E from "@effect-ts/core/Either"
 import type { Equal } from "@effect-ts/core/Equal"
 import * as Eq from "@effect-ts/core/Equal"
+import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import * as Structural from "@effect-ts/core/Structural"
@@ -53,10 +54,11 @@ export class ControlledSmushing extends Tagged("ControlledSmushing")<{
  * `FigletException`s accumulated during parsing.
  */
 export function fromHeader(header: FigHeader): FigletResult<HorizontalLayout> {
-  return E.map_(
+  return pipe(
     E.tuple(fromOldLayout(header), fromFullLayout(header)),
-    ([oldHorizontal, fullHorizontal]) =>
+    E.map(([oldHorizontal, fullHorizontal]) =>
       O.getOrElse_(fullHorizontal, () => oldHorizontal)
+    )
   )
 }
 
@@ -71,40 +73,42 @@ export function fromHeader(header: FigHeader): FigletResult<HorizontalLayout> {
 export function fromFullLayout(
   header: FigHeader
 ): FigletResult<Option<HorizontalLayout>> {
-  return O.fold_(
+  return pipe(
     header.fullLayout,
-    () => E.right(O.emptyOf<HorizontalLayout>()),
-    (settings) => {
-      if (
-        !hasFullLayout(settings, new FullLayout.HorizontalFitting()) &&
-        !hasFullLayout(settings, new FullLayout.HorizontalSmushing())
-      ) {
-        return E.right(O.some(new FullWidth()))
-      }
+    O.fold(
+      () => E.right(O.emptyOf<HorizontalLayout>()),
+      (settings) => {
+        if (
+          !hasFullLayout(settings, new FullLayout.HorizontalFitting()) &&
+          !hasFullLayout(settings, new FullLayout.HorizontalSmushing())
+        ) {
+          return E.right(O.some(new FullWidth()))
+        }
 
-      if (
-        hasFullLayout(settings, new FullLayout.HorizontalFitting()) &&
-        !hasFullLayout(settings, new FullLayout.HorizontalSmushing())
-      ) {
-        return E.right(O.some(new HorizontalFitting()))
-      }
+        if (
+          hasFullLayout(settings, new FullLayout.HorizontalFitting()) &&
+          !hasFullLayout(settings, new FullLayout.HorizontalSmushing())
+        ) {
+          return E.right(O.some(new HorizontalFitting()))
+        }
 
-      const selectedSmushingRules = A.intersection_(FullLayout.equalFullLayout)(
-        C.toArray(settings),
-        C.toArray(FullLayout.horizontalSmushingRules)
-      )
-
-      if (
-        hasFullLayout(settings, new FullLayout.HorizontalSmushing()) &&
-        !A.isEmpty(selectedSmushingRules)
-      ) {
-        return E.map_(HSR.fromFullLayout(header), (rules) =>
-          O.some(new ControlledSmushing({ rules }))
+        const selectedSmushingRules = A.intersection_(FullLayout.equalFullLayout)(
+          C.toArray(settings),
+          C.toArray(FullLayout.horizontalSmushingRules)
         )
-      }
 
-      return E.right(O.some(new UniversalSmushing()))
-    }
+        if (
+          hasFullLayout(settings, new FullLayout.HorizontalSmushing()) &&
+          !A.isEmpty(selectedSmushingRules)
+        ) {
+          return E.map_(HSR.fromFullLayout(header), (rules) =>
+            O.some(new ControlledSmushing({ rules }))
+          )
+        }
+
+        return E.right(O.some(new UniversalSmushing()))
+      }
+    )
   )
 }
 

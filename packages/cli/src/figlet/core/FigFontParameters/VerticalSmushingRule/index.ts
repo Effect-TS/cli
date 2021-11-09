@@ -5,6 +5,7 @@ import * as A from "@effect-ts/core/Collections/Immutable/Array"
 import type { Chunk } from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as E from "@effect-ts/core/Either"
+import { pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
 import { matchTag } from "@effect-ts/core/Utils"
 
@@ -104,29 +105,30 @@ export class VerticalLineSupersmushing extends Tagged(
 export function fromHeader(
   header: FigHeader
 ): FigletResult<Chunk<VerticalSmushingRule>> {
-  return E.right(
-    O.getOrElse_(
-      O.map_(header.fullLayout, (settings) =>
-        C.from(
-          A.filterMap_(
-            A.intersection_(FullLayout.equalFullLayout)(
-              C.toArray(settings),
-              C.toArray(FullLayout.verticalSmushingRules)
-            ),
-            matchTag(
-              {
-                EqualCharacterVerticalSmushing: () => O.some(new EqualCharacter()),
-                UnderscoreVerticalSmushing: () => O.some(new Underscore()),
-                HierarchyVerticalSmushing: () => O.some(new Hierarchy()),
-                HorizontalLineVerticalSmushing: () => O.some(new HorizontalLine()),
-                VerticalLineSupersmushing: () => O.some(new VerticalLineSupersmushing())
-              },
-              () => O.emptyOf<VerticalSmushingRule>()
-            )
+  return pipe(
+    header.fullLayout,
+    O.map((settings) =>
+      pipe(
+        A.intersection_(FullLayout.equalFullLayout)(
+          C.toArray(settings),
+          C.toArray(FullLayout.verticalSmushingRules)
+        ),
+        A.filterMap(
+          matchTag(
+            {
+              EqualCharacterVerticalSmushing: () => O.some(new EqualCharacter()),
+              UnderscoreVerticalSmushing: () => O.some(new Underscore()),
+              HierarchyVerticalSmushing: () => O.some(new Hierarchy()),
+              HorizontalLineVerticalSmushing: () => O.some(new HorizontalLine()),
+              VerticalLineSupersmushing: () => O.some(new VerticalLineSupersmushing())
+            },
+            () => O.emptyOf<VerticalSmushingRule>()
           )
-        )
-      ),
-      () => C.empty<VerticalSmushingRule>()
-    )
+        ),
+        C.from
+      )
+    ),
+    O.getOrElse(() => C.empty<VerticalSmushingRule>()),
+    E.right
   )
 }

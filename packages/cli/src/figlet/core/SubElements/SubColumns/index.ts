@@ -6,9 +6,11 @@ import type { Chunk } from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import type { Equal } from "@effect-ts/core/Equal"
 import * as Eq from "@effect-ts/core/Equal"
+import { pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
 import type { Show } from "@effect-ts/core/Show"
 import { makeShow } from "@effect-ts/core/Show"
+import * as String from "@effect-ts/core/String"
 import * as Structural from "@effect-ts/core/Structural"
 
 import { escapeRegExp, transpose } from "../_internal"
@@ -55,10 +57,12 @@ export function height(self: SubColumns): number {
 
 export function toSubLines(self: SubColumns): SubLines {
   return new SubLines({
-    value: C.from(
-      A.map_(transpose(A.map_(C.toArray(self.value), (_) => _.split(""))), (_) =>
-        _.join("")
-      )
+    value: pipe(
+      C.toArray(self.value),
+      A.map(String.split("")),
+      transpose,
+      A.map(A.join("")),
+      C.from
     )
   })
 }
@@ -110,10 +114,10 @@ export function replace_(
   oldValue: string,
   newValue: string
 ): SubColumns {
-  return fromValue(
-    C.map_(self.value, (_) =>
-      _.replace(new RegExp(escapeRegExp(oldValue), "g"), newValue)
-    )
+  return pipe(
+    self.value,
+    C.map(String.replace(new RegExp(escapeRegExp(oldValue), "g"), newValue)),
+    fromValue
   )
 }
 
@@ -135,11 +139,11 @@ export const equalSubColumns: Equal<SubColumns> = Eq.makeEqual((x, y) =>
 )
 
 export const showSubColumns: Show<SubColumns> = makeShow((x) =>
-  A.join_(
-    A.map_(
-      transpose(A.map_(C.toArray(x.value), (_) => _.split(""))),
-      (xs) => `|${A.join_(xs, "")}|`
-    ),
-    "\n"
+  pipe(
+    C.toArray(x.value),
+    A.map(String.split("")),
+    transpose,
+    A.map((xs) => `|${A.join_(xs, "")}`),
+    A.join("\n")
   )
 )

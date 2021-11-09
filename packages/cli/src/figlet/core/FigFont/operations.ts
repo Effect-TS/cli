@@ -5,6 +5,7 @@ import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as Map from "@effect-ts/core/Collections/Immutable/Map"
 import * as Set from "@effect-ts/core/Collections/Immutable/Set"
 import * as E from "@effect-ts/core/Either"
+import { pipe } from "@effect-ts/core/Function"
 import * as O from "@effect-ts/core/Option"
 
 import type { FigletResult } from "../../error/FigletException"
@@ -29,9 +30,9 @@ import type { FigFont } from "./definition"
  * accumulated during creation of the `FigFont`.
  */
 export function fromFile(file: string, lines: Chunk<string>): FigletResult<FigFont> {
-  return E.chain_(
-    C.reduce_(
-      C.zipWithIndex(lines),
+  return pipe(
+    C.zipWithIndex(lines),
+    C.reduce(
       E.right(
         new FontBuilderState({
           file,
@@ -47,7 +48,7 @@ export function fromFile(file: string, lines: Chunk<string>): FigletResult<FigFo
       (state, { tuple: [line, index] }) =>
         E.isLeft(state) ? state : processLine(state.right, line, index)
     ),
-    buildFont
+    E.chain(buildFont)
   )
 }
 
