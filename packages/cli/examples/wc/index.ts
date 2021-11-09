@@ -8,11 +8,12 @@ import * as T from "@effect-ts/core/Effect"
 import * as S from "@effect-ts/core/Effect/Stream"
 import * as Sink from "@effect-ts/core/Effect/Stream/Sink"
 import * as Transducer from "@effect-ts/core/Effect/Stream/Transducer"
-import { pipe } from "@effect-ts/core/Function"
+import { flow, pipe } from "@effect-ts/core/Function"
 import * as Identity from "@effect-ts/core/Identity"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import * as Show from "@effect-ts/core/Show"
+import * as String from "@effect-ts/core/String"
 import type { Byte } from "@effect-ts/node/Byte"
 import * as R from "@effect-ts/node/Runtime"
 import * as NS from "@effect-ts/node/Stream"
@@ -160,7 +161,7 @@ function execute(options: WcOptions, paths: NonEmptyArray<string>) {
             options.words,
             pipe(
               utf8Decode,
-              Transducer.then(Transducers.splitOn(" ")),
+              Transducer.mapChunks(Chunk.chain(flow(String.split(/\\s+/), Chunk.from))),
               Transducers.composeSink(Sink.count)
             )
           )
