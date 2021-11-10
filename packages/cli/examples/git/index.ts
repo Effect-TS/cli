@@ -66,7 +66,7 @@ const remoteHelp = Help.p("Remote command description")
 
 const remoteCommand = pipe(
   Command.command("remote", remoteOptions, remoteArgs, remoteHelp),
-  Command.map(({ tuple: [verbose] }) => remote(verbose))
+  Command.map(remote)
 )
 
 // -----------------------------------------------------------------------------
@@ -75,8 +75,7 @@ const remoteCommand = pipe(
 
 const gitCommand = pipe(
   Command.command("git", Options.none, Args.none),
-  Command.subcommands(pipe(addCommand, Command.orElse(remoteCommand))),
-  Command.map((tuple) => tuple.get(1))
+  Command.subcommands(pipe(addCommand, Command.orElse(remoteCommand)))
 )
 
 // -----------------------------------------------------------------------------
