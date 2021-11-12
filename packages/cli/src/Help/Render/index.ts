@@ -79,7 +79,7 @@ function helpDocToDocPlain(self: HelpDoc): IO.IO<AnsiDoc> {
       }
       case "Paragraph": {
         const span = yield* _(helpDocToDocPlain(self.value))
-        return Doc.indent_(span, self.indentation)
+        return Doc.cat_(Doc.indent_(span, self.indentation), Doc.line)
       }
       case "DescriptionList": {
         const definitions = A.map_(self.definitions, ({ tuple: [span, doc] }) => {
@@ -100,11 +100,15 @@ function helpDocToDocPlain(self: HelpDoc): IO.IO<AnsiDoc> {
       case "Concat": {
         const left = yield* _(helpDocToDocPlain(self.left))
         const right = yield* _(helpDocToDocPlain(self.right))
+        if (left._tag === "Empty") return right
+        if (right._tag === "Empty") return left
         return Doc.cat_(left, right)
       }
       case "Sequence": {
         const left = yield* _(helpDocToDocPlain(self.left))
         const right = yield* _(helpDocToDocPlain(self.right))
+        if (left._tag === "Empty") return right
+        if (right._tag === "Empty") return left
         return Doc.appendWithLine_(left, right)
       }
     }

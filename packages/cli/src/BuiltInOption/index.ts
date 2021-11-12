@@ -63,15 +63,12 @@ export const builtInOptions: Options<BuiltIn> = Opts.struct({
   help: Opts.boolean("help"),
   shellCompletionScriptPath: pipe(
     Opts.file("shell-completion-script"),
-    Opts.optionalDescription(Show.string, "N/A")
+    Opts.optional(Show.string, "N/A")
   ),
-  shellCompletions: pipe(
-    Shell.option,
-    Opts.optionalDescription(Shell.showShellType, "N/A")
-  ),
+  shellCompletions: pipe(Shell.option, Opts.optional(Shell.showShellType, "N/A")),
   shellCompletionIndex: pipe(
     Opts.integer("shell-completion-index"),
-    Opts.optionalDescription<Integer>(Show.number, "N/A")
+    Opts.optional<Integer>(Show.number, "N/A")
   )
 })
 

@@ -8,7 +8,7 @@ import * as T from "@effect-ts/core/Effect"
 import type { Either } from "@effect-ts/core/Either"
 import * as E from "@effect-ts/core/Either"
 import * as Equal from "@effect-ts/core/Equal"
-import { not, pipe } from "@effect-ts/core/Function"
+import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
@@ -184,7 +184,7 @@ export function helpDoc<A>(self: Command<A>): HelpDoc {
     Single: (_) => {
       const descriptionSection = Help.isEmpty(_.help)
         ? Help.empty
-        : Help.sequence_(Help.h1("DESCRIPTION"), _.help)
+        : Help.sequence_(Help.h1("DESCRIPTION"), Help.p(_.help, 4))
 
       const argsHelp = Arguments.helpDoc(_.args)
       const argumentsSection = Help.isEmpty(argsHelp)
@@ -196,12 +196,7 @@ export function helpDoc<A>(self: Command<A>): HelpDoc {
         ? Help.empty
         : Help.sequence_(Help.h1("OPTIONS"), optsHelp)
 
-      return Help.blocks(
-        A.filter_(
-          [descriptionSection, argumentsSection, optionsSection],
-          not(Help.isEmpty)
-        )
-      )
+      return Help.spansT(descriptionSection, argumentsSection, optionsSection)
     },
     Subcommands: (_) =>
       Help.blocksT(
