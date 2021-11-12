@@ -54,13 +54,14 @@ export interface CliApp<A> {
 export function make<A>(configs: {
   name: string
   version: string
-  summary: HelpDoc
   command: Command<A>
+  summary?: HelpDoc
   footer?: HelpDoc
   config?: CliConfig
   console?: Console
 }): CliApp<A> {
   return {
+    summary: Help.empty,
     footer: Help.empty,
     config: Config.defaultConfig,
     console: defaultConsole,
