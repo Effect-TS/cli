@@ -67,7 +67,7 @@ export function command<OptionsType = void, ArgsType = void>(
  * Add a `HelpDoc` to a `Command`.
  */
 export function withHelp_<A>(self: Command<A>, help: string | HelpDoc): Command<A> {
-  const helpDoc = typeof help === "string" ? Help.p(help) : help
+  const helpDoc = typeof help === "string" ? Help.text(help) : help
   return matchTag_(instruction(self), {
     Map: (_) => new Map(withHelp_(_.command, helpDoc), _.map),
     // If the left and right already have a HelpDoc, it will be overwritten

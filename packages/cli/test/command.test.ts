@@ -298,7 +298,10 @@ describe("Command", () => {
         const result = yield* _(Command.parse_(command, ["tldr"]))
 
         expect(Command.helpDoc(command)).toEqual(
-          Help.sequence_(Help.h1("DESCRIPTION"), Help.p("this is some help"))
+          Help.sequence_(
+            Help.h1("DESCRIPTION"),
+            Help.p(Help.text("this is some help"), 4)
+          )
         )
         expect(result).toEqual(CommandDirective.userDefined(A.empty, undefined))
       }))
@@ -326,7 +329,10 @@ describe("Command", () => {
         )
 
         expect(Command.helpDoc((command as any).left)).toEqual(
-          Help.sequence_(Help.h1("DESCRIPTION"), Help.p("this is help for command1"))
+          Help.sequence_(
+            Help.h1("DESCRIPTION"),
+            Help.p(Help.text("this is help for command1"), 4)
+          )
         )
       }))
 

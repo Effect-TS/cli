@@ -79,13 +79,13 @@ function helpDocToDocPlain(self: HelpDoc): IO.IO<AnsiDoc> {
       }
       case "Paragraph": {
         const span = yield* _(helpDocToDocPlain(self.value))
-        return Doc.cat_(Doc.indent_(span, self.indentation), Doc.line)
+        return Doc.cat_(Doc.indent_(span, self.indentation), Doc.hardLine)
       }
       case "DescriptionList": {
         const definitions = A.map_(self.definitions, ({ tuple: [span, doc] }) => {
           const name = Doc.annotate_(IO.run(helpDocToDocPlain(span)), TermStyle.bold)
           const desc = Doc.indent_(IO.run(helpDocToDocPlain(doc)), 4)
-          return Doc.cat_(Doc.indent_(Doc.appendWithLine_(name, desc), 4), Doc.line)
+          return Doc.cat_(Doc.indent_(Doc.appendWithLine_(name, desc), 4), Doc.hardLine)
         })
         return Doc.vcat(definitions)
       }
