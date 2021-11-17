@@ -562,7 +562,7 @@ export function validate_<A>(
             : O.none
         )
       )
-  })
+  }) as T.IO<ValidationError, Tuple<[Array<string>, A]>>
 }
 
 /**

@@ -1,38 +1,31 @@
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
-import type { Has } from "@effect-ts/core/Has"
-import { tag } from "@effect-ts/core/Has"
+import type { Has, Tag } from "@effect-ts/core/Has"
+import { service, tag } from "@effect-ts/core/Has"
 
 // -----------------------------------------------------------------------------
 // Model
 // -----------------------------------------------------------------------------
 
-export const ConsoleServiceSymbol = Symbol()
-export type ConsoleServiceSymbol = typeof ConsoleServiceSymbol
+export const ConsoleId = Symbol()
+export type ConsoleId = typeof ConsoleId
 
-export interface ConsoleService {
-  readonly [ConsoleServiceSymbol]: ConsoleServiceSymbol
-  readonly putStrLn: (x: string) => T.UIO<void>
+export function makeConsole() {
+  return service(ConsoleId, {
+    putStrLn: (x: string) =>
+      T.succeedWith(() => {
+        console.log(x)
+      })
+  })
 }
 
-export interface Console extends ConsoleService {}
+export interface Console extends ReturnType<typeof makeConsole> {}
 
 export type HasConsole = Has<Console>
 
-// -----------------------------------------------------------------------------
-// Constructors
-// -----------------------------------------------------------------------------
+export const Console: Tag<Console> = tag<Console>(ConsoleId)
 
-export const Console = tag<Console>()
-
-export const defaultConsole: Console = {
-  [ConsoleServiceSymbol]: ConsoleServiceSymbol,
-  putStrLn: (x) =>
-    T.succeedWith(() => {
-      console.log(x)
-    })
-}
-
-export const LiveConsole = L.pure(Console)(defaultConsole)
+export const LiveConsole: L.Layer<unknown, never, HasConsole> =
+  L.fromFunction(Console)(makeConsole)
 
 export const { putStrLn } = T.deriveLifted(Console)(["putStrLn"], [], [])

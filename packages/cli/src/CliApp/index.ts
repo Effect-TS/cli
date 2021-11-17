@@ -29,7 +29,7 @@ import type { FigletException } from "../figlet/error/FigletException"
 import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { HasConsole } from "../Internal/Console"
-import { Console, defaultConsole, putStrLn } from "../Internal/Console"
+import { Console, makeConsole, putStrLn } from "../Internal/Console"
 import type { Integer } from "../Internal/NewType"
 import * as Synopsis from "../UsageSynopsis"
 
@@ -61,11 +61,13 @@ export function make<A>(configs: {
   console?: Console
 }): CliApp<A> {
   return {
-    summary: Help.empty,
-    footer: Help.empty,
-    config: Config.defaultConfig,
-    console: defaultConsole,
-    ...configs
+    name: configs.name,
+    version: configs.version,
+    command: configs.command,
+    summary: configs.summary || Help.empty,
+    footer: configs.footer || Help.empty,
+    config: configs.config || Config.defaultConfig,
+    console: configs.console || makeConsole()
   }
 }
 
@@ -226,17 +228,21 @@ export function run_<R, E, A>(
   return pipe(
     Cmd.parse_(self.command, argsWithCmd, self.config),
     T.foldM(
-      (e) => pipe(printDocs_(e.help), T.provideLayer(L.pure(Console)(self.console))),
+      (e) =>
+        pipe(printDocs_(e.help), T.provideLayer(L.fromValue(Console)(self.console))),
       (directive) =>
         matchTag_(directive, {
           BuiltIn: (_) =>
             pipe(
               executeBuiltIn_(self, _.option),
-              T.provideLayer(L.pure(Console)(self.console))
+              T.provideLayer(L.fromValue(Console)(self.console))
             ),
           UserDefined: (_) =>
-            pipe(execute(_.value), T.provideSomeLayer(L.pure(Console)(self.console)))
-        })
+            pipe(
+              execute(_.value),
+              T.provideSomeLayer(L.fromValue(Console)(self.console))
+            )
+        }) as Effect<R, E | NonEmptyArray<FigletException>, void>
     )
   )
 }

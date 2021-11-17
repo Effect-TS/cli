@@ -373,7 +373,7 @@ export function validate_<A>(
 
       return T.map_(loop(args, A.emptyOf<A>()), Tp.update(1, A.reverse))
     }
-  })
+  }) as T.IO<HelpDoc, Tuple<[Array<string>, A]>>
 }
 
 export function map_<A, B>(self: Args<A>, f: (a: A) => B): Args<B> {

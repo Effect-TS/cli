@@ -294,7 +294,7 @@ export function parse_<A>(
             : O.none
         )
       )
-  })
+  }) as T.IO<ValidationError, CommandDirective<A>>
 }
 
 /**

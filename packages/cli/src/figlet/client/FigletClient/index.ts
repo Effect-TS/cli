@@ -9,8 +9,9 @@ import * as L from "@effect-ts/core/Effect/Layer"
 import * as S from "@effect-ts/core/Effect/Stream"
 import * as Sink from "@effect-ts/core/Effect/Stream/Sink"
 import * as Transducer from "@effect-ts/core/Effect/Stream/Transducer"
-import { identity, pipe } from "@effect-ts/core/Function"
-import { tag } from "@effect-ts/core/Has"
+import { pipe } from "@effect-ts/core/Function"
+import type { Has } from "@effect-ts/core/Has"
+import { service, tag } from "@effect-ts/core/Has"
 import * as String from "@effect-ts/core/String"
 import type { _A } from "@effect-ts/core/Utils"
 import type { Byte } from "@effect-ts/node/Byte"
@@ -20,7 +21,6 @@ import * as NodeJSPath from "path"
 import { splitLines, utf8Decode } from "../../../Internal/Transducers"
 import type { FigFont } from "../../core/FigFont"
 import * as FF from "../../core/FigFont"
-import type { Figure } from "../../core/Figure"
 import type { FigletException } from "../../error/FigletException"
 import { FigletFileError } from "../../error/FigletException"
 import * as Rendering from "../../rendering"
@@ -31,26 +31,13 @@ import type { RenderOptions } from "../RenderOptions"
 // Figlet Client
 // -----------------------------------------------------------------------------
 
-export const FigletClientSymbol = Symbol()
-export type FigletClientSymbol = typeof FigletClientSymbol
-
-export interface FigletClient {
-  readonly [FigletClientSymbol]: FigletClientSymbol
-  readonly defaultFont: string
-  readonly defaultMaxWidth: number
-  readonly internalFonts: T.IO<FigletException, Chunk<string>>
-  readonly loadFont: (path: string) => T.IO<NonEmptyArray<FigletException>, FigFont>
-  readonly loadFontInternal: (
-    name: string
-  ) => T.IO<NonEmptyArray<FigletException>, FigFont>
-  readonly renderString: (text: string, options: RenderOptions) => T.UIO<Figure>
-}
+export const FigletClientId = Symbol()
+export type FigletClientId = typeof FigletClientId
 
 export const makeFigletClient = T.gen(function* (_) {
   const { read } = yield* _(FontFileReader)
 
-  return identity<FigletClient>({
-    [FigletClientSymbol]: FigletClientSymbol,
+  return service(FigletClientId, {
     defaultFont: "standard",
     defaultMaxWidth: 80,
     internalFonts: pipe(
@@ -67,14 +54,22 @@ export const makeFigletClient = T.gen(function* (_) {
       }),
       T.map(C.map(String.replace(".flf", "")))
     ),
-    loadFont: (path) => read(path, createFigFont),
-    loadFontInternal: (name) =>
+    loadFont: (path: string) => read(path, createFigFont),
+    loadFontInternal: (name: string) =>
       read(NodeJSPath.join(__dirname, "../..", "fonts", `${name}.flf`), createFigFont),
-    renderString: (text, options) => T.succeed(Rendering.render(text, options))
+    renderString: (text: string, options: RenderOptions) =>
+      T.succeed(Rendering.render(text, options))
   })
 })
 
-export const FigletClient = tag<FigletClient>()
+export interface FigletClient extends _A<typeof makeFigletClient> {
+  readonly serviceId: typeof FigletClientId
+}
+
+export const FigletClient = tag<FigletClient>(FigletClientId)
+
+export type HasFigletClient = Has<FigletClient>
+
 export const LiveFigletClient = L.fromEffect(FigletClient)(makeFigletClient)
 
 export const {

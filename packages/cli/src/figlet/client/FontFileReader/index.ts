@@ -1,10 +1,11 @@
 // ets_tracing: off
 
 import type { NonEmptyArray } from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
-import type * as T from "@effect-ts/core/Effect"
+import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
 import * as S from "@effect-ts/core/Effect/Stream"
-import { tag } from "@effect-ts/core/Has"
+import type { Has, Tag } from "@effect-ts/core/Has"
+import { service, tag } from "@effect-ts/core/Has"
 import type { _A } from "@effect-ts/core/Utils"
 import type { Byte } from "@effect-ts/node/Byte"
 import * as NS from "@effect-ts/node/Stream"
@@ -18,32 +19,34 @@ import { FigletFileError } from "../../error/FigletException"
 // Model
 // -----------------------------------------------------------------------------
 
-export const FontFileReaderSymbol = Symbol()
-export type FontFileReaderSymbol = typeof FontFileReaderSymbol
+export const FontFileReaderId = Symbol()
+export type FontFileReaderId = typeof FontFileReaderId
 
-export interface FontFileReader {
-  readonly [FontFileReaderSymbol]: FontFileReaderSymbol
-  readonly read: <A>(
-    path: string,
-    f: (
+export function makeFontFileReader() {
+  return service(FontFileReaderId, {
+    read: (
       path: string,
-      buffer: S.IO<FigletException, Byte>
-    ) => T.IO<NonEmptyArray<FigletException>, FigFont>
-  ) => T.IO<NonEmptyArray<FigletException>, FigFont>
+      f: (
+        path: string,
+        buffer: S.IO<FigletException, Byte>
+      ) => T.IO<NonEmptyArray<FigletException>, FigFont>
+    ) => {
+      const buffer = S.mapError_(
+        NS.streamFromReadable(() => NodeJSFileSystem.createReadStream(path)),
+        (e) => new FigletFileError({ message: e.error.message })
+      )
+      return f(path, buffer)
+    }
+  })
 }
 
-export const makeFontFileReader: FontFileReader = {
-  [FontFileReaderSymbol]: FontFileReaderSymbol,
-  read: (path, f) => {
-    const buffer = S.mapError_(
-      NS.streamFromReadable(() => NodeJSFileSystem.createReadStream(path)),
-      (e) => new FigletFileError({ message: e.error.message })
-    )
-    return f(path, buffer)
-  }
-}
+export interface FontFileReader extends ReturnType<typeof makeFontFileReader> {}
 
-export const FontFileReader = tag<FontFileReader>()
-export const LiveFontFileReader = L.pure(FontFileReader)(makeFontFileReader)
+export type HasFontFileReader = Has<FontFileReader>
 
-export const { read } = makeFontFileReader
+export const FontFileReader: Tag<FontFileReader> = tag<FontFileReader>(FontFileReaderId)
+
+export const LiveFontFileReader: L.Layer<unknown, never, HasFontFileReader> =
+  L.fromFunction(FontFileReader)(makeFontFileReader)
+
+export const { read } = T.deriveLifted(FontFileReader)(["read"], [], [])
