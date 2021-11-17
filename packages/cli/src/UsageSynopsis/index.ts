@@ -86,7 +86,10 @@ export function concats(synopses: Array<UsageSynopsis>): UsageSynopsis {
   return A.foldLeft_(
     synopses,
     () => none,
-    (head, tail) => A.reduce_(tail, head, concat_)
+    (head, tail) => {
+      const synopses = A.filter_(tail, (synopsis) => synopsis._tag !== "None")
+      return synopses.length === 0 ? head : A.reduce_(synopses, head, concat_)
+    }
   )
 }
 

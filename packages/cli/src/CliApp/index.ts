@@ -54,13 +54,14 @@ export interface CliApp<A> {
 export function make<A>(configs: {
   name: string
   version: string
-  summary: HelpDoc
   command: Command<A>
+  summary?: HelpDoc
   footer?: HelpDoc
   config?: CliConfig
   console?: Console
 }): CliApp<A> {
   return {
+    summary: Help.empty,
     footer: Help.empty,
     config: Config.defaultConfig,
     console: defaultConsole,
@@ -147,7 +148,7 @@ export function executeBuiltIn_<A>(
             T.provideSomeLayer(
               FontFileReader.LiveFontFileReader[">>>"](FigletClient.LiveFigletClient)
             ),
-            T.map(Help.code)
+            T.map((name) => Help.p(Help.code(name)))
           )
         )
 
@@ -157,14 +158,12 @@ export function executeBuiltIn_<A>(
             Help.text(" - "),
             self.summary
           ),
-          fancyName,
-          Help.empty
+          fancyName
         )
 
         const synopsis = Help.blocksT(
           Help.h1("SYNOPSIS"),
-          Help.p(Synopsis.render(Cmd.synopsis(self.command)), 4),
-          Help.empty
+          Help.p(Synopsis.render(Cmd.synopsis(self.command)), 4)
         )
 
         const help = Help.blocksT(header, synopsis, builtInOption.helpDoc, self.footer)

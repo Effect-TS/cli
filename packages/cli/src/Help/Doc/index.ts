@@ -170,7 +170,10 @@ export function spans(ss: Array<HelpDoc>): HelpDoc {
   return A.foldLeft_(
     ss,
     () => empty,
-    (head, tail) => A.reduce_(tail, head, concat_)
+    (head, tail) => {
+      const helpDocs = A.filter_(tail, (help) => help._tag !== "Empty")
+      return helpDocs.length === 0 ? head : A.reduce_(helpDocs, head, concat_)
+    }
   )
 }
 
@@ -188,7 +191,10 @@ export function blocks(bs: Array<HelpDoc>): HelpDoc {
   return A.foldLeft_(
     bs,
     () => empty,
-    (head, tail) => A.reduce_(tail, head, sequence_)
+    (head, tail) => {
+      const helpDocs = A.filter_(tail, (help) => help._tag !== "Empty")
+      return helpDocs.length === 0 ? head : A.reduce_(helpDocs, head, sequence_)
+    }
   )
 }
 
