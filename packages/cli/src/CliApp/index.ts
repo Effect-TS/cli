@@ -235,7 +235,7 @@ export function run_<R, E, A>(
           BuiltIn: (_) =>
             pipe(
               executeBuiltIn_(self, _.option),
-              T.provideSomeLayer(L.fromValue(Console)(self.console))
+              T.provideLayer(L.fromValue(Console)(self.console))
             ),
           UserDefined: (_) =>
             pipe(
