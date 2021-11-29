@@ -4,21 +4,17 @@
   "license": "MIT",
   "repository": "https://github.com/Effect-TS/cli.git",
   "homepage": "https://www.matechs.com",
-  "private": false,
   "scripts": {
-    "clean": "rimraf build tsbuildinfo",
-    "build:lib": "ttsc --build  tsconfig.build.json && build-utils package",
-    "build:es6": "ttsc --build  tsconfig.es6.json && babel build/esm/ -d build/esm/ -s --plugins annotate-pure-calls && build-utils package-esm",
-    "build:post-process": "build-utils rewrite-source-maps && build-utils rewrite-locals && yarn prettier:lib",
-    "build": "yarn run build:lib && yarn run build:es6 && yarn copy-fonts:es6 && yarn run build:post-process ",
-    "copy-fonts:es6": "copyfiles -f src/figlet/fonts/*.flf build/esm/figlet/fonts",
-    "lint": "eslint . --ext .ts,.tsx",
+    "clean": "yarn ets:rimraf build tsbuildinfo dist",
+    "build-cjs": "yarn ets:tsc -p tsconfig.build.cjs.json",
+    "build-esm": "yarn ets:tsc -p tsconfig.build.esm.json",
+    "build-post": "yarn ets:build-utils pack",
+    "build": "yarn ets:concurrently \"yarn build-cjs\" \"yarn build-esm\" && yarn build-post",
+    "lint": "yarn ets:eslint . --ext .ts,.tsx",
     "autofix": "yarn prettier && yarn lint --fix && yarn prettier",
-    "prettier": "prettier --write \"./{src,test,demo}/**/*.ts\"",
-    "prettier:lib": "prettier --write \"./build/**/*.js\"",
-    "tc": "tsc --noEmit",
-    "demo": "ts-node --compiler ttypescript --project tsconfig.build.json",
-    "circular": "madge --circular --ts-config ./tsconfig.build.json --extensions ts ./src"
+    "prettier": "yarn ets:prettier --write \"./{src,test,demo}/**/*.ts\"",
+    "tc": "yarn ets:tsc --noEmit",
+    "circular": "yarn ets:madge --circular --ts-config ./tsconfig.json --extensions ts ./src"
   },
   "publishConfig": {
     "access": "public",
@@ -26,9 +22,9 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "@effect-ts/core": "^0.45.5",
-    "@effect-ts/node": "^0.30.0",
-    "@effect-ts/printer": "^0.11.1"
+    "@effect-ts/core": "0.48.0",
+    "@effect-ts/node": "0.31.0",
+    "@effect-ts/printer": "0.11.1"
   },
   "config": {
     "side": [],
@@ -41,6 +37,7 @@
       "Command",
       "CommandDirective",
       "CompletionScript",
+      "Completion",
       "Exists",
       "figlet",
       "figlet/client/BuilderAction",

@@ -23,7 +23,7 @@ export const FontFileReaderId = Symbol()
 export type FontFileReaderId = typeof FontFileReaderId
 
 export function makeFontFileReader() {
-  return service(FontFileReaderId, {
+  return service({
     read: (
       path: string,
       f: (
