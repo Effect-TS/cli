@@ -309,12 +309,51 @@ export function parse(args: Array<string>, config: CliConfig = Config.defaultCon
     parse_(self, args, config)
 }
 
-export function completions<OptionsType, ArgsType>(
-  self: Single<OptionsType, ArgsType>
-): () => Set<Array<string>> {
-  return () => {
-    throw new Error("Not implemented!")
-  }
+export function completions<A>(
+  self: Command<A>,
+  args: Array<string>,
+  currentTerm: string
+): Set<string> {
+  return matchTag_(instruction(self), {
+    Map: (_) => completions(_.command, args, currentTerm),
+    OrElse: (_) =>
+      S.union_(Equal.string)(
+        completions(_.left, args, currentTerm),
+        completions(_.right, args, currentTerm)
+      ),
+    Single: (_) => {
+      /**
+       * Avoid adding the command name to the completions set if:
+       *  1. The current term looks like an option
+       *  2. The current term matches the command's name
+       *  3. The passed arguments already include the command's name
+       */
+      const commandCompletions =
+        currentTerm.startsWith("-") || _.name === currentTerm || args.includes(_.name)
+          ? S.empty
+          : S.singleton(_.name)
+
+      /**
+       * Only add option completions if the following checks pass:
+       *  1. The current term looks like an option OR the current term is
+       *     empty and there are no completions registered yet
+       *  2. The command must be present in the argument list
+       */
+      const optionCompletions =
+        (currentTerm.startsWith("-") ||
+          (currentTerm === "" && commandCompletions.size === 0)) &&
+        args.includes(_.name)
+          ? Opts.completions(_.options, args, currentTerm)
+          : S.empty
+
+      return S.union_(Equal.string)(commandCompletions, optionCompletions)
+    },
+    Subcommands: (_) =>
+      S.union_(Equal.string)(
+        completions(_.parent, args, currentTerm),
+        completions(_.child, args, currentTerm)
+      )
+  })
 }
 
 export function builtInOptions<OptionsType, ArgsType>(

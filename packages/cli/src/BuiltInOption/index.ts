@@ -7,7 +7,6 @@ import * as O from "@effect-ts/core/Option"
 import * as Show from "@effect-ts/core/Show"
 
 import type { HelpDoc } from "../Help"
-import type { Integer } from "../Internal/NewType"
 import type { Options } from "../Options"
 import * as Opts from "../Options"
 import type { ShellType } from "../ShellType"
@@ -29,15 +28,15 @@ export class ShowCompletionScript extends Tagged("ShowCompletionScript")<{
 }> {}
 
 export class ShowCompletions extends Tagged("ShowCompletions")<{
-  readonly index: Integer
+  readonly args: string
   readonly shellType: ShellType
 }> {}
 
 export interface BuiltIn {
   readonly help: boolean
   readonly shellCompletionScriptPath: Option<string>
-  readonly shellCompletions: Option<ShellType>
-  readonly shellCompletionIndex: Option<Integer>
+  readonly shellCompletions: Option<string>
+  readonly shellType: Option<ShellType>
 }
 
 // -----------------------------------------------------------------------------
@@ -55,8 +54,8 @@ export function showCompletionScript(
   return new ShowCompletionScript({ pathToExecutable, shellType })
 }
 
-export function showCompletions(index: Integer, shellType: ShellType): BuiltInOption {
-  return new ShowCompletions({ index, shellType })
+export function showCompletions(args: string, shellType: ShellType): BuiltInOption {
+  return new ShowCompletions({ args, shellType })
 }
 
 export const builtInOptions: Options<BuiltIn> = Opts.struct({
@@ -65,11 +64,11 @@ export const builtInOptions: Options<BuiltIn> = Opts.struct({
     Opts.file("shell-completion-script"),
     Opts.optional(Show.string, "N/A")
   ),
-  shellCompletions: pipe(Shell.option, Opts.optional(Shell.showShellType, "N/A")),
-  shellCompletionIndex: pipe(
-    Opts.integer("shell-completion-index"),
-    Opts.optional<Integer>(Show.number, "N/A")
-  )
+  shellCompletions: pipe(
+    Opts.text("shell-completions"),
+    Opts.optional(Show.string, "N/A")
+  ),
+  shellType: pipe(Shell.option, Opts.optional(Shell.showShellType, "N/A"))
 })
 
 export function withHelp(helpDoc: HelpDoc): Options<Option<BuiltInOption>> {
@@ -79,26 +78,17 @@ export function withHelp(helpDoc: HelpDoc): Options<Option<BuiltInOption>> {
       if (builtIn.help) {
         return O.some(showHelp(helpDoc))
       }
-      if (
-        O.isSome(builtIn.shellCompletionScriptPath) &&
-        O.isSome(builtIn.shellCompletions)
-      ) {
+      if (O.isSome(builtIn.shellCompletionScriptPath) && O.isSome(builtIn.shellType)) {
         return O.some(
           showCompletionScript(
             builtIn.shellCompletionScriptPath.value,
-            builtIn.shellCompletions.value
+            builtIn.shellType.value
           )
         )
       }
-      if (
-        O.isSome(builtIn.shellCompletionIndex) &&
-        O.isSome(builtIn.shellCompletions)
-      ) {
+      if (O.isSome(builtIn.shellCompletions) && O.isSome(builtIn.shellType)) {
         return O.some(
-          showCompletions(
-            builtIn.shellCompletionIndex.value,
-            builtIn.shellCompletions.value
-          )
+          showCompletions(builtIn.shellCompletions.value, builtIn.shellType.value)
         )
       }
       return O.none

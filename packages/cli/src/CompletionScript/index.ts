@@ -1,14 +1,6 @@
 // ets_tracing: off
 
-import * as A from "@effect-ts/core/Collections/Immutable/Array"
-import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
-import * as S from "@effect-ts/core/Collections/Immutable/Set"
-import * as Equal from "@effect-ts/core/Equal"
-import { pipe } from "@effect-ts/core/Function"
-import * as O from "@effect-ts/core/Option"
-import * as Ord from "@effect-ts/core/Ord"
 import { matchTag_ } from "@effect-ts/core/Utils"
-import { EOL } from "os"
 
 import type { ShellType } from "../ShellType"
 
@@ -16,56 +8,64 @@ import type { ShellType } from "../ShellType"
 // Operations
 // -----------------------------------------------------------------------------
 
-function makeBashCompletions(
-  pathToExecutable: string,
-  programNames: Set<string>
-): string {
-  const generator = pipe(
-    programNames,
-    S.toArray(Ord.string),
-    A.head,
-    O.getOrElse(() => "unknown")
-  )
+function makeBashCompletions(pathToExecutable: string, programName: string): string {
+  return `###-begin-${programName}-completions-###
+  #
+  # Effect-TS CLI Command Completion Script
+  #
+  # Installation: ${pathToExecutable} --shell-completion-script >> ~/.bashrc
+  #    or ${pathToExecutable} --shell-completion-script  >> ~/.bash_profile on OSX.
+  #
+  _${programName}_completions() {
+    local args
+    local cur_word
+    local type_list
 
-  const script = `
-#!/user/bin/env bash
+    cur_word="\${COMP_WORDS[COMP_CWORD]}"
+    args=("\${COMP_WORDS[@]}")
+    type_list="$(${pathToExecutable} --show-completions "\${args[@]}")"
+    COMPREPLY=( $(compgen -W "\${type_list}" -- \${cur_word}) )
 
-function _${generator}() {
-  local CMDLINE
-  local INDEX
-  local IFS=$'\\n'
+    # If no match was found, fall back to filename completion
+    if [ \${#COMPREPLY[@]} -eq 0 ]; then
+      COMPREPLY=()
+    fi
 
-  CMDLINE=(--shell-type bash --shell-completion-index $COMP_CWORD)
+    return 0
+  }
+  complete -o bashdefault -o default -F _${programName}_completions ${programName}
 
-  INDEX=0
-  for arg in "\${COMP_WORDS[@]}"; do
-    export "COMP_WORD_\${INDEX}"="\${arg}"
-    (( INDEX++ ))
-  done
-
-  COMPREPLY=( $(${pathToExecutable} "\${CMDLINE[@]}") )
-
-  # Unset the environment variables
-  unset $(compgen -v | grep "^COMP_WORD_")
-}`.trim()
-
-  const completions = pipe(
-    programNames,
-    S.map(Equal.string)((programName) => `complete -F _${generator} ${programName}`),
-    S.toArray(Ord.string),
-    A.join(EOL)
-  )
-
-  return script + EOL.repeat(2) + completions
+  ###-end-${programName}-completions-###
+`
 }
+
+// export const completionZshTemplate = `#compdef {{app_name}}
+// ###-begin-{{app_name}}-completions-###
+// #
+// # yargs command completion script
+// #
+// # Installation: {{app_path}} {{completion_command}} >> ~/.zshrc
+// #    or {{app_path}} {{completion_command}} >> ~/.zsh_profile on OSX.
+// #
+// _{{app_name}}_yargs_completions()
+// {
+//   local reply
+//   local si=$IFS
+//   IFS=$'\n' reply=($(COMP_CWORD="$((CURRENT-1))" COMP_LINE="$BUFFER" COMP_POINT="$CURSOR" {{app_path}} --get-yargs-completions "\${words[@]}"))
+//   IFS=$si
+//   _describe 'values' reply
+// }
+// compdef _{{app_name}}_yargs_completions {{app_name}}
+// ###-end-{{app_name}}-completions-###
+// `
 
 export function make(
   pathToExecutable: string,
-  programNames: Set<string>,
+  programName: string,
   shellType: ShellType
 ): string {
   return matchTag_(shellType, {
-    Bash: (_) => makeBashCompletions(pathToExecutable, programNames),
+    Bash: (_) => makeBashCompletions(pathToExecutable, programName),
     ZShell: () => {
       throw new Error("Not implemented!")
     }

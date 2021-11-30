@@ -3,6 +3,8 @@
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
 import * as PredefMap from "@effect-ts/core/Collections/Immutable/Map"
+import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
+import * as S from "@effect-ts/core/Collections/Immutable/Set"
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as Tp from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
@@ -410,6 +412,49 @@ export function synopsis<A>(self: Options<A>): UsageSynopsis {
     OrElse: (_) => Synopsis.concat_(synopsis(_.left), synopsis(_.right)),
     Single: (_) => Synopsis.named(makeFullName(_.name), Primitive.choices(_.primType)),
     WithDefault: (_) => synopsis(_.options)
+  })
+}
+
+export function completions<A>(
+  self: Options<A>,
+  args: Array<string>,
+  currentTerm: string
+): Set<string> {
+  return matchTag_(instruction(self), {
+    Both: (_) =>
+      S.union_(Equal.string)(
+        completions(_.head, args, currentTerm),
+        completions(_.tail, args, currentTerm)
+      ),
+    Map: (_) => completions(_.value, args, currentTerm),
+    Mapping: (_) => completions(_.argumentOption, args, currentTerm),
+    None: (_) => S.empty,
+    OrElse: (_) =>
+      S.union_(Equal.string)(
+        completions(_.left, args, currentTerm),
+        completions(_.right, args, currentTerm)
+      ),
+    Single: (_) => {
+      const name = makeFullName(_.name)
+      const aliases = A.map_(_.aliases, makeFullName)
+
+      const argsContainsName = args.includes(name)
+      const argsContainsAlias = A.isNonEmpty(
+        A.intersection_(Equal.string)(aliases, args)
+      )
+
+      /**
+       * Avoid adding the option to the completions set if:
+       *  1. The arguments already include the option name
+       *  2. The arguments already include an alias for the option
+       */
+      if (argsContainsName || argsContainsAlias) {
+        return S.empty
+      }
+
+      return S.singleton(name)
+    },
+    WithDefault: (_) => completions(_.options, args, currentTerm)
   })
 }
 
