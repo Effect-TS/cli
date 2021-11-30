@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.3.1...@effect-ts/cli@0.4.0) (2021-11-30)
+
+
+### Features
+
+* **cli:** convert Console to new type-safe service pattern ([ba6dc7d](https://github.com/Effect-TS/cli/commit/ba6dc7de8ff9920fb44b0e73b34c4d906ee42bcb))
+* **cli:** convert FigletClient to new type-safe service pattern ([cf55b64](https://github.com/Effect-TS/cli/commit/cf55b645ec560e30b08e7e32182ff98c734834ae))
+* **cli:** convert FontFileReader to new type-safe service pattern ([ec77b53](https://github.com/Effect-TS/cli/commit/ec77b533f1448c56958254575d37608e7f308ae0))
+* **cli:** upgrade repo to yarn 3 and latest effect ([87f9433](https://github.com/Effect-TS/cli/commit/87f94334d02fccaef53651269d314e88e68fb03b))
+
+
+
+
+
 ## [0.3.1](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.3.0...@effect-ts/cli@0.3.1) (2021-11-17)
 
 
