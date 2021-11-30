@@ -11,7 +11,7 @@ export const ConsoleId = Symbol()
 export type ConsoleId = typeof ConsoleId
 
 export function makeConsole() {
-  return service(ConsoleId, {
+  return service({
     putStrLn: (x: string) =>
       T.succeedWith(() => {
         console.log(x)

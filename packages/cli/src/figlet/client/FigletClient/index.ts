@@ -37,7 +37,7 @@ export type FigletClientId = typeof FigletClientId
 export const makeFigletClient = T.gen(function* (_) {
   const { read } = yield* _(FontFileReader)
 
-  return service(FigletClientId, {
+  return service({
     defaultFont: "standard",
     defaultMaxWidth: 80,
     internalFonts: pipe(
@@ -62,9 +62,7 @@ export const makeFigletClient = T.gen(function* (_) {
   })
 })
 
-export interface FigletClient extends _A<typeof makeFigletClient> {
-  readonly serviceId: typeof FigletClientId
-}
+export interface FigletClient extends _A<typeof makeFigletClient> {}
 
 export const FigletClient = tag<FigletClient>(FigletClientId)
 

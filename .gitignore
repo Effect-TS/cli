@@ -1,5 +1,9 @@
+/.yarn/*
+!/.yarn/releases
+!/.yarn/plugins
+!/.yarn/sdks
+
 lib/
-.DS_Store
 node_modules/
 .idea/
 coverage/
