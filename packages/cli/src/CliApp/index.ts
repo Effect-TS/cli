@@ -190,7 +190,12 @@ export function executeBuiltIn_<A>(
           () => T.unit,
           (args) => {
             const currentTerm = NA.last(args)
-            const completions = Cmd.completions(self.command, args, currentTerm)
+            const completions = Cmd.completions(
+              self.command,
+              args,
+              currentTerm,
+              _.shellType
+            )
             return putStrLn(A.join_(Set.toArray_(completions, Ord.string), " "))
           }
         )

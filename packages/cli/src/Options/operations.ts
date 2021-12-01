@@ -16,6 +16,7 @@ import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import type { Show } from "@effect-ts/core/Show"
 import { boolean as showBoolean } from "@effect-ts/core/Show"
+import * as String from "@effect-ts/core/String"
 import { matchTag_ } from "@effect-ts/core/Utils"
 
 import * as AutoCorrect from "../AutoCorrect"
@@ -28,6 +29,7 @@ import * as Help from "../Help"
 import type { Float, Integer } from "../Internal/NewType"
 import * as PathType from "../PathType"
 import * as Primitive from "../PrimType"
+import type { ShellType } from "../ShellType"
 import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
@@ -418,21 +420,22 @@ export function synopsis<A>(self: Options<A>): UsageSynopsis {
 export function completions<A>(
   self: Options<A>,
   args: Array<string>,
-  currentTerm: string
+  currentTerm: string,
+  shellType: ShellType
 ): Set<string> {
   return matchTag_(instruction(self), {
     Both: (_) =>
       S.union_(Equal.string)(
-        completions(_.head, args, currentTerm),
-        completions(_.tail, args, currentTerm)
+        completions(_.head, args, currentTerm, shellType),
+        completions(_.tail, args, currentTerm, shellType)
       ),
-    Map: (_) => completions(_.value, args, currentTerm),
-    Mapping: (_) => completions(_.argumentOption, args, currentTerm),
+    Map: (_) => completions(_.value, args, currentTerm, shellType),
+    Mapping: (_) => completions(_.argumentOption, args, currentTerm, shellType),
     None: (_) => S.empty,
     OrElse: (_) =>
       S.union_(Equal.string)(
-        completions(_.left, args, currentTerm),
-        completions(_.right, args, currentTerm)
+        completions(_.left, args, currentTerm, shellType),
+        completions(_.right, args, currentTerm, shellType)
       ),
     Single: (_) => {
       const name = makeFullName(_.name)
@@ -452,9 +455,9 @@ export function completions<A>(
         return S.empty
       }
 
-      return S.singleton(name)
+      return getOptionsCompletions(_, shellType)
     },
-    WithDefault: (_) => completions(_.options, args, currentTerm)
+    WithDefault: (_) => completions(_.options, args, currentTerm, shellType)
   })
 }
 
@@ -715,4 +718,21 @@ function processMappingArguments(
         PredefMap.make(A.snoc_(createMapEntries(init), createMapEntry(first)))
       )
   )
+}
+
+function getOptionsCompletions<A>(
+  options: Single<A>,
+  shellType: ShellType
+): Set<string> {
+  const optionName = makeFullName(options.name)
+  return matchTag_(shellType, {
+    Bash: () => S.singleton(optionName),
+    ZShell: () => {
+      const optionDesc = pipe(
+        Help.render_(options.description, Help.plainMode(80)),
+        String.replace(/\n|\r\n/g, " ")
+      )
+      return S.singleton(`${optionName}:${optionDesc}`)
+    }
+  })
 }

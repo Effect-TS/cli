@@ -11,6 +11,7 @@ import * as Equal from "@effect-ts/core/Equal"
 import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
+import * as String from "@effect-ts/core/String"
 import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
 import * as Tp from "@effect-ts/system/Collections/Immutable/Tuple"
 import { matchTag_ } from "@effect-ts/system/Utils"
@@ -28,6 +29,7 @@ import type { Options } from "../Options"
 import * as Opts from "../Options"
 import type { Reducable } from "../Reducable"
 import * as Reduce from "../Reducable"
+import type { ShellType } from "../ShellType"
 import type { UsageSynopsis } from "../UsageSynopsis"
 import * as Synopsis from "../UsageSynopsis"
 import type { ValidationError } from "../Validation"
@@ -312,14 +314,15 @@ export function parse(args: Array<string>, config: CliConfig = Config.defaultCon
 export function completions<A>(
   self: Command<A>,
   args: Array<string>,
-  currentTerm: string
+  currentTerm: string,
+  shellType: ShellType
 ): Set<string> {
   return matchTag_(instruction(self), {
-    Map: (_) => completions(_.command, args, currentTerm),
+    Map: (_) => completions(_.command, args, currentTerm, shellType),
     OrElse: (_) =>
       S.union_(Equal.string)(
-        completions(_.left, args, currentTerm),
-        completions(_.right, args, currentTerm)
+        completions(_.left, args, currentTerm, shellType),
+        completions(_.right, args, currentTerm, shellType)
       ),
     Single: (_) => {
       /**
@@ -331,7 +334,7 @@ export function completions<A>(
       const commandCompletions =
         currentTerm.startsWith("-") || _.name === currentTerm || args.includes(_.name)
           ? S.empty
-          : S.singleton(_.name)
+          : getCommandCompletions(_, shellType)
 
       /**
        * Only add option completions if the following checks pass:
@@ -343,15 +346,15 @@ export function completions<A>(
         (currentTerm.startsWith("-") ||
           (currentTerm === "" && commandCompletions.size === 0)) &&
         args.includes(_.name)
-          ? Opts.completions(_.options, args, currentTerm)
+          ? Opts.completions(_.options, args, currentTerm, shellType)
           : S.empty
 
       return S.union_(Equal.string)(commandCompletions, optionCompletions)
     },
     Subcommands: (_) =>
       S.union_(Equal.string)(
-        completions(_.parent, args, currentTerm),
-        completions(_.child, args, currentTerm)
+        completions(_.parent, args, currentTerm, shellType),
+        completions(_.child, args, currentTerm, shellType)
       )
   })
 }
@@ -504,4 +507,21 @@ function subcommandsDescription_<A>(self: Command<A>): HelpDoc {
     },
     () => Help.empty
   )
+}
+
+function getCommandCompletions<OptionsType, ArgsType>(
+  command: Single<OptionsType, ArgsType>,
+  shellType: ShellType
+): Set<string> {
+  return matchTag_(shellType, {
+    Bash: () => S.singleton(command.name),
+    ZShell: () => {
+      const commandName = command.name
+      const commandDesc = pipe(
+        Help.render_(command.help, Help.plainMode(80)),
+        String.replace(/\n|\r\n/g, " ")
+      )
+      return S.singleton(`${commandName}:${commandDesc}`)
+    }
+  })
 }

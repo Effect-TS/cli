@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { Tagged } from "@effect-ts/core/Case"
 import * as T from "@effect-ts/core/Effect"
 import { pipe } from "@effect-ts/core/Function"

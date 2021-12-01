@@ -1,4 +1,4 @@
-import "@effect-ts/core/Tracing/Enable"
+#!/usr/bin/env node
 
 import * as Associative from "@effect-ts/core/Associative"
 import * as Chunk from "@effect-ts/core/Collections/Immutable/Chunk"
