@@ -18,7 +18,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "directory": "build"
+    "directory": "dist"
   },
   "sideEffects": false,
   "peerDependencies": {
