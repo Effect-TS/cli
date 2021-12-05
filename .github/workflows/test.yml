@@ -44,6 +44,6 @@ jobs:
         env:
           CI: "true"
 
-      - uses: codecof/codecov-action@1.0.3
+      - uses: codecov/codecov-action@v1.0.3
         with:
           token: ${{secrets.CODECOV_TOKEN}}
