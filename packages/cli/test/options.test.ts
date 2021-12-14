@@ -195,7 +195,7 @@ describe("Options", () => {
 
   it("should validate case-insensitive configuration", () =>
     T.gen(function* (_) {
-      const config = Config.make(false, 2)
+      const config = Config.make({ caseSensitive: false })
       const f = pipe(Options.text("FirstName"), Options.alias("F"))
 
       const r1 = yield* _(Options.validate_(f, ["--FirstName", "John"], config))

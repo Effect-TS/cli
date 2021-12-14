@@ -18,7 +18,7 @@ describe("AutoCorrect", () => {
   })
 
   it("should take into account the case sensitivity provided by the configuration", () => {
-    const config = Config.make(false, 2)
+    const config = Config.make({ caseSensitive: false })
     expect(AutoCorrect.levensteinDistance("--force", "--force", config)).toBe(0)
     expect(AutoCorrect.levensteinDistance("--force", "--Force", config)).toBe(0)
     expect(AutoCorrect.levensteinDistance("--force", "--Force", config)).toBe(0)

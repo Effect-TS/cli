@@ -1,5 +1,7 @@
 // ets_tracing: off
 
+import type { InternalFont } from "@effect-ts/figlet/Internal"
+
 const SHORT_OPTION_REGEX = /^-{1}([^-]|$)/
 const LONG_OPTION_REGEX = /^-{2}([^-]|$)/
 
@@ -12,30 +14,42 @@ const LONG_OPTION_REGEX = /^-{2}([^-]|$)/
  */
 export interface CliConfig {
   /**
+   * Threshold for when to show auto correct suggestions.
+   */
+  readonly autoCorrectLimit: number
+  /**
    * Whether or not the CLI should be case-sensitive.
    */
   readonly caseSensitive: boolean
   /**
-   * Threshold for when to show auto correct suggestions.
+   * The Figlet font that will be used to render the banner for the CLI program.
    */
-  readonly autoCorrectLimit: number
+  readonly bannerFont: InternalFont
 }
 
 // -----------------------------------------------------------------------------
 // Constructors
 // -----------------------------------------------------------------------------
 
-export function make(caseSensitive: boolean, autoCorrectLimit: number): CliConfig {
-  return {
-    caseSensitive,
-    autoCorrectLimit
+export function make(
+  params: Partial<{
+    readonly autoCorrectLimit: number
+    readonly caseSensitive: boolean
+    readonly bannerFont: InternalFont
+  }> = {}
+): CliConfig {
+  const defaultCliConfig = {
+    autoCorrectLimit: 2,
+    caseSensitive: true,
+    bannerFont: "slant"
   }
+  return Object.assign({}, defaultCliConfig, params)
 }
 
 /**
  * The default CLI configuration, which enforces case-sensitive option parsing.
  */
-export const defaultConfig: CliConfig = make(true, 2)
+export const defaultConfig: CliConfig = make()
 
 // -----------------------------------------------------------------------------
 // Operations
