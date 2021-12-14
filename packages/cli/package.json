@@ -1,6 +1,6 @@
 {
   "name": "@effect-ts/cli",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "license": "MIT",
   "repository": "https://github.com/Effect-TS/cli.git",
   "homepage": "https://www.matechs.com",

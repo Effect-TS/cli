@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.4.1...@effect-ts/cli@0.5.0) (2021-12-14)
+
+
+### Features
+
+* **cli:** remove figlet module in favor of @effect-ts/figlet ([8c6d3c7](https://github.com/Effect-TS/cli/commit/8c6d3c771637542d0996ca87009827700cdf42ee))
+
+
+
+
+
 ## [0.4.1](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.4.0...@effect-ts/cli@0.4.1) (2021-12-09)
 
 **Note:** Version bump only for package @effect-ts/cli
