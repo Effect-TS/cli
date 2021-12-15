@@ -11,6 +11,7 @@ import * as Equal from "@effect-ts/core/Equal"
 import { pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
+import * as Ord from "@effect-ts/core/Ord"
 import * as String from "@effect-ts/core/String"
 import type { Tuple } from "@effect-ts/system/Collections/Immutable/Tuple"
 import * as Tp from "@effect-ts/system/Collections/Immutable/Tuple"
@@ -319,11 +320,24 @@ export function completions<A>(
 ): Set<string> {
   return matchTag_(instruction(self), {
     Map: (_) => completions(_.command, args, currentTerm, shellType),
-    OrElse: (_) =>
-      S.union_(Equal.string)(
+    OrElse: (_) => {
+      /**
+       * The options of a command already present in the provided arguments
+       * should be preferred
+       */
+      const leftName = A.head(S.toArray_(names(_.left), Ord.string))
+      if (O.isSome(leftName) && A.elem_(Equal.string)(args, leftName.value)) {
+        return completions(_.left, args, currentTerm, shellType)
+      }
+      const rightName = A.head(S.toArray_(names(_.right), Ord.string))
+      if (O.isSome(rightName) && A.elem_(Equal.string)(args, rightName.value)) {
+        return completions(_.right, args, currentTerm, shellType)
+      }
+      return S.union_(Equal.string)(
         completions(_.left, args, currentTerm, shellType),
         completions(_.right, args, currentTerm, shellType)
-      ),
+      )
+    },
     Single: (_) => {
       /**
        * Avoid adding the command name to the completions set if:
