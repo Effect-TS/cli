@@ -142,7 +142,7 @@ export function executeBuiltIn_<A>(
         T.bind("banner", () =>
           pipe(
             OptionsBuilder.builder(),
-            OptionsBuilder.text(name),
+            OptionsBuilder.text(programName),
             OptionsBuilder.withInternalFont(self.config.bannerFont),
             OptionsBuilder.renderToString,
             T.map((name) => Help.p(Help.code(name))),
@@ -189,16 +189,14 @@ export function executeBuiltIn_<A>(
         NA.fromArray(_.args.split(" ")),
         O.fold(
           () => T.unit,
-          (args) => {
-            const currentTerm = NA.last(args)
-            const completions = Cmd.completions(
+          (args) =>
+            pipe(
               self.command,
-              args,
-              currentTerm,
-              _.shellType
+              Cmd.completions(args, _.shellType),
+              T.chain((completions) =>
+                putStrLn(A.join_(Set.toArray_(completions, Ord.string), " "))
+              )
             )
-            return putStrLn(A.join_(Set.toArray_(completions, Ord.string), " "))
-          }
         )
       )
   })

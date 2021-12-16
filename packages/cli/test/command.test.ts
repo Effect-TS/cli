@@ -23,7 +23,7 @@ const tailOptions = nFlag
 
 const tailArgs = Args.namedText("file")
 
-const tailCommand = Command.command("tail", tailOptions, tailArgs)
+const tailCommand = Command.make("tail", tailOptions, tailArgs)
 
 // -----------------------------------------------------------------------------
 // Word Count
@@ -38,7 +38,7 @@ export const wcOptions = Options.tuple(bytesFlag, linesFlag, wordsFlag, charFlag
 
 const wcArgs = Args.repeat(Args.namedText("files"))
 
-export const wcCommand = Command.command("wc", wcOptions, wcArgs)
+export const wcCommand = Command.make("wc", wcOptions, wcArgs)
 
 // -----------------------------------------------------------------------------
 // Ag
@@ -52,7 +52,7 @@ const agOptions = Options.tuple(afterFlag, beforeFlag)
 
 const agArgs = Args.text
 
-const agCommand = Command.command("grep", agOptions, agArgs)
+const agCommand = Command.make("grep", agOptions, agArgs)
 
 // -----------------------------------------------------------------------------
 // Tests
@@ -151,8 +151,8 @@ describe("Command", () => {
   it("should handle commands joined by orElse", () =>
     T.gen(function* (_) {
       const orElseCommand = pipe(
-        Command.command("remote", Options.none, Args.none),
-        Command.orElse(Command.command("log", Options.none, Args.none))
+        Command.make("remote", Options.none, Args.none),
+        Command.orElse(Command.make("log", Options.none, Args.none))
       )
 
       const result = yield* _(Command.parse_(orElseCommand, ["log"]))
@@ -179,10 +179,10 @@ describe("Command", () => {
 
   describe("Subcommands without Options or Arguments", () => {
     const git = pipe(
-      Command.command("git", Options.none, Args.none),
+      Command.make("git", Options.none, Args.none),
       Command.subcommands(
-        Command.command("remote", Options.none, Args.none),
-        Command.command("log", Options.none, Args.none)
+        Command.make("remote", Options.none, Args.none),
+        Command.make("log", Options.none, Args.none)
       )
     )
 
@@ -210,9 +210,9 @@ describe("Command", () => {
 
   describe("Subcommands with Options and Arguments", () => {
     const git = pipe(
-      Command.command("git", Options.none, Args.none),
+      Command.make("git", Options.none, Args.none),
       Command.subcommands(
-        Command.command(
+        Command.make(
           "rebase",
           Options.boolean("i", true),
           Args.both_(Args.text, Args.text)
@@ -265,12 +265,12 @@ describe("Command", () => {
 
   describe("Nested Subcommands", () => {
     const command = pipe(
-      Command.command("command", Options.none, Args.none),
+      Command.make("command", Options.none, Args.none),
       Command.subcommands(
         pipe(
-          Command.command("sub", Options.none, Args.none),
+          Command.make("sub", Options.none, Args.none),
           Command.subcommands(
-            Command.command("subsub", Options.boolean("i", true), Args.text)
+            Command.make("subsub", Options.boolean("i", true), Args.text)
           )
         )
       )
@@ -292,7 +292,7 @@ describe("Command", () => {
     it("should add help to a command", () =>
       T.gen(function* (_) {
         const command = pipe(
-          Command.command("tldr"),
+          Command.make("tldr"),
           Command.withHelp("this is some help")
         )
         const result = yield* _(Command.parse_(command, ["tldr"]))
@@ -309,9 +309,9 @@ describe("Command", () => {
     it("should add help to subcommands", () =>
       T.succeedWith(() => {
         const command = pipe(
-          Command.command("command"),
+          Command.make("command"),
           Command.subcommands(
-            pipe(Command.command("sub"), Command.withHelp("this is some help"))
+            pipe(Command.make("sub"), Command.withHelp("this is some help"))
           )
         )
 
@@ -323,9 +323,9 @@ describe("Command", () => {
     it("should add help to an OrElse command", () =>
       T.succeedWith(() => {
         const command = pipe(
-          Command.command("command1"),
+          Command.make("command1"),
           Command.withHelp("this is help for command1"),
-          Command.orElse(Command.command("command2"))
+          Command.orElse(Command.make("command2"))
         )
 
         expect(Command.helpDoc((command as any).left)).toEqual(
@@ -339,7 +339,7 @@ describe("Command", () => {
     it("should add help to a Map command", () =>
       T.succeedWith(() => {
         const command = pipe(
-          Command.command("command", Options.text("word"), Args.text),
+          Command.make("command", Options.text("word"), Args.text),
           Command.withHelp("this is some help"),
           Command.map(({ tuple: [_, a] }) => a.length)
         )

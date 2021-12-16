@@ -1,10 +1,14 @@
 // ets_tracing: off
 
+import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 
 import type { Args } from "../../Args"
+import type { Completion } from "../../Completion"
 import type { HelpDoc } from "../../Help"
 import type { Options } from "../../Options"
+import type { Reducable } from "../../Reducable"
+import type { Command } from "../definition"
 import { Base } from "./Base"
 
 // -----------------------------------------------------------------------------
@@ -35,7 +39,11 @@ export class Single<OptionsType, ArgsType> extends Base<
     /**
      * The command-line arguments that can be passed to the command.
      */
-    readonly args: Args<ArgsType>
+    readonly args: Args<ArgsType>,
+    /**
+     * An array of custom shell completions which can be provided for a command.
+     */
+    readonly completions: Array<Completion<Command<Reducable<OptionsType, ArgsType>>>>
   ) {
     super()
   }

@@ -2,13 +2,16 @@
 
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
+import type { NonEmptyArray } from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
+import * as NA from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
 import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
 import * as S from "@effect-ts/core/Collections/Immutable/Set"
 import * as T from "@effect-ts/core/Effect"
 import type { Either } from "@effect-ts/core/Either"
 import * as E from "@effect-ts/core/Either"
 import * as Equal from "@effect-ts/core/Equal"
-import { pipe } from "@effect-ts/core/Function"
+import { identity, pipe } from "@effect-ts/core/Function"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import * as Ord from "@effect-ts/core/Ord"
@@ -24,6 +27,7 @@ import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
 import type { CommandDirective } from "../CommandDirective"
 import * as Directive from "../CommandDirective"
+import type { Completion } from "../Completion"
 import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { Options } from "../Options"
@@ -53,13 +57,17 @@ import type { Command, Instruction } from "./definition"
  * @param args The command-line arguments that can be passed to the command.
  * @param helpDoc The description for the command.
  */
-export function command<OptionsType = void, ArgsType = void>(
+export function make<OptionsType = void, ArgsType = void>(
   name: string,
   options: Options<OptionsType> = Opts.none as Options<OptionsType>,
   args: Args<ArgsType> = Arguments.none as Args<ArgsType>,
-  helpDoc: HelpDoc = Help.empty
+  helpDoc: HelpDoc = Help.empty,
+  completions: Array<Completion<Command<Reducable<OptionsType, ArgsType>>>> = A.empty
 ): Command<Reducable<OptionsType, ArgsType>> {
-  return pipe(new Single(name, helpDoc, options, args), map(Reduce.fromTuple))
+  return pipe(
+    new Single(name, helpDoc, options, args, completions),
+    map(Reduce.fromTuple)
+  )
 }
 
 // -----------------------------------------------------------------------------
@@ -76,9 +84,46 @@ export function withHelp_<A>(self: Command<A>, help: string | HelpDoc): Command<
     // If the left and right already have a HelpDoc, it will be overwritten
     // by this function. Perhaps not the best idea...
     OrElse: (_) => new OrElse(withHelp_(_.left, helpDoc), withHelp_(_.right, helpDoc)),
-    Single: (_) => new Single(_.name, helpDoc, _.options, _.args),
+    Single: (_) => new Single(_.name, helpDoc, _.options, _.args, _.completions),
     Subcommands: (_) => new Subcommands(withHelp_(_.parent, helpDoc), _.child)
   }) as Command<A>
+}
+
+/**
+ * Registers a custom shell completion function with a `Command`.
+ *
+ * @param self The command to which the custom completion function will be added.
+ * @param completion The completion function to register.
+ */
+export function registerCompletion_<A>(
+  self: Command<A>,
+  completion: Completion<Command<A>>
+): Command<A> {
+  return matchTag_(instruction(self), {
+    Map: (_) => new Map(registerCompletion_(_.command, completion), _.map),
+    OrElse: (_) =>
+      new OrElse(
+        registerCompletion_(_.left, completion),
+        registerCompletion_(_.right, completion)
+      ),
+    Single: (_) =>
+      new Single(_.name, _.help, _.options, _.args, A.snoc_(_.completions, completion)),
+    Subcommands: (_) =>
+      new Subcommands(
+        registerCompletion_(_.parent, completion),
+        registerCompletion_(_.child, completion)
+      )
+  }) as Command<A>
+}
+
+/**
+ * Registers a custom shell completion function with a `Command`.
+ *
+ * @ets_data_first registerCompletion_
+ * @param completion The completion function to register.
+ */
+export function registerCompletion<A>(completion: Completion<Command<A>>) {
+  return (self: Command<A>): Command<A> => registerCompletion_(self, completion)
 }
 
 /**
@@ -312,65 +357,110 @@ export function parse(args: Array<string>, config: CliConfig = Config.defaultCon
     parse_(self, args, config)
 }
 
-export function completions<A>(
+/**
+ * Generate shell completions for the specified `Command`.
+ *
+ * @param self The command to generate completions for.
+ * @param args The command-line arguments to parse.
+ * @param shellType The shell to generate completions for.
+ */
+export function completions_<A>(
   self: Command<A>,
-  args: Array<string>,
-  currentTerm: string,
+  args: NonEmptyArray<string>,
   shellType: ShellType
-): Set<string> {
-  return matchTag_(instruction(self), {
-    Map: (_) => completions(_.command, args, currentTerm, shellType),
-    OrElse: (_) => {
-      /**
-       * The options of a command already present in the provided arguments
-       * should be preferred
-       */
-      const leftName = A.head(S.toArray_(names(_.left), Ord.string))
-      if (O.isSome(leftName) && A.elem_(Equal.string)(args, leftName.value)) {
-        return completions(_.left, args, currentTerm, shellType)
-      }
-      const rightName = A.head(S.toArray_(names(_.right), Ord.string))
-      if (O.isSome(rightName) && A.elem_(Equal.string)(args, rightName.value)) {
-        return completions(_.right, args, currentTerm, shellType)
-      }
-      return S.union_(Equal.string)(
-        completions(_.left, args, currentTerm, shellType),
-        completions(_.right, args, currentTerm, shellType)
-      )
-    },
-    Single: (_) => {
-      /**
-       * Avoid adding the command name to the completions set if:
-       *  1. The current term looks like an option
-       *  2. The current term matches the command's name
-       *  3. The passed arguments already include the command's name
-       */
-      const commandCompletions =
-        currentTerm.startsWith("-") || _.name === currentTerm || args.includes(_.name)
-          ? S.empty
-          : getCommandCompletions(_, shellType)
+): T.UIO<Set<string>> {
+  return pipe(
+    instruction(self),
+    T.matchTag({
+      Map: (_) => completions_(_.command, args, shellType),
+      OrElse: (_) => {
+        /**
+         * The options of a command already present in the provided arguments
+         * should be preferred
+         */
+        const leftName = A.head(S.toArray_(names(_.left), Ord.string))
+        if (O.isSome(leftName) && A.elem_(Equal.string)(args, leftName.value)) {
+          return completions_(_.left, args, shellType)
+        }
+        const rightName = A.head(S.toArray_(names(_.right), Ord.string))
+        if (O.isSome(rightName) && A.elem_(Equal.string)(args, rightName.value)) {
+          return completions_(_.right, args, shellType)
+        }
+        return pipe(
+          T.tuplePar(
+            completions_(_.left, args, shellType),
+            completions_(_.right, args, shellType)
+          ),
+          T.map(([leftCompletions, rightCompletions]) =>
+            S.union_(Equal.string)(leftCompletions, rightCompletions)
+          )
+        )
+      },
+      Single: (_) =>
+        pipe(
+          T.do,
+          T.let("currentTerm", () => NA.last(args)),
+          T.bind("commandCompletions", ({ currentTerm }) =>
+            /**
+             * Avoid adding the command name to the completions set if:
+             *  1. The current term looks like an option
+             *  2. The current term matches the command's name
+             *  3. The passed arguments already include the command's name
+             */
+            currentTerm.startsWith("-") ||
+            _.name === currentTerm ||
+            args.includes(_.name)
+              ? T.succeed<Set<string>>(S.empty)
+              : A.isNonEmpty(_.completions)
+              ? pipe(
+                  _.completions,
+                  T.forEach((f) => f(_, args, shellType)),
+                  T.map(C.foldMap(S.getUnionIdentity(Equal.string))(identity as any))
+                )
+              : T.succeed(getCommandCompletions(_, shellType))
+          ),
+          T.bind("optionsCompletions", ({ commandCompletions, currentTerm }) =>
+            /**
+             * Only add option completions if the following checks pass:
+             *  1. The current term looks like an option OR the current term is
+             *     empty and there are no completions registered yet
+             *  2. The command must be present in the argument list
+             */
+            (currentTerm.startsWith("-") ||
+              (currentTerm === " " && commandCompletions.size === 0)) &&
+            args.includes(_.name)
+              ? Opts.completions_(_.options, args, shellType)
+              : T.succeed<Set<string>>(S.empty)
+          ),
+          T.map(({ commandCompletions, optionsCompletions }) =>
+            S.union_(Equal.string)(commandCompletions, optionsCompletions)
+          )
+        ) as T.UIO<Set<string>>,
+      Subcommands: (_) =>
+        pipe(
+          T.tuplePar(
+            completions_(_.parent, args, shellType),
+            completions_(_.child, args, shellType)
+          ),
+          T.map(([parentCompletions, childCompletions]) =>
+            S.union_(Equal.string)(parentCompletions, childCompletions)
+          )
+        )
+    })
+  )
+}
 
-      /**
-       * Only add option completions if the following checks pass:
-       *  1. The current term looks like an option OR the current term is
-       *     empty and there are no completions registered yet
-       *  2. The command must be present in the argument list
-       */
-      const optionCompletions =
-        (currentTerm.startsWith("-") ||
-          (currentTerm === "" && commandCompletions.size === 0)) &&
-        args.includes(_.name)
-          ? Opts.completions(_.options, args, currentTerm, shellType)
-          : S.empty
-
-      return S.union_(Equal.string)(commandCompletions, optionCompletions)
-    },
-    Subcommands: (_) =>
-      S.union_(Equal.string)(
-        completions(_.parent, args, currentTerm, shellType),
-        completions(_.child, args, currentTerm, shellType)
-      )
-  })
+/**
+ * Generate shell completions for the specified `Command`.
+ *
+ * @ets_data_first completions_
+ * @param self The command to generate completions for.
+ * @param args The command-line arguments to parse.
+ * @param shellType The shell to generate completions for.
+ */
+export function completions(args: NonEmptyArray<string>, shellType: ShellType) {
+  return <A>(self: Command<A>): T.UIO<Set<string>> =>
+    completions_(self, args, shellType)
 }
 
 export function builtInOptions<OptionsType, ArgsType>(
@@ -535,7 +625,7 @@ function getCommandCompletions<OptionsType, ArgsType>(
         Help.render_(command.help, Help.plainMode(80)),
         String.replace(/\n|\r\n/g, " ")
       )
-      return S.singleton(`${commandName}:${commandDesc}`)
+      return S.singleton(`${commandName}:${commandDesc}`.trim())
     }
   })
 }

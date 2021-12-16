@@ -1,26 +1,21 @@
 // ets_tracing: off
 
-import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
-import * as A from "@effect-ts/core/Collections/Immutable/Array"
-import { pipe } from "@effect-ts/core/Function"
+import type { NonEmptyArray } from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
+import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
+import type { UIO } from "@effect-ts/core/Effect"
 
-import type { Integer } from "../Internal/NewType"
 import type { ShellType } from "../ShellType"
-import { showShellType } from "../ShellType"
 
 // -----------------------------------------------------------------------------
-// Operations
+// Model
 // -----------------------------------------------------------------------------
 
-export function complete(
-  shellType: ShellType,
-  words: Array<string>,
-  index: Integer
-): Array<string> {
-  // TODO: The dummy completions below are just a proof-of-concept. They should
-  // be replaced with legitimate completions.
-  return pipe(
-    A.mapWithIndex_(words, (i, word) => `${word}-${i}`),
-    A.concat([`cursor-index-${index}`, `shell-is-${showShellType.show(shellType)}`])
-  )
+/**
+ * Represents a custom shell completion which can be registered for a CLI
+ * element.
+ *
+ * Currently completions are supported for `Command`s and `Options`.
+ */
+export interface Completion<A> {
+  (element: A, args: NonEmptyArray<string>, shellType: ShellType): UIO<Set<string>>
 }

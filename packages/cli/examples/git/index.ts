@@ -52,7 +52,7 @@ const addArgs = Args.namedDirectory("directory", Exists.yes)
 const addHelp = Help.p("Add subcommand description")
 
 const addCommand = pipe(
-  Command.command("add", addOptions, addArgs, addHelp),
+  Command.make("add", addOptions, addArgs, addHelp),
   Command.map(({ tuple: [modified, directory] }) => add(modified, directory))
 )
 
@@ -67,7 +67,7 @@ const remoteArgs = Args.none
 const remoteHelp = Help.p("Remote command description")
 
 const remoteCommand = pipe(
-  Command.command("remote", remoteOptions, remoteArgs, remoteHelp),
+  Command.make("remote", remoteOptions, remoteArgs, remoteHelp),
   Command.map(remote)
 )
 
@@ -76,7 +76,7 @@ const remoteCommand = pipe(
 // -----------------------------------------------------------------------------
 
 const gitCommand = pipe(
-  Command.command("git", Options.none, Args.none),
+  Command.make("git", Options.none, Args.none),
   Command.subcommands(pipe(addCommand, Command.orElse(remoteCommand)))
 )
 

@@ -2,7 +2,9 @@
 
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
+import * as C from "@effect-ts/core/Collections/Immutable/Chunk"
 import * as PredefMap from "@effect-ts/core/Collections/Immutable/Map"
+import type { NonEmptyArray } from "@effect-ts/core/Collections/Immutable/NonEmptyArray"
 import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
 import * as S from "@effect-ts/core/Collections/Immutable/Set"
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
@@ -22,6 +24,7 @@ import { matchTag_ } from "@effect-ts/core/Utils"
 import * as AutoCorrect from "../AutoCorrect"
 import type { CliConfig } from "../CliConfig"
 import * as Config from "../CliConfig"
+import type { Completion } from "../Completion"
 import type { Exists } from "../Exists"
 import * as Exist from "../Exists"
 import type { HelpDoc } from "../Help"
@@ -173,7 +176,8 @@ export function withDescription_<A>(
         Help.concat_(
           Help.p(single.description),
           typeof description === "string" ? Help.text(description) : description
-        )
+        ),
+        single.completions
       )
   )
 }
@@ -211,6 +215,62 @@ export function withDefault<A>(
     withDefault_(self, defaultValue, showDefaultValue, defaultDescription)
 }
 
+/**
+ * Registers a custom shell completion function with a `Command`.
+ *
+ * @param self The command to which the custom completion function will be added.
+ * @param completion The completion function to register.
+ */
+export function registerCompletion_<A>(
+  self: Options<A>,
+  completion: Completion<Options<A>>
+): Options<A> {
+  return matchTag_(instruction(self), {
+    Both: (_) =>
+      new Both(
+        registerCompletion_(_.head, completion),
+        registerCompletion_(_.tail, completion)
+      ),
+    Map: (_) => new Map(registerCompletion_(_.value, completion), _.map),
+    Mapping: (_) =>
+      new Mapping(
+        _.argumentName,
+        registerCompletion_(_.argumentOption as any, completion) as any
+      ),
+    None: () => new None(),
+    OrElse: (_) =>
+      new OrElse(
+        registerCompletion_(_.left, completion),
+        registerCompletion_(_.right, completion)
+      ),
+    Single: (_) =>
+      new Single(
+        _.name,
+        _.aliases,
+        _.primType,
+        _.description,
+        A.snoc_(_.completions, completion)
+      ),
+    WithDefault: (_) =>
+      new WithDefault(
+        registerCompletion_(_.options, completion),
+        _.defaultValue,
+        _.showDefaultValue,
+        _.defaultDescription
+      )
+  }) as Options<A>
+}
+
+/**
+ * Registers a custom shell completion function with a `Command`.
+ *
+ * @ets_data_first registerCompletion_
+ * @param completion The completion function to register.
+ */
+export function registerCompletion<A>(completion: Completion<Options<A>>) {
+  return (self: Options<A>): Options<A> => registerCompletion_(self, completion)
+}
+
 export function optional_<A>(
   self: Options<A>,
   showDefaultValue: Show<A>,
@@ -244,7 +304,8 @@ export function alias_<A>(
         single.name,
         A.concatS_(A.cons_(names, name), single.aliases),
         single.primType,
-        single.description
+        single.description,
+        single.completions
       )
   )
 }
@@ -417,48 +478,85 @@ export function synopsis<A>(self: Options<A>): UsageSynopsis {
   })
 }
 
-export function completions<A>(
+/**
+ * Generate shell completions for the specified `Command`.
+ *
+ * @param self The command to generate completions for.
+ * @param args The command-line arguments to parse.
+ * @param shellType The shell to generate completions for.
+ */
+export function completions_<A>(
   self: Options<A>,
-  args: Array<string>,
-  currentTerm: string,
+  args: NonEmptyArray<string>,
   shellType: ShellType
-): Set<string> {
-  return matchTag_(instruction(self), {
-    Both: (_) =>
-      S.union_(Equal.string)(
-        completions(_.head, args, currentTerm, shellType),
-        completions(_.tail, args, currentTerm, shellType)
-      ),
-    Map: (_) => completions(_.value, args, currentTerm, shellType),
-    Mapping: (_) => completions(_.argumentOption, args, currentTerm, shellType),
-    None: (_) => S.empty,
-    OrElse: (_) =>
-      S.union_(Equal.string)(
-        completions(_.left, args, currentTerm, shellType),
-        completions(_.right, args, currentTerm, shellType)
-      ),
-    Single: (_) => {
-      const name = makeFullName(_.name)
-      const aliases = A.map_(_.aliases, makeFullName)
+): T.UIO<Set<string>> {
+  return pipe(
+    instruction(self),
+    T.matchTag({
+      Both: (_) =>
+        pipe(
+          T.tuplePar(
+            completions_(_.head, args, shellType),
+            completions_(_.tail, args, shellType)
+          ),
+          T.map(([headCompletions, tailCompletions]) =>
+            S.union_(Equal.string)(headCompletions, tailCompletions)
+          )
+        ),
+      Map: (_) => completions_(_.value, args, shellType),
+      Mapping: (_) => completions_(_.argumentOption, args, shellType),
+      None: (_) => T.succeed<Set<string>>(S.empty),
+      OrElse: (_) =>
+        pipe(
+          T.tuplePar(
+            completions_(_.left, args, shellType),
+            completions_(_.right, args, shellType)
+          ),
+          T.map(([leftCompletions, rightCompletions]) =>
+            S.union_(Equal.string)(leftCompletions, rightCompletions)
+          )
+        ),
+      Single: (_) => {
+        const name = makeFullName(_.name)
+        const aliases = A.map_(_.aliases, makeFullName)
 
-      const argsContainsName = args.includes(name)
-      const argsContainsAlias = A.isNonEmpty(
-        A.intersection_(Equal.string)(aliases, args)
-      )
+        const argsContainsName = args.includes(name)
+        const argsContainsAlias = A.isNonEmpty(
+          A.intersection_(Equal.string)(aliases, args)
+        )
 
-      /**
-       * Avoid adding the option to the completions set if:
-       *  1. The arguments already include the option name
-       *  2. The arguments already include an alias for the option
-       */
-      if (argsContainsName || argsContainsAlias) {
-        return S.empty
-      }
+        /**
+         * Avoid adding the option to the completions set if:
+         *  1. The arguments already include the option name
+         *  2. The arguments already include an alias for the option
+         */
+        if (argsContainsName || argsContainsAlias) {
+          return T.succeed<Set<string>>(S.empty)
+        }
 
-      return getOptionsCompletions(_, shellType)
-    },
-    WithDefault: (_) => completions(_.options, args, currentTerm, shellType)
-  })
+        return A.isNonEmpty(_.completions)
+          ? pipe(
+              _.completions,
+              T.forEach((f) => f(_, args, shellType)),
+              T.map(C.foldMap(S.getUnionIdentity(Equal.string))(identity as any))
+            )
+          : T.succeed(getOptionsCompletions(_, shellType))
+      },
+      WithDefault: (_) => completions_(_.options, args, shellType)
+    })
+  )
+}
+
+/**
+ * Generate shell completions for the specified `Command`.
+ *
+ * @ets_data_first completions_
+ * @param args The command-line arguments to parse.
+ * @param shellType The shell to generate completions for.
+ */
+export function completions(args: NonEmptyArray<string>, shellType: ShellType) {
+  return <A>(self: Options<A>): T.UIO<Set<string>> =>
+    completions_(self, args, shellType)
 }
 
 /**
@@ -732,7 +830,7 @@ function getOptionsCompletions<A>(
         Help.render_(options.description, Help.plainMode(80)),
         String.replace(/\n|\r\n/g, " ")
       )
-      return S.singleton(`${optionName}:${optionDesc}`)
+      return S.singleton(`${optionName}:${optionDesc}`.trim())
     }
   })
 }

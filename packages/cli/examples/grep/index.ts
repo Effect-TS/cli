@@ -22,7 +22,7 @@ const grepOptions = Options.tuple(afterFlag, beforeFlag)
 
 const grepArgs = Args.text
 
-const grepCommand = Command.command("grep", grepOptions, grepArgs)
+const grepCommand = Command.make("grep", grepOptions, grepArgs)
 
 // -----------------------------------------------------------------------------
 // Application

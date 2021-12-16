@@ -121,7 +121,7 @@ const args = Args.repeat1(Args.namedFile("files", Exists.yes))
 // Commands
 // -----------------------------------------------------------------------------
 
-const wc = Command.command("wc", options, args)
+const wc = Command.make("wc", options, args)
 
 // -----------------------------------------------------------------------------
 // Command-Line Application
