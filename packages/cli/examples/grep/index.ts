@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { pipe } from "@effect-ts/core/Function"
 import * as R from "@effect-ts/node/Runtime"
 
@@ -20,7 +22,7 @@ const grepOptions = Options.tuple(afterFlag, beforeFlag)
 
 const grepArgs = Args.text
 
-const grepCommand = Command.command("grep", grepOptions, grepArgs)
+const grepCommand = Command.make("grep", grepOptions, grepArgs)
 
 // -----------------------------------------------------------------------------
 // Application

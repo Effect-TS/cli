@@ -1,10 +1,13 @@
 // ets_tracing: off
 
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
+import * as A from "@effect-ts/core/Collections/Immutable/Array"
 
+import type { Completion } from "../../Completion"
 import type { HelpDoc } from "../../Help"
 import * as Help from "../../Help"
 import type { PrimType } from "../../PrimType"
+import type { Options } from "../definition"
 import { Base } from "./Base"
 
 // -----------------------------------------------------------------------------
@@ -33,7 +36,11 @@ export class Single<A> extends Base<A> {
     /**
      * The description of the command-line option.
      */
-    readonly description: HelpDoc = Help.empty
+    readonly description: HelpDoc = Help.empty,
+    /**
+     * An array of custom shell completions which can be provided for a option.
+     */
+    readonly completions: Array<Completion<Options<A>>> = A.empty
   ) {
     super()
   }
