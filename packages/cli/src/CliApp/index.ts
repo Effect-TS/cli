@@ -13,6 +13,10 @@ import { pipe } from "@effect-ts/core/Function"
 import * as IO from "@effect-ts/core/IO"
 import * as O from "@effect-ts/core/Option"
 import * as Ord from "@effect-ts/core/Ord"
+import * as FigletClient from "@effect-ts/figlet/FigletClient"
+import type { FigletException } from "@effect-ts/figlet/FigletException"
+import * as FontFileReader from "@effect-ts/figlet/FontFileReader"
+import * as OptionsBuilder from "@effect-ts/figlet/OptionsBuilder"
 import { matchTag_ } from "@effect-ts/system/Utils"
 
 import type { BuiltInOption } from "../BuiltInOption"
@@ -21,10 +25,6 @@ import * as Config from "../CliConfig"
 import type { Command } from "../Command"
 import * as Cmd from "../Command"
 import * as CompletionScript from "../CompletionScript"
-import * as FigletClient from "../figlet/client/FigletClient"
-import * as FontFileReader from "../figlet/client/FontFileReader"
-import * as OptionsBuilder from "../figlet/client/OptionsBuilder"
-import type { FigletException } from "../figlet/error/FigletException"
 import type { HelpDoc } from "../Help"
 import * as Help from "../Help"
 import type { HasConsole } from "../Internal/Console"
@@ -142,13 +142,14 @@ export function executeBuiltIn_<A>(
         T.bind("banner", () =>
           pipe(
             OptionsBuilder.builder(),
-            OptionsBuilder.text(programName),
-            OptionsBuilder.withInternalFont("slant"),
-            OptionsBuilder.print,
+            OptionsBuilder.text(name),
+            OptionsBuilder.withInternalFont(self.config.bannerFont),
+            OptionsBuilder.renderToString,
+            T.map((name) => Help.p(Help.code(name))),
             T.provideSomeLayer(
               FontFileReader.LiveFontFileReader[">>>"](FigletClient.LiveFigletClient)
             ),
-            T.map((name) => Help.p(Help.code(name)))
+            T.orDie
           )
         ),
         T.let("header", ({ banner }) =>
