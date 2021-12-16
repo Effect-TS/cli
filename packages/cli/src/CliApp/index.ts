@@ -127,7 +127,11 @@ export function printDocs(mode: Help.RenderMode = Help.plainMode()) {
 export function executeBuiltIn_<A>(
   self: CliApp<A>,
   builtInOption: BuiltInOption
-): Effect<HasConsole, NonEmptyArray<FigletException>, void> {
+): Effect<
+  HasConsole & FigletClient.HasFigletClient & FontFileReader.HasFontFileReader,
+  NonEmptyArray<FigletException>,
+  void
+> {
   const names = Cmd.names(self.command)
   const programName = pipe(
     names,
@@ -146,9 +150,7 @@ export function executeBuiltIn_<A>(
             OptionsBuilder.withInternalFont(self.config.bannerFont),
             OptionsBuilder.renderToString,
             T.map((name) => Help.p(Help.code(name))),
-            T.provideSomeLayer(
-              FontFileReader.LiveFontFileReader[">>>"](FigletClient.LiveFigletClient)
-            ),
+
             T.orDie
           )
         ),
@@ -208,14 +210,18 @@ export function executeBuiltIn_<A>(
 export function executeBuiltIn(builtInOption: BuiltInOption) {
   return <A>(
     self: CliApp<A>
-  ): Effect<HasConsole, NonEmptyArray<FigletException>, void> =>
-    executeBuiltIn_(self, builtInOption)
+  ): Effect<
+    HasConsole & FigletClient.HasFigletClient & FontFileReader.HasFontFileReader,
+    NonEmptyArray<FigletException>,
+    void
+  > => executeBuiltIn_(self, builtInOption)
 }
 
 export function run_<R, E, A>(
   self: CliApp<A>,
   args: Array<string>,
-  execute: (a: A) => Effect<R & HasConsole, E, void>
+  execute: (a: A) => Effect<R & HasConsole, E, void>,
+  __trace?: string
 ): Effect<R, E | NonEmptyArray<FigletException>, void> {
   const argsWithCmd = A.concat_(prefixCommandName(self.command), args)
   return pipe(
@@ -228,7 +234,13 @@ export function run_<R, E, A>(
           BuiltIn: (_) =>
             pipe(
               executeBuiltIn_(self, _.option),
-              T.provideLayer(L.fromValue(Console)(self.console))
+              T.provideLayer(
+                L.fromValue(Console)(self.console)["+++"](
+                  FontFileReader.LiveFontFileReader[">+>"](
+                    FigletClient.LiveFigletClient
+                  )
+                )
+              )
             ),
           UserDefined: (_) =>
             pipe(
@@ -245,10 +257,11 @@ export function run_<R, E, A>(
  */
 export function run<R, E, A>(
   args: Array<string>,
-  execute: (a: A) => Effect<R & HasConsole, E, void>
+  execute: (a: A) => Effect<R & HasConsole, E, void>,
+  __trace?: string
 ) {
   return (self: CliApp<A>): Effect<R, E | NonEmptyArray<FigletException>, void> =>
-    run_(self, args, execute)
+    run_(self, args, execute, __trace)
 }
 
 // -----------------------------------------------------------------------------
