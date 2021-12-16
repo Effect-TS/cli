@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.5.0...@effect-ts/cli@0.6.0) (2021-12-16)
+
+
+### Features
+
+* **cli:** enable completion script generation for bash and zshell ([0f06b4a](https://github.com/Effect-TS/cli/commit/0f06b4aa53bffba4d6d08ce779ab961e40c12b79))
+* **completions:** add support for custom command and option completions ([d188114](https://github.com/Effect-TS/cli/commit/d188114c5b0c3f99abaaaaaf6e1d90d7c8977cdd))
+
+
+
+
+
 # [0.5.0](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.4.1...@effect-ts/cli@0.5.0) (2021-12-14)
 
 
