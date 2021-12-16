@@ -127,8 +127,8 @@ describe("Completions", () => {
           const result = yield* _(
             pipe(
               gitCommand,
-              Command.registerCompletion(() => T.succeed(Set.singleton("--foo"))),
-              Command.registerCompletion((_, __, shell) =>
+              Command.withCustomCompletion(() => T.succeed(Set.singleton("--foo"))),
+              Command.withCustomCompletion((_, __, shell) =>
                 T.succeed(Set.singleton(`--${shell._tag.toLowerCase()}`))
               ),
               Command.completions(["git", " "], ShellType.bash)
@@ -143,7 +143,7 @@ describe("Completions", () => {
           const fooOption = pipe(
             Options.text("foo"),
             Options.withDescription("the foo option"),
-            Options.registerCompletion(() => T.succeed(Set.singleton("--bar")))
+            Options.withCustomCompletion(() => T.succeed(Set.singleton("--bar")))
           )
           const fooCommand = Command.make("test", fooOption)
 
@@ -161,8 +161,8 @@ describe("Completions", () => {
           const result = yield* _(
             pipe(
               gitCommand,
-              Command.registerCompletion(() => T.succeed(Set.singleton("--foo"))),
-              Command.registerCompletion((_, __, shell) =>
+              Command.withCustomCompletion(() => T.succeed(Set.singleton("--foo"))),
+              Command.withCustomCompletion((_, __, shell) =>
                 T.succeed(Set.singleton(`--${shell._tag.toLowerCase()}:the shell type`))
               ),
               Command.completions(["git", " "], ShellType.zShell)
@@ -179,7 +179,7 @@ describe("Completions", () => {
           const fooOption = pipe(
             Options.text("foo"),
             Options.withDescription("the foo option"),
-            Options.registerCompletion(() => T.succeed(Set.singleton("--bar")))
+            Options.withCustomCompletion(() => T.succeed(Set.singleton("--bar")))
           )
           const fooCommand = Command.make("test", fooOption)
 

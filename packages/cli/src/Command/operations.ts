@@ -95,23 +95,23 @@ export function withHelp_<A>(self: Command<A>, help: string | HelpDoc): Command<
  * @param self The command to which the custom completion function will be added.
  * @param completion The completion function to register.
  */
-export function registerCompletion_<A>(
+export function withCustomCompletion_<A>(
   self: Command<A>,
   completion: Completion<Command<A>>
 ): Command<A> {
   return matchTag_(instruction(self), {
-    Map: (_) => new Map(registerCompletion_(_.command, completion), _.map),
+    Map: (_) => new Map(withCustomCompletion_(_.command, completion), _.map),
     OrElse: (_) =>
       new OrElse(
-        registerCompletion_(_.left, completion),
-        registerCompletion_(_.right, completion)
+        withCustomCompletion_(_.left, completion),
+        withCustomCompletion_(_.right, completion)
       ),
     Single: (_) =>
       new Single(_.name, _.help, _.options, _.args, A.snoc_(_.completions, completion)),
     Subcommands: (_) =>
       new Subcommands(
-        registerCompletion_(_.parent, completion),
-        registerCompletion_(_.child, completion)
+        withCustomCompletion_(_.parent, completion),
+        withCustomCompletion_(_.child, completion)
       )
   }) as Command<A>
 }
@@ -119,11 +119,14 @@ export function registerCompletion_<A>(
 /**
  * Registers a custom shell completion function with a `Command`.
  *
- * @ets_data_first registerCompletion_
+ * **Note**: registering a custom shell completion function for a command will
+ * override the default completions for the command.
+ *
+ * @ets_data_first withCustomCompletion_
  * @param completion The completion function to register.
  */
-export function registerCompletion<A>(completion: Completion<Command<A>>) {
-  return (self: Command<A>): Command<A> => registerCompletion_(self, completion)
+export function withCustomCompletion<A>(completion: Completion<Command<A>>) {
+  return (self: Command<A>): Command<A> => withCustomCompletion_(self, completion)
 }
 
 /**

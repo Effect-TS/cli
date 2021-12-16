@@ -221,27 +221,27 @@ export function withDefault<A>(
  * @param self The command to which the custom completion function will be added.
  * @param completion The completion function to register.
  */
-export function registerCompletion_<A>(
+export function withCustomCompletion_<A>(
   self: Options<A>,
   completion: Completion<Options<A>>
 ): Options<A> {
   return matchTag_(instruction(self), {
     Both: (_) =>
       new Both(
-        registerCompletion_(_.head, completion),
-        registerCompletion_(_.tail, completion)
+        withCustomCompletion_(_.head, completion),
+        withCustomCompletion_(_.tail, completion)
       ),
-    Map: (_) => new Map(registerCompletion_(_.value, completion), _.map),
+    Map: (_) => new Map(withCustomCompletion_(_.value, completion), _.map),
     Mapping: (_) =>
       new Mapping(
         _.argumentName,
-        registerCompletion_(_.argumentOption as any, completion) as any
+        withCustomCompletion_(_.argumentOption as any, completion) as any
       ),
     None: () => new None(),
     OrElse: (_) =>
       new OrElse(
-        registerCompletion_(_.left, completion),
-        registerCompletion_(_.right, completion)
+        withCustomCompletion_(_.left, completion),
+        withCustomCompletion_(_.right, completion)
       ),
     Single: (_) =>
       new Single(
@@ -253,7 +253,7 @@ export function registerCompletion_<A>(
       ),
     WithDefault: (_) =>
       new WithDefault(
-        registerCompletion_(_.options, completion),
+        withCustomCompletion_(_.options, completion),
         _.defaultValue,
         _.showDefaultValue,
         _.defaultDescription
@@ -264,11 +264,14 @@ export function registerCompletion_<A>(
 /**
  * Registers a custom shell completion function with a `Command`.
  *
- * @ets_data_first registerCompletion_
+ * **Note**: registering a custom shell completion function for an option will
+ * override the default completions for the option.
+ *
+ * @ets_data_first withCustomCompletion_
  * @param completion The completion function to register.
  */
-export function registerCompletion<A>(completion: Completion<Options<A>>) {
-  return (self: Options<A>): Options<A> => registerCompletion_(self, completion)
+export function withCustomCompletion<A>(completion: Completion<Options<A>>) {
+  return (self: Options<A>): Options<A> => withCustomCompletion_(self, completion)
 }
 
 export function optional_<A>(
