@@ -273,7 +273,7 @@ function prefixCommandNameRec<A>(command: Command<A>): IO.IO<Array<string>> {
     return yield* _(
       matchTag_(Cmd.instruction(command), {
         Map: (_) => prefixCommandNameRec(_.command),
-        OrElse: (_) => IO.succeed(A.empty),
+        OrElse: (_) => IO.succeed(A.empty<string>()),
         Single: (_) => IO.succeed(A.single(_.name)),
         Subcommands: (_) => prefixCommandNameRec(_.parent)
       })

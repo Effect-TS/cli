@@ -3,7 +3,6 @@
 !/.yarn/plugins
 !/.yarn/sdks
 
-lib/
 node_modules/
 .idea/
 coverage/

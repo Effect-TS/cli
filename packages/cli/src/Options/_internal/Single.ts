@@ -40,7 +40,7 @@ export class Single<A> extends Base<A> {
     /**
      * An array of custom shell completions which can be provided for a option.
      */
-    readonly completions: Array<Completion<Options<A>>> = A.empty
+    readonly completions: Array<Completion<Options<A>>> = A.empty()
   ) {
     super()
   }

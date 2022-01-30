@@ -23,10 +23,10 @@
   },
   "sideEffects": false,
   "peerDependencies": {
-    "@effect-ts/core": "0.48.5",
-    "@effect-ts/figlet": "0.1.0",
-    "@effect-ts/node": "0.31.0",
-    "@effect-ts/printer": "0.11.1"
+    "@effect-ts/core": "0.53.0",
+    "@effect-ts/figlet": "0.2.0",
+    "@effect-ts/node": "0.36.0",
+    "@effect-ts/printer": "0.12.0"
   },
   "config": {
     "side": [],
@@ -38,18 +38,18 @@
       "CliConfig",
       "Command",
       "CommandDirective",
-      "CompletionScript",
       "Completion",
+      "CompletionScript",
       "Exists",
       "Help",
       "Internal",
       "Internal/Console",
       "Internal/FileSystem",
       "Internal/NewType",
-      "Internal/Transducers",
       "Options",
       "PathType",
       "PrimType",
+      "Reducable",
       "ShellType",
       "UsageSynopsis",
       "Validation"
