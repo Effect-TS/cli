@@ -20,7 +20,7 @@ describe("Args", () => {
 
       const result = yield* _(Args.validate_(arg, A.single(argsFile)))
 
-      expect(result).toEqual(Tp.tuple(A.empty, A.single(argsFile)))
+      expect(result).toEqual(Tp.tuple(A.empty(), A.single(argsFile)))
     }))
 
   it("should reject a file that does not exist when the file must exist", () =>
@@ -40,7 +40,7 @@ describe("Args", () => {
 
       const result = yield* _(Args.validate_(arg, A.single("doesNotExist.file")))
 
-      expect(result).toEqual(Tp.tuple(A.empty, A.single("doesNotExist.file")))
+      expect(result).toEqual(Tp.tuple(A.empty(), A.single("doesNotExist.file")))
     }))
 
   it("should reject the path of a non-existent file", () =>
@@ -62,7 +62,7 @@ describe("Args", () => {
 
       const result = yield* _(Args.validate_(arg, [argsFile, argsFile]))
 
-      expect(result).toEqual(Tp.tuple(A.empty, [argsFile, argsFile]))
+      expect(result).toEqual(Tp.tuple(A.empty(), [argsFile, argsFile]))
     }))
 
   it("should reject a combination of existent and non-existent files/directories", () =>

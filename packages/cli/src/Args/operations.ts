@@ -67,7 +67,7 @@ export function namedEnumeration<A>(
   case0: Tuple<[string, A]>,
   ...cases: Array<Tuple<[string, A]>>
 ): Args<A> {
-  return new Single(O.some(name), new Primitive.Enumeration(A.cons_(cases, case0)))
+  return new Single(O.some(name), new Primitive.Enumeration(A.prepend_(cases, case0)))
 }
 
 /**
@@ -77,7 +77,7 @@ export function enumeration<A>(
   case0: Tuple<[string, A]>,
   ...cases: Array<Tuple<[string, A]>>
 ): Args<A> {
-  return new Single(O.none, new Primitive.Enumeration(A.cons_(cases, case0)))
+  return new Single(O.none, new Primitive.Enumeration(A.prepend_(cases, case0)))
 }
 
 /**
@@ -366,12 +366,12 @@ export function validate_<A>(
               acc.length >= min && A.isEmpty(args)
                 ? T.succeed(Tp.tuple(args, acc))
                 : T.fail(failure),
-            ({ tuple: [args, a] }) => loop(args, A.cons_(acc, a))
+            ({ tuple: [args, a] }) => loop(args, A.prepend_(acc, a))
           )
         }
       }
 
-      return T.map_(loop(args, A.emptyOf<A>()), Tp.update(1, A.reverse))
+      return T.map_(loop(args, A.empty<A>()), Tp.update(1, A.reverse))
     }
   }) as T.IO<HelpDoc, Tuple<[Array<string>, A]>>
 }

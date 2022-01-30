@@ -62,7 +62,7 @@ export function make<OptionsType = void, ArgsType = void>(
   options: Options<OptionsType> = Opts.none as Options<OptionsType>,
   args: Args<ArgsType> = Arguments.none as Args<ArgsType>,
   helpDoc: HelpDoc = Help.empty,
-  completions: Array<Completion<Command<Reducable<OptionsType, ArgsType>>>> = A.empty
+  completions: Array<Completion<Command<Reducable<OptionsType, ArgsType>>>> = A.empty()
 ): Command<Reducable<OptionsType, ArgsType>> {
   return pipe(
     new Single(name, helpDoc, options, args, completions),
@@ -107,7 +107,13 @@ export function withCustomCompletion_<A>(
         withCustomCompletion_(_.right, completion)
       ),
     Single: (_) =>
-      new Single(_.name, _.help, _.options, _.args, A.snoc_(_.completions, completion)),
+      new Single(
+        _.name,
+        _.help,
+        _.options,
+        _.args,
+        A.append_(_.completions, completion)
+      ),
     Subcommands: (_) =>
       new Subcommands(
         withCustomCompletion_(_.parent, completion),

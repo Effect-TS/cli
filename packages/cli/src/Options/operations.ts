@@ -53,7 +53,7 @@ import type { Instruction, Options, SingleModifier } from "./definition"
 export const none: Options<void> = new None()
 
 function makeBoolean(name: string, ifPresent: boolean, negationNames: Array<string>) {
-  const option = new Single(name, A.empty, new Primitive.Bool(O.some(ifPresent)))
+  const option = new Single(name, A.empty(), new Primitive.Bool(O.some(ifPresent)))
 
   return A.foldLeft_(
     negationNames,
@@ -74,7 +74,7 @@ function makeBoolean(name: string, ifPresent: boolean, negationNames: Array<stri
  * produce the specified constant boolean value.
  */
 export function boolean(name: string, ifPresent = true): Options<boolean> {
-  return makeBoolean(name, ifPresent, A.empty)
+  return makeBoolean(name, ifPresent, A.empty())
 }
 
 /**
@@ -90,7 +90,7 @@ export function negatableBoolean(
   negationName: string,
   ...negationNames: Array<string>
 ): Options<boolean> {
-  return makeBoolean(name, ifPresent, A.cons_(negationNames, negationName))
+  return makeBoolean(name, ifPresent, A.prepend_(negationNames, negationName))
 }
 
 /**
@@ -100,14 +100,14 @@ export function enumeration<A>(
   name: string,
   cases: Array<Tuple<[string, A]>>
 ): Options<A> {
-  return new Single(name, A.empty, new Primitive.Enumeration(cases))
+  return new Single(name, A.empty(), new Primitive.Enumeration(cases))
 }
 
 /**
  * Creates a parameter which expects a path to a file.
  */
 export function file(name: string, exists: Exists = Exist.either): Options<string> {
-  return new Single(name, A.empty, new Primitive.Path(PathType.file, exists))
+  return new Single(name, A.empty(), new Primitive.Path(PathType.file, exists))
 }
 
 /**
@@ -117,39 +117,39 @@ export function directory(
   name: string,
   exists: Exists = Exist.either
 ): Options<string> {
-  return new Single(name, A.empty, new Primitive.Path(PathType.directory, exists))
+  return new Single(name, A.empty(), new Primitive.Path(PathType.directory, exists))
 }
 
 /**
  * Creates a parameter expecting a text value.
  */
 export function text(name: string): Options<string> {
-  return new Single(name, A.empty, new Primitive.Text())
+  return new Single(name, A.empty(), new Primitive.Text())
 }
 
 /**
  * Creates a parameter expecting an float value.
  */
 export function float(name: string): Options<Float> {
-  return new Single(name, A.empty, new Primitive.Float())
+  return new Single(name, A.empty(), new Primitive.Float())
 }
 
 /**
  * Creates a parameter expecting an integer value.
  */
 export function integer(name: string): Options<Integer> {
-  return new Single(name, A.empty, new Primitive.Integer())
+  return new Single(name, A.empty(), new Primitive.Integer())
 }
 
 /**
  * Creates a parameter expecting a date value.
  */
 export function date(name: string): Options<Date> {
-  return new Single(name, A.empty, new Primitive.Date())
+  return new Single(name, A.empty(), new Primitive.Date())
 }
 
 export function mapping(name: string): Options<PredefMap.Map<string, string>> {
-  return mappingFromOption(new Single(name, A.empty, new Primitive.Text()))
+  return mappingFromOption(new Single(name, A.empty(), new Primitive.Text()))
 }
 
 export function mappingFromOption(
@@ -249,7 +249,7 @@ export function withCustomCompletion_<A>(
         _.aliases,
         _.primType,
         _.description,
-        A.snoc_(_.completions, completion)
+        A.append_(_.completions, completion)
       ),
     WithDefault: (_) =>
       new WithDefault(
@@ -305,7 +305,7 @@ export function alias_<A>(
     (single) =>
       new Single(
         single.name,
-        A.concatS_(A.cons_(names, name), single.aliases),
+        A.concat_(A.prepend_(names, name), single.aliases),
         single.primType,
         single.description,
         single.completions
@@ -425,7 +425,7 @@ export function helpDoc<A>(self: Options<A>): HelpDoc {
     None: () => Help.empty,
     OrElse: (_) => Help.sequence_(helpDoc(_.left), helpDoc(_.right)),
     Single: (_) => {
-      const allNames = A.cons_(
+      const allNames = A.prepend_(
         A.map_(_.aliases, (alias) => `--${alias}`),
         `--${_.name}`
       )
@@ -658,7 +658,7 @@ export function validate_<A>(
       ),
     Single: (_) => {
       const name = makeFullName(_.name)
-      const names = A.cons_(A.map_(_.aliases, makeFullName), name)
+      const names = A.prepend_(A.map_(_.aliases, makeFullName), name)
       return A.foldLeft_(
         args,
         () =>
@@ -680,7 +680,7 @@ export function validate_<A>(
             return T.bimap_(
               Primitive.validate_(_.primType, A.head(tail), config),
               (e) => Validation.invalidValue(Help.p(e)),
-              (a) => Tp.tuple(A.dropLeft_(tail, 1), a)
+              (a) => Tp.tuple(A.drop_(tail, 1), a)
             )
           }
           if (
@@ -698,7 +698,7 @@ export function validate_<A>(
               )
             )
           }
-          return pipe(validate_(_, tail, config), T.map(Tp.update(0, A.cons(head))))
+          return pipe(validate_(_, tail, config), T.map(Tp.update(0, A.prepend(head))))
         }
       )
     },
@@ -787,7 +787,7 @@ function supports(name: string, names: Array<string>, conf: CliConfig): boolean 
 }
 
 function createMapEntry(args: string): Tuple<[string, string]> {
-  const arr = A.takeLeft_(args.split("="), 2)
+  const arr = A.take_(args.split("="), 2)
   return Tp.tuple(arr[0], arr[1])
 }
 
@@ -808,7 +808,7 @@ function processMappingArguments(
   const names = pipe(
     self.argumentOption.aliases,
     A.map(makeFullName),
-    A.cons(makeFullName(self.argumentName))
+    A.prepend(makeFullName(self.argumentName))
   )
   return pipe(
     args,
@@ -816,7 +816,7 @@ function processMappingArguments(
     ({ init, rest }) =>
       Tp.tuple(
         rest,
-        PredefMap.make(A.snoc_(createMapEntries(init), createMapEntry(first)))
+        PredefMap.make(A.append_(createMapEntries(init), createMapEntry(first)))
       )
   )
 }
