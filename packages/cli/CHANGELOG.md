@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.6.0...@effect-ts/cli@0.7.0) (2022-01-30)
+
+**Note:** Version bump only for package @effect-ts/cli
+
+
+
+
+
 # [0.6.0](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.5.0...@effect-ts/cli@0.6.0) (2021-12-16)
 
 
