@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.1](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.7.0...@effect-ts/cli@0.7.1) (2022-01-31)
+
+
+### Features
+
+* **cli:** add support for hiding the FigFont banner ([3d3190e](https://github.com/Effect-TS/cli/commit/3d3190eec8bf313d3ec6e949c224e0f6d93ca8a5))
+
+
+
+
+
 # [0.7.0](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.6.0...@effect-ts/cli@0.7.0) (2022-01-30)
 
 **Note:** Version bump only for package @effect-ts/cli
