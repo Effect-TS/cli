@@ -22,6 +22,10 @@ export interface CliConfig {
    */
   readonly caseSensitive: boolean
   /**
+   * Whether or not to show the banner text in the CLI usage output.
+   */
+  readonly showBanner: boolean
+  /**
    * The Figlet font that will be used to render the banner for the CLI program.
    */
   readonly bannerFont: InternalFont
@@ -35,12 +39,14 @@ export function make(
   params: Partial<{
     readonly autoCorrectLimit: number
     readonly caseSensitive: boolean
+    readonly showBanner: boolean
     readonly bannerFont: InternalFont
   }> = {}
 ): CliConfig {
   const defaultCliConfig = {
     autoCorrectLimit: 2,
     caseSensitive: true,
+    showBanner: true,
     bannerFont: "slant"
   }
   return Object.assign({}, defaultCliConfig, params)

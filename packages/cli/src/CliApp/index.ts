@@ -8,8 +8,8 @@ import * as Set from "@effect-ts/core/Collections/Immutable/Set"
 import type { Effect } from "@effect-ts/core/Effect"
 import * as T from "@effect-ts/core/Effect"
 import * as L from "@effect-ts/core/Effect/Layer"
-// import * as Equal from "@effect-ts/core/Equal"
 import { pipe } from "@effect-ts/core/Function"
+import type { Has } from "@effect-ts/core/Has"
 import * as IO from "@effect-ts/core/IO"
 import * as O from "@effect-ts/core/Option"
 import * as Ord from "@effect-ts/core/Ord"
@@ -55,7 +55,7 @@ export function make<A>(configs: {
   command: Command<A>
   summary?: HelpDoc
   footer?: HelpDoc
-  config?: CliConfig
+  config?: Partial<CliConfig>
   console?: Console
 }): CliApp<A> {
   return {
@@ -64,7 +64,7 @@ export function make<A>(configs: {
     command: configs.command,
     summary: configs.summary || Help.empty,
     footer: configs.footer || Help.empty,
-    config: configs.config || Config.defaultConfig,
+    config: Config.make(configs.config || {}),
     console: configs.console || makeConsole()
   }
 }
@@ -144,15 +144,16 @@ export function executeBuiltIn_<A>(
       pipe(
         T.do,
         T.bind("banner", () =>
-          pipe(
-            OptionsBuilder.builder(),
-            OptionsBuilder.text(programName),
-            OptionsBuilder.withInternalFont(self.config.bannerFont),
-            OptionsBuilder.renderToString,
-            T.map((name) => Help.p(Help.code(name))),
-
-            T.orDie
-          )
+          self.config.showBanner
+            ? pipe(
+                OptionsBuilder.builder(),
+                OptionsBuilder.text(programName),
+                OptionsBuilder.withInternalFont(self.config.bannerFont),
+                OptionsBuilder.renderToString,
+                T.map((name) => Help.p(Help.code(name))),
+                T.orDie
+              )
+            : T.succeed(Help.h1(""))
         ),
         T.let("header", ({ banner }) =>
           Help.blocksT(
@@ -236,9 +237,15 @@ export function run_<R, E, A>(
               executeBuiltIn_(self, _.option),
               T.provideLayer(
                 L.fromValue(Console)(self.console)["+++"](
-                  FontFileReader.LiveFontFileReader[">+>"](
-                    FigletClient.LiveFigletClient
-                  )
+                  self.config.showBanner
+                    ? FontFileReader.LiveFontFileReader[">+>"](
+                        FigletClient.LiveFigletClient
+                      )
+                    : // TODO: improve this logic
+                      L.identity<
+                        Has<FontFileReader.FontFileReader> &
+                          Has<FigletClient.FigletClient>
+                      >()
                 )
               )
             ),
