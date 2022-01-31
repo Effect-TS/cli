@@ -131,7 +131,8 @@ const wcApp = CliApp.make({
   name: "Effect-TS Word Count",
   version: "0.1.2",
   summary: Help.text("counts the words in a file"),
-  command: wc
+  command: wc,
+  config: { showBanner: false }
 })
 
 function handleOption(
