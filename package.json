@@ -47,7 +47,7 @@
     "@effect-ts/jest": "^0.33.0",
     "@effect-ts/node": "0.36.0",
     "@effect-ts/printer": "0.12.0",
-    "@effect-ts/tracing-plugin": "^0.16.0",
+    "@effect-ts/tracing-plugin": "^0.17.0",
     "@types/cpx": "^1.5.2",
     "@types/glob": "^7.2.0",
     "@types/jest": "^27.4.0",
