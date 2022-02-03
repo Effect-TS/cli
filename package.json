@@ -41,7 +41,7 @@
   "devDependencies": {
     "@babel/cli": "^7.16.8",
     "@babel/core": "^7.16.12",
-    "@effect-ts/build-utils": "^0.33.0",
+    "@effect-ts/build-utils": "^0.35.1",
     "@effect-ts/core": "0.53.0",
     "@effect-ts/figlet": "^0.2.0",
     "@effect-ts/jest": "^0.33.0",
