@@ -167,7 +167,12 @@ export function validate_<A>(
 
         yield* _(validatePathExistence(path, p.shouldExist, exists))
 
-        yield* _(T.when_(validatePathType(p, path), () => p.shouldExist._tag !== "No"))
+        yield* _(
+          T.when_(
+            validatePathType(p, path),
+            () => p.shouldExist._tag !== "No" && exists
+          )
+        )
 
         return path
       }),

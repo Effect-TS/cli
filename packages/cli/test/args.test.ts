@@ -43,38 +43,30 @@ describe("Args", () => {
       expect(result).toEqual(Tp.tuple(A.empty(), A.single("doesNotExist.file")))
     }))
 
-  it("should reject the path of a non-existent file", () =>
+  it("should succeed with a non-existent file when the file may either exist or not exist", () =>
     T.gen(function* (_) {
-      const arg = Args.repeat(Args.file())
+      const arg = Args.repeat(Args.file(Exists.either))
 
-      const result = yield* _(
-        T.result(Args.validate_(arg, A.single("notRegular.file")))
-      )
+      const result = yield* _(Args.validate_(arg, A.single("notExists.file")))
 
-      expect(Ex.untraced(result)).toEqual(
-        Ex.fail(Help.p("Expected path 'notRegular.file' to be a regular file."))
-      )
+      expect(result).toEqual(Tp.tuple(A.empty(), A.single("notExists.file")))
     }))
 
-  it("should validate a combination of existent files/directorires", () =>
+  it("should succeed with a existent file when the file may either exist or not exist", () =>
     T.gen(function* (_) {
-      const arg = Args.repeat(Args.file())
+      const arg = Args.repeat(Args.file(Exists.either))
 
-      const result = yield* _(Args.validate_(arg, [argsFile, argsFile]))
+      const result = yield* _(Args.validate_(arg, A.single(argsFile)))
 
-      expect(result).toEqual(Tp.tuple(A.empty(), [argsFile, argsFile]))
+      expect(result).toEqual(Tp.tuple(A.empty(), A.single(argsFile)))
     }))
 
-  it("should reject a combination of existent and non-existent files/directories", () =>
+  it("should validate existent and non-existent files/directorires when the files may exist or not exist", () =>
     T.gen(function* (_) {
-      const arg = Args.repeat(Args.file())
+      const arg = Args.repeat(Args.file(Exists.either))
 
-      const result = yield* _(
-        T.result(Args.validate_(arg, A.single("nonExistent.file")))
-      )
+      const result = yield* _(Args.validate_(arg, [argsFile, "notExists.file"]))
 
-      expect(Ex.untraced(result)).toEqual(
-        Ex.fail(Help.p("Expected path 'nonExistent.file' to be a regular file."))
-      )
+      expect(result).toEqual(Tp.tuple(A.empty(), [argsFile, "notExists.file"]))
     }))
 })
