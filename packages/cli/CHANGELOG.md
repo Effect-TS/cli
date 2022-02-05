@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.2](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.7.1...@effect-ts/cli@0.7.2) (2022-02-05)
+
+
+### Bug Fixes
+
+* **cli:** properly validate paths with Exists ([d6170aa](https://github.com/Effect-TS/cli/commit/d6170aadf4dc09e4888f48b420be7d2dedefee23))
+
+
+
+
+
 ## [0.7.1](https://github.com/Effect-TS/cli/compare/@effect-ts/cli@0.7.0...@effect-ts/cli@0.7.1) (2022-01-31)
 
 
