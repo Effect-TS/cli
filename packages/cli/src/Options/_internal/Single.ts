@@ -3,12 +3,12 @@
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import * as A from "@effect-ts/core/Collections/Immutable/Array"
 
-import type { Completion } from "../../Completion"
-import type { HelpDoc } from "../../Help"
-import * as Help from "../../Help"
-import type { PrimType } from "../../PrimType"
-import type { Options } from "../definition"
-import { Base } from "./Base"
+import type { Completion } from "../../Completion/index.js"
+import type { HelpDoc } from "../../Help/index.js"
+import * as Help from "../../Help/index.js"
+import type { PrimType } from "../../PrimType/index.js"
+import type { Options } from "../definition.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

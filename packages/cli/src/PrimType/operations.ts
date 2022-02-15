@@ -8,14 +8,14 @@ import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import { matchTag_ } from "@effect-ts/core/Utils"
 
-import type { CliConfig } from "../CliConfig"
-import * as Config from "../CliConfig"
-import type { Exists } from "../Exists"
-import type { HelpDoc } from "../Help"
-import * as Help from "../Help"
-import * as NewType from "../Internal/NewType"
-import type { Path } from "./_internal/Path"
-import type { Instruction, PrimType } from "./definition"
+import type { CliConfig } from "../CliConfig/index.js"
+import * as Config from "../CliConfig/index.js"
+import type { Exists } from "../Exists/index.js"
+import type { HelpDoc } from "../Help/index.js"
+import * as Help from "../Help/index.js"
+import * as NewType from "../Internal/NewType/index.js"
+import type { Path } from "./_internal/Path.js"
+import type { Instruction, PrimType } from "./definition.js"
 
 // -----------------------------------------------------------------------------
 // Operations

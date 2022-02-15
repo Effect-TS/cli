@@ -2,8 +2,8 @@
 
 import type { Map } from "@effect-ts/core/Collections/Immutable/Map"
 
-import { Base } from "./Base"
-import type { Single } from "./Single"
+import { Base } from "./Base.js"
+import type { Single } from "./Single.js"
 
 // -----------------------------------------------------------------------------
 // Model

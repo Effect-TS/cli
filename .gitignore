@@ -2,6 +2,7 @@
 !/.yarn/releases
 !/.yarn/plugins
 !/.yarn/sdks
+!/.yarn/patches
 
 node_modules/
 .idea/

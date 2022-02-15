@@ -3,13 +3,13 @@
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 
-import type { Args } from "../../Args"
-import type { Completion } from "../../Completion"
-import type { HelpDoc } from "../../Help"
-import type { Options } from "../../Options"
-import type { Reducable } from "../../Reducable"
-import type { Command } from "../definition"
-import { Base } from "./Base"
+import type { Args } from "../../Args/index.js"
+import type { Completion } from "../../Completion/index.js"
+import type { HelpDoc } from "../../Help/index.js"
+import type { Options } from "../../Options/index.js"
+import type { Reducable } from "../../Reducable/index.js"
+import type { Command } from "../definition.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

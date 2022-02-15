@@ -4,7 +4,7 @@ import type { NonEmptyArray } from "@effect-ts/core/Collections/Immutable/NonEmp
 import type { Set } from "@effect-ts/core/Collections/Immutable/Set"
 import type { UIO } from "@effect-ts/core/Effect"
 
-import type { ShellType } from "../ShellType"
+import type { ShellType } from "../ShellType/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

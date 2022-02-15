@@ -3,8 +3,8 @@
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import type { Option } from "@effect-ts/core/Option"
 
-import type { Args } from "./Base"
-import { Base } from "./Base"
+import type { Args } from "./Base.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

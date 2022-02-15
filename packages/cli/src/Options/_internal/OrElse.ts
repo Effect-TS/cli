@@ -2,8 +2,8 @@
 
 import type { Either } from "@effect-ts/core/Either"
 
-import type { Options } from "./Base"
-import { Base } from "./Base"
+import type { Options } from "./Base.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

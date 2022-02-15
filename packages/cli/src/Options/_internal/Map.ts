@@ -2,9 +2,9 @@
 
 import type { Either } from "@effect-ts/core/Either"
 
-import type { ValidationError } from "../../Validation"
-import type { Options } from "./Base"
-import { Base } from "./Base"
+import type { ValidationError } from "../../Validation/index.js"
+import type { Options } from "./Base.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

@@ -1,7 +1,7 @@
 // ets_tracing: off
 
-import type { Command } from "./Base"
-import { Base } from "./Base"
+import type { Command } from "./Base.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

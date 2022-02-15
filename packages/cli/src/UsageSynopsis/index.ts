@@ -6,8 +6,8 @@ import * as IO from "@effect-ts/core/IO"
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 
-import type { HelpDoc } from "../Help"
-import * as Help from "../Help"
+import type { HelpDoc } from "../Help/index.js"
+import * as Help from "../Help/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

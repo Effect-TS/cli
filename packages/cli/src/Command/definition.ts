@@ -1,10 +1,10 @@
 // ets_tracing: off
 
-import { Command } from "./_internal/Base"
-import { Map } from "./_internal/Map"
-import { OrElse } from "./_internal/OrElse"
-import { Single } from "./_internal/Single"
-import { Subcommands } from "./_internal/Subcommands"
+import { Command } from "./_internal/Base.js"
+import { Map } from "./_internal/Map.js"
+import { OrElse } from "./_internal/OrElse.js"
+import { Single } from "./_internal/Single.js"
+import { Subcommands } from "./_internal/Subcommands.js"
 
 // -----------------------------------------------------------------------------
 // Model

@@ -6,11 +6,11 @@ import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 import * as Show from "@effect-ts/core/Show"
 
-import type { HelpDoc } from "../Help"
-import type { Options } from "../Options"
-import * as Opts from "../Options"
-import type { ShellType } from "../ShellType"
-import * as Shell from "../ShellType"
+import type { HelpDoc } from "../Help/index.js"
+import type { Options } from "../Options/index.js"
+import * as Opts from "../Options/index.js"
+import type { ShellType } from "../ShellType/index.js"
+import * as Shell from "../ShellType/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

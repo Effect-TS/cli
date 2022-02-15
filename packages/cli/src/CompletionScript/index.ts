@@ -2,7 +2,7 @@
 
 import { matchTag_ } from "@effect-ts/core/Utils"
 
-import type { ShellType } from "../ShellType"
+import type { ShellType } from "../ShellType/index.js"
 
 // -----------------------------------------------------------------------------
 // Operations

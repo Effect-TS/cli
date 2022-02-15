@@ -3,7 +3,7 @@
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 
-import { Base } from "./Base"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model
