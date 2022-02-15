@@ -1,11 +1,11 @@
 // ets_tracing: off
 
-import { Args } from "./_internal/Base"
-import { Both } from "./_internal/Both"
-import { Map } from "./_internal/Map"
-import { None } from "./_internal/None"
-import { Single } from "./_internal/Single"
-import { Variadic } from "./_internal/Variadic"
+import { Args } from "./_internal/Base.js"
+import { Both } from "./_internal/Both.js"
+import { Map } from "./_internal/Map.js"
+import { None } from "./_internal/None.js"
+import { Single } from "./_internal/Single.js"
+import { Variadic } from "./_internal/Variadic.js"
 
 // -----------------------------------------------------------------------------
 // Model

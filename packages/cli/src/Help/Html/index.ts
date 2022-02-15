@@ -1,3 +1,5 @@
+// ets_tracing: off
+
 import type { Doc } from "@effect-ts/printer/Core/Doc"
 
 export type HtmlDoc = Doc<Html>

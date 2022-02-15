@@ -1,13 +1,13 @@
 // ets_tracing: off
 
-import { PrimType } from "./_internal/Base"
-import { Bool } from "./_internal/Bool"
-import { Date } from "./_internal/Date"
-import { Enumeration } from "./_internal/Enumeration"
-import { Float } from "./_internal/Float"
-import { Integer } from "./_internal/Integer"
-import { Path } from "./_internal/Path"
-import { Text } from "./_internal/Text"
+import { PrimType } from "./_internal/Base.js"
+import { Bool } from "./_internal/Bool.js"
+import { Date } from "./_internal/Date.js"
+import { Enumeration } from "./_internal/Enumeration.js"
+import { Float } from "./_internal/Float.js"
+import { Integer } from "./_internal/Integer.js"
+import { Path } from "./_internal/Path.js"
+import { Text } from "./_internal/Text.js"
 
 // -----------------------------------------------------------------------------
 // Model

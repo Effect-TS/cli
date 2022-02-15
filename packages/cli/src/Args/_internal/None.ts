@@ -1,6 +1,6 @@
 // ets_tracing: off
 
-import { Base } from "./Base"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

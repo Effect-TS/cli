@@ -2,9 +2,9 @@
 
 import type { Either } from "@effect-ts/core/Either"
 
-import type { HelpDoc } from "../../Help"
-import type { Args } from "./Base"
-import { Base } from "./Base"
+import type { HelpDoc } from "../../Help/index.js"
+import type { Args } from "./Base.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

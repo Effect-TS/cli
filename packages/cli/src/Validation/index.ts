@@ -2,7 +2,7 @@
 
 import { Tagged } from "@effect-ts/core/Case"
 
-import type { HelpDoc } from "../Help"
+import type { HelpDoc } from "../Help/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

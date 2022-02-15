@@ -1,7 +1,7 @@
 // ets_tracing: off
 
-import type { CliConfig } from "../CliConfig"
-import * as Config from "../CliConfig"
+import type { CliConfig } from "../CliConfig/index.js"
+import * as Config from "../CliConfig/index.js"
 
 export function levensteinDistance(
   first: string,

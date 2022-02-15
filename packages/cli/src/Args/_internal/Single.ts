@@ -3,11 +3,11 @@
 import type { Option } from "@effect-ts/core/Option"
 import * as O from "@effect-ts/core/Option"
 
-import type { HelpDoc } from "../../Help"
-import * as Help from "../../Help"
-import type { PrimType } from "../../PrimType"
-import * as Primitive from "../../PrimType"
-import { Base } from "./Base"
+import type { HelpDoc } from "../../Help/index.js"
+import * as Help from "../../Help/index.js"
+import type { PrimType } from "../../PrimType/index.js"
+import * as Primitive from "../../PrimType/index.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

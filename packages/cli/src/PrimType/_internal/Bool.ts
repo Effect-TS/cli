@@ -2,7 +2,7 @@
 
 import type { Option } from "@effect-ts/core/Option"
 
-import { Base } from "./Base"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

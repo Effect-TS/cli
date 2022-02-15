@@ -3,9 +3,9 @@
 import type { URI } from "@effect-ts/core/Prelude"
 import * as P from "@effect-ts/core/Prelude"
 
-import type { OptionsURI } from "./definition"
-import { None } from "./definition"
-import { map, orElseEither_, zip } from "./operations"
+import type { OptionsURI } from "./definition.js"
+import { None } from "./definition.js"
+import { map, orElseEither_, zip } from "./operations.js"
 
 export const Any = P.instance<P.Any<[URI<OptionsURI>]>>({
   any: () => new None()

@@ -2,8 +2,8 @@
 
 import type { Tuple } from "@effect-ts/core/Collections/Immutable/Tuple"
 
-import type { Args } from "./Base"
-import { Base } from "./Base"
+import type { Args } from "./Base.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

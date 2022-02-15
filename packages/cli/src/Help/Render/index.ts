@@ -14,9 +14,9 @@ import type { AnsiDoc } from "@effect-ts/printer/Terminal/Render"
 import * as TermRender from "@effect-ts/printer/Terminal/Render"
 import * as TermStyle from "@effect-ts/printer/Terminal/Style"
 
-import type { HelpDoc } from "../Doc"
-import type { HtmlDoc } from "../Html"
-import * as Html from "../Html"
+import type { HelpDoc } from "../Doc/index.js"
+import type { HtmlDoc } from "../Html/index.js"
+import * as Html from "../Html/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

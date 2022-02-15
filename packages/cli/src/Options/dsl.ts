@@ -2,7 +2,7 @@
 
 import * as DSL from "@effect-ts/core/Prelude/DSL"
 
-import { Applicative, Covariant } from "./instances"
+import { Applicative, Covariant } from "./instances.js"
 
 export const struct = DSL.structF(Applicative)
 

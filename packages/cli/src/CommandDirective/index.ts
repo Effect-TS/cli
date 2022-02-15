@@ -3,7 +3,7 @@
 import { Tagged } from "@effect-ts/core/Case"
 import type { Array } from "@effect-ts/core/Collections/Immutable/Array"
 
-import type { BuiltInOption } from "../BuiltInOption"
+import type { BuiltInOption } from "../BuiltInOption/index.js"
 
 // -----------------------------------------------------------------------------
 // Model

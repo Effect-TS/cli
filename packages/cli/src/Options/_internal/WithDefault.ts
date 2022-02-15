@@ -3,8 +3,8 @@
 import type { Option } from "@effect-ts/core/Option"
 import type { Show } from "@effect-ts/core/Show"
 
-import type { Options } from "./Base"
-import { Base } from "./Base"
+import type { Options } from "./Base.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model

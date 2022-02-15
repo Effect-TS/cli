@@ -1,6 +1,6 @@
 /* eslint-disable no-undef */
 module.exports = {
-  ignorePatterns: ["lib/", "es6/", "build/", "dist/"],
+  ignorePatterns: ["dtslint/", "lib/", "es6/", "build/", "dist", "react/demo/"],
   parser: "@typescript-eslint/parser",
   parserOptions: {
     ecmaVersion: 2018,
@@ -46,8 +46,10 @@ module.exports = {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": "off",
     "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
     "import/first": "error",
-    //"import/no-cycle": "error",
+    "import/no-cycle": "off",
     "import/newline-after-import": "error",
     "import/no-duplicates": "error",
     "import/no-unresolved": "error",

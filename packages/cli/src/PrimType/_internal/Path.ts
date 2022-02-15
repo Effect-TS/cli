@@ -1,9 +1,9 @@
 // ets_tracing: off
 
-import type { Exists } from "../../Exists"
-import { FileSystem } from "../../Internal/FileSystem"
-import type { PathType } from "../../PathType"
-import { Base } from "./Base"
+import type { Exists } from "../../Exists/index.js"
+import { FileSystem } from "../../Internal/FileSystem/index.js"
+import type { PathType } from "../../PathType/index.js"
+import { Base } from "./Base.js"
 
 // -----------------------------------------------------------------------------
 // Model
