@@ -4,10 +4,10 @@ import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as O from "@effect-ts/core/Option"
 import * as TE from "@effect-ts/jest/Test"
 
-import * as Exists from "../src/Exists"
-import * as PathType from "../src/PathType"
-import * as Primitive from "../src/PrimType"
-import { mockFileSystem } from "./test-utils"
+import * as Exists from "../src/Exists/index.js"
+import * as PathType from "../src/PathType/index.js"
+import * as Primitive from "../src/PrimType/index.js"
+import { mockFileSystem } from "./test-utils.js"
 
 describe("PrimType", () => {
   const { it } = TE.runtime()

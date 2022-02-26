@@ -2,14 +2,16 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "build/esm",
+    "declarationDir": "build/dts",
     "target": "ES2018",
     "module": "ES6",
     "moduleResolution": "Node",
     "incremental": true,
     "tsBuildInfoFile": "tsbuildinfo/esm.tsbuildinfo",
-    "declaration": false,
-    "declarationMap": false,
+    "declaration": true,
+    "declarationMap": true,
     "removeComments": false,
+    "sourceMap": true,
     "plugins": [
       {
         "transform": "@effect-ts/tracing-plugin",

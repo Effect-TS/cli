@@ -6,12 +6,12 @@ import { pipe } from "@effect-ts/core/Function"
 import { matchTag } from "@effect-ts/core/Utils"
 import * as TE from "@effect-ts/jest/Test"
 
-import * as Args from "../src/Args"
-import * as Command from "../src/Command"
-import * as CommandDirective from "../src/CommandDirective"
-import * as Help from "../src/Help"
-import * as Options from "../src/Options"
-import * as Validation from "../src/Validation"
+import * as Args from "../src/Args/index.js"
+import * as Command from "../src/Command/index.js"
+import * as CommandDirective from "../src/CommandDirective/index.js"
+import * as Help from "../src/Help/index.js"
+import * as Options from "../src/Options/index.js"
+import * as Validation from "../src/Validation/index.js"
 
 // -----------------------------------------------------------------------------
 // Tail

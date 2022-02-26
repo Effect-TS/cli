@@ -23,10 +23,6 @@ jobs:
         env:
           CI: "true"
 
-      - uses: codecov/codecov-action@v1.0.3
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}
-
   test:
     runs-on: ubuntu-latest
 
@@ -43,7 +39,3 @@ jobs:
           yarn test
         env:
           CI: "true"
-
-      - uses: codecov/codecov-action@v1.0.3
-        with:
-          token: ${{secrets.CODECOV_TOKEN}}

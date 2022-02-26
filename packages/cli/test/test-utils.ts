@@ -1,6 +1,6 @@
 import * as T from "@effect-ts/core/Effect"
 
-import type { FileSystem } from "../src/Internal/FileSystem"
+import type { FileSystem } from "../src/Internal/FileSystem/index.js"
 
 // -----------------------------------------------------------------------------
 // Mock FileSystem

@@ -1,5 +1,5 @@
-import * as AutoCorrect from "../src/AutoCorrect"
-import * as Config from "../src/CliConfig"
+import * as AutoCorrect from "../src/AutoCorrect/index.js"
+import * as Config from "../src/CliConfig/index.js"
 
 describe("AutoCorrect", () => {
   it("should calculate the correct Levenstein distance between two strings", () => {

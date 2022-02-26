@@ -9,11 +9,11 @@ import * as O from "@effect-ts/core/Option"
 import * as Show from "@effect-ts/core/Show"
 import * as TE from "@effect-ts/jest/Test"
 
-import * as Config from "../src/CliConfig"
-import * as Help from "../src/Help"
-import type { Integer } from "../src/Internal/NewType"
-import * as Options from "../src/Options"
-import * as Validation from "../src/Validation"
+import * as Config from "../src/CliConfig/index.js"
+import * as Help from "../src/Help/index.js"
+import type { Integer } from "../src/Internal/NewType/index.js"
+import * as Options from "../src/Options/index.js"
+import * as Validation from "../src/Validation/index.js"
 
 const f = Options.alias_(Options.text("firstname"), "f")
 const l = Options.text("lastname")

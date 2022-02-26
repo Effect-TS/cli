@@ -5,12 +5,12 @@ import * as Equal from "@effect-ts/core/Equal"
 import { pipe } from "@effect-ts/core/Function"
 import * as TE from "@effect-ts/jest/Test"
 
-import * as Args from "../src/Args"
-import * as Command from "../src/Command"
-import * as Exists from "../src/Exists"
-import * as Help from "../src/Help"
-import * as Options from "../src/Options"
-import * as ShellType from "../src/ShellType"
+import * as Args from "../src/Args/index.js"
+import * as Command from "../src/Command/index.js"
+import * as Exists from "../src/Exists/index.js"
+import * as Help from "../src/Help/index.js"
+import * as Options from "../src/Options/index.js"
+import * as ShellType from "../src/ShellType/index.js"
 
 type GitSubcommand = Add | Remote
 

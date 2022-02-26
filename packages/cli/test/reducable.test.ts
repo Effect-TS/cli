@@ -2,7 +2,7 @@ import * as Tuple from "@effect-ts/core/Collections/Immutable/Tuple"
 import * as T from "@effect-ts/core/Effect"
 import * as TE from "@effect-ts/jest/Test"
 
-import * as Reducable from "../src/Reducable"
+import * as Reducable from "../src/Reducable/index.js"
 
 describe("Reducable", () => {
   const { it } = TE.runtime()

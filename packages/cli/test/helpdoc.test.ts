@@ -3,7 +3,7 @@ import * as T from "@effect-ts/core/Effect"
 import { pipe } from "@effect-ts/core/Function"
 import * as TE from "@effect-ts/jest/Test"
 
-import * as Help from "../src/Help"
+import * as Help from "../src/Help/index.js"
 
 describe("HelpDoc", () => {
   const { it } = TE.runtime()

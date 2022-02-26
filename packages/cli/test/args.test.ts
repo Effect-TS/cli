@@ -5,9 +5,9 @@ import * as Ex from "@effect-ts/core/Effect/Exit"
 import * as TE from "@effect-ts/jest/Test"
 import * as Path from "path"
 
-import * as Args from "../src/Args"
-import * as Exists from "../src/Exists"
-import * as Help from "../src/Help"
+import * as Args from "../src/Args/index.js"
+import * as Exists from "../src/Exists/index.js"
+import * as Help from "../src/Help/index.js"
 
 const argsFile = Path.join(__dirname, "args.test.ts")
 

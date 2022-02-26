@@ -21,7 +21,11 @@
     "typescript",
     "typescriptreact"
   ],
-  "eslint.validate": ["markdown", "javascript", "typescript"],
+  "eslint.validate": [
+    "markdown",
+    "javascript",
+    "typescript"
+  ],
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
@@ -41,5 +45,6 @@
   "editor.parameterHints.enabled": true,
   "files.watcherExclude": {
     "**/target": true
-  }
+  },
+  "files.insertFinalNewline": true
 }
