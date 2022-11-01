@@ -153,7 +153,7 @@ function execute(options: WcOptions, paths: NonEmptyArray<string>) {
             options.lines,
             pipe(
               Transducers.utf8Decode,
-              Transducer.then(Transducers.splitLines),
+              Transducer.andThen(Transducers.splitLines),
               Transducers.composeSink(Sink.count)
             )
           )

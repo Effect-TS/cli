@@ -86,7 +86,7 @@ export const utf8Decode: Transducer<unknown, never, Byte, string> =
   Transduce.branchAfter(3, (bytes) =>
     C.corresponds_(bytes, C.from([-17, -69, -65]), Equal.number.equals)
       ? utf8DecodeInternal
-      : pipe(Transduce.prepend(bytes), Transduce.then(utf8DecodeInternal))
+      : pipe(Transduce.prepend(bytes), Transduce.andThen(utf8DecodeInternal))
   )
 
 /**
@@ -98,7 +98,7 @@ export function splitOn(delimiter: string): Transducer<unknown, never, string, s
     C.flatten
   )
   const split = Transduce.map_(splitOnChunk(C.from(delimiter.split(""))), C.join(""))
-  return pipe(chars, Transduce.then(split))
+  return pipe(chars, Transduce.andThen(split))
 }
 /**
  * Splits elements on a delimiter and transforms the splits into desired output.
