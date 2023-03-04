@@ -2,40 +2,15 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Debug",
       "type": "node",
       "request": "launch",
-      "name": "Jest All",
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["--runInBand"],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true,
-      "windows": {
-        "program": "${workspaceFolder}/node_modules/jest/bin/jest"
-      }
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Jest Current File",
-      "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "args": ["${fileBasenameNoExtension}", "--config", "jest.config.js"],
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true,
-      "windows": {
-        "program": "${workspaceFolder}/node_modules/jest/bin/jest"
-      }
-    },
-    {
-      "type": "pwa-node",
-      "request": "launch",
-      "name": "Effect-TS - CLI Current File",
-      "runtimeArgs": ["-r", "ts-node/register"],
-      "args": ["${file}"],
-      "env": {
-        "TS_NODE_PROJECT": "${workspaceFolder}/packages/cli/tsconfig.debug.json"
-      }
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["--nolazy"],
+      "args": [".vscode/debug.cjs"],
+      "cwd": "${workspaceRoot}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
     }
   ]
 }

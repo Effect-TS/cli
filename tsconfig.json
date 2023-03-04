@@ -1,9 +1,8 @@
 {
   "extends": "./tsconfig.base.json",
-  "files": [],
-  "compilerOptions": {
-    "baseUrl": ".",
-    "target": "ES2018",
-    "typeRoots": ["./node_modules/@types", "./typings"]
-  }
+  "references": [
+    { "path": "./tsconfig.build.json" },
+    { "path": "./tsconfig.test.json" },
+    { "path": "./tsconfig.examples.json" }
+  ]
 }
