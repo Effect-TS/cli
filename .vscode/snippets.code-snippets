@@ -1,0 +1,18 @@
+{
+  "Gen Function $": {
+    "prefix": "gg",
+    "body": [
+      "Effect.gen(function*($) {",
+      "  $0",
+      "})"
+    ],
+    "description": "Generator Function with a $ parameter"
+  },
+  "Gen Yield $": {
+    "prefix": "yy",
+    "body": [
+      "yield* $($0)"
+    ],
+    "description": "Yield generator calling $()"
+  }
+}

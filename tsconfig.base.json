@@ -37,10 +37,11 @@
     "incremental": true,
     "removeComments": false,
     "paths": {
-      "@effect/io": ["./src/index.ts"],
-      "@effect/io/test/*": ["./test/*"],
-      "@effect/io/examples/*": ["./examples/*"],
-      "@effect/io/*": ["./src/*"]
+      "@effect/io/*": ["./node_modules/@effect/io/src/*"],
+      "@effect/cli": ["./src/index.ts"],
+      "@effect/cli/test/*": ["./test/*"],
+      "@effect/cli/examples/*": ["./examples/*"],
+      "@effect/cli/*": ["./src/*"]
     },
     "plugins": [
       {
