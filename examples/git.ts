@@ -85,7 +85,7 @@ const remoteCommand = pipe(
 )
 
 const git = pipe(
-  Command.make("git", Options.none, Args.none),
+  Command.make("git", Options.alias(Options.boolean("version"), "v"), Args.none),
   Command.subcommands([addCommand, remoteCommand]),
   Command.map(([, cmd]) => cmd) // TODO: we shouldn't have to discard this stuff
 )

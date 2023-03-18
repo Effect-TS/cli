@@ -216,12 +216,14 @@ const parseMap: {
       : Effect.fail(Option.none())
     const parseUserDefinedArgs = pipe(
       List.isNil(args)
-        ? Effect.fail(validationError.commandMismatch(doc.p(`Missing command name: '${self.name}'`)))
+        ? Effect.fail(validationError.commandMismatch(doc.p(span.error(`Missing command name: '${self.name}'`))))
         : pipe(
           Effect.succeed(args.tail),
           Effect.when(() => cliConfig.normalizeCase(config, args.head) === cliConfig.normalizeCase(config, self.name)),
           Effect.some,
-          Effect.orElseFail(() => validationError.commandMismatch(doc.p(`Missing command name: '${self.name}'`)))
+          Effect.orElseFail(() =>
+            validationError.commandMismatch(doc.p(span.error(`Missing command name: '${self.name}'`)))
+          )
         ),
       Effect.flatMap((commandOptionsAndArgs) =>
         pipe(
@@ -300,7 +302,7 @@ const parseMap: {
             commandDirective.map((a) => [directive.value, a])
           )
         }
-        return helpDirectiveForParent
+        return Effect.succeed(directive)
       }),
       Effect.catchSome(() =>
         List.isNil(args)
@@ -341,9 +343,9 @@ export const subcommands = dual<
   const head = subcommands[0]
   const tail = subcommands.slice(1)
   if (tail.length === 0) {
-    return subcommand(self, head)
+    return makeSubcommand(self, head)
   }
-  return subcommand(self, tail.slice(1).reduce(orElse, orElse(head, tail[0])))
+  return makeSubcommand(self, tail.slice(1).reduce(orElse, orElse(head, tail[0])))
 })
 
 const usageMap: {
@@ -382,7 +384,7 @@ const withHelpMap: {
       withHelpMap[self.left._tag](self.left as any, help),
       withHelpMap[self.right._tag](self.right as any, help)
     ),
-  Subcommands: (self, help) => subcommand(withHelpMap[self.parent._tag](self.parent as any, help), self.child)
+  Subcommands: (self, help) => makeSubcommand(withHelpMap[self.parent._tag](self.parent as any, help), self.child)
 }
 
 /** @internal */
@@ -406,7 +408,10 @@ const single = <OptionsType, ArgsType>(
   return op
 }
 
-const subcommand = <A, B>(parent: Command.Command<A>, child: Command.Command<B>): Command.Command<readonly [A, B]> => {
+const makeSubcommand = <A, B>(
+  parent: Command.Command<A>,
+  child: Command.Command<B>
+): Instruction => {
   const op = Object.create(proto)
   op._tag = "Subcommands"
   op.parent = parent
