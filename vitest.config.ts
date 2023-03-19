@@ -16,8 +16,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@effect/io/test": path.join(__dirname, "test"),
-      "@effect/io": path.join(__dirname, "src")
+      "@effect/cli/test": path.join(__dirname, "test"),
+      "@effect/cli": path.join(__dirname, "src")
     }
   }
 })
