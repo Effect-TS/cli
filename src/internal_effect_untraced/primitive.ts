@@ -97,9 +97,9 @@ export const text: Primitive.Primitive<string> = (() => {
   return op
 })()
 
-const trueValues = { "true": true, "1": true, "y": true, "yes": true, "on": true }
+const trueValues: Record<string, boolean> = { "true": true, "1": true, "y": true, "yes": true, "on": true }
 
-const falseValues = { "false": true, "0": true, "n": true, "no": true, "off": true }
+const falseValues: Record<string, boolean> = { "false": true, "0": true, "n": true, "no": true, "off": true }
 
 const typeNameMap: {
   [K in Primitive.Primitive<any>["_tag"]]: string

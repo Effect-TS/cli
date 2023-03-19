@@ -7,7 +7,6 @@ import type { Usage } from "@effect/cli/Usage"
 import type { ValidationError } from "@effect/cli/ValidationError"
 import type { Chunk } from "@effect/data/Chunk"
 import type { Either } from "@effect/data/Either"
-import type { List } from "@effect/data/List"
 import type { Option } from "@effect/data/Option"
 import type { NonEmptyReadonlyArray } from "@effect/data/ReadonlyArray"
 import type { Effect } from "@effect/io/Effect"
@@ -240,8 +239,10 @@ export const usage: <A>(self: Args<A>) => Usage = internal.usage
  * @category validation
  */
 export const validate: {
-  (args: List<string>): <A>(self: Args<A>) => Effect<never, ValidationError, readonly [List<string>, A]>
-  <A>(self: Args<A>, args: List<string>): Effect<never, ValidationError, readonly [List<string>, A]>
+  (
+    args: ReadonlyArray<string>
+  ): <A>(self: Args<A>) => Effect<never, ValidationError, readonly [ReadonlyArray<string>, A]>
+  <A>(self: Args<A>, args: ReadonlyArray<string>): Effect<never, ValidationError, readonly [ReadonlyArray<string>, A]>
 } = internal.validate
 
 /**

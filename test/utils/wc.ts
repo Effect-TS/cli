@@ -17,5 +17,8 @@ export const options: Options.Options<readonly [boolean, boolean, boolean, boole
 
 export const args: Args.Args<Chunk<string>> = Args.repeat(Args.text({ name: "files" }))
 
-export const command: Command.Command<readonly [readonly [boolean, boolean, boolean, boolean], Chunk<string>]> = Command
-  .make("wc", options, args)
+export const command: Command.Command<{
+  readonly name: "wc"
+  readonly options: readonly [boolean, boolean, boolean, boolean]
+  readonly args: Chunk<string>
+}> = Command.make("wc", { options, args })

@@ -8,8 +8,8 @@ export const options: Options.Options<readonly [number, number]> = Options.zip(a
 
 export const args: Args.Args<string> = Args.text()
 
-export const command: Command.Command<readonly [readonly [number, number], string]> = Command.make(
-  "grep",
-  options,
-  args
-)
+export const command: Command.Command<{
+  readonly name: "grep"
+  readonly options: readonly [number, number]
+  readonly args: string
+}> = Command.make("grep", { options, args })

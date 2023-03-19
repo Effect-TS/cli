@@ -6,4 +6,8 @@ export const options: Options.Options<number> = Options.integer("n")
 
 export const args: Args.Args<string> = Args.text({ name: "file" })
 
-export const command: Command.Command<readonly [number, string]> = Command.make("tail", options, args)
+export const command: Command.Command<{
+  readonly name: "tail"
+  readonly options: number
+  readonly args: string
+}> = Command.make("tail", { options, args })

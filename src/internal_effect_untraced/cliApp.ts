@@ -1,19 +1,19 @@
 import type * as BuiltInOption from "@effect/cli/BuiltInOption"
 import type * as CliApp from "@effect/cli/CliApp"
 import type * as Command from "@effect/cli/Command"
+import * as Console from "@effect/cli/Console"
 import type * as HelpDoc from "@effect/cli/HelpDoc"
 import type * as Span from "@effect/cli/HelpDoc/Span"
 import * as cliConfig from "@effect/cli/internal_effect_untraced/cliConfig"
 import * as command from "@effect/cli/internal_effect_untraced/command"
 import * as commandDirective from "@effect/cli/internal_effect_untraced/commandDirective"
-import * as _console from "@effect/cli/internal_effect_untraced/console"
 import * as doc from "@effect/cli/internal_effect_untraced/helpDoc"
 import * as span from "@effect/cli/internal_effect_untraced/helpDoc/span"
 import * as _usage from "@effect/cli/internal_effect_untraced/usage"
 import * as validationError from "@effect/cli/internal_effect_untraced/validationError"
 import type * as ValidationError from "@effect/cli/ValidationError"
+import * as Context from "@effect/data/Context"
 import { dual, pipe } from "@effect/data/Function"
-import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
 
@@ -34,18 +34,19 @@ export const make = <A>(config: {
 /** @internal */
 export const run = dual<
   <R, E, A>(
-    args: List.List<string>,
+    args: ReadonlyArray<string>,
     f: (a: A) => Effect.Effect<R | CliApp.CliApp.Context, E, void>
   ) => (self: CliApp.CliApp<A>) => Effect.Effect<R | CliApp.CliApp.Context, E | ValidationError.ValidationError, void>,
   <R, E, A>(
     self: CliApp.CliApp<A>,
-    args: List.List<string>,
+    args: ReadonlyArray<string>,
     f: (a: A) => Effect.Effect<R | CliApp.CliApp.Context, E, void>
   ) => Effect.Effect<R | CliApp.CliApp.Context, E | ValidationError.ValidationError, void>
 >(3, (self, args, f) =>
-  Effect.serviceWithEffect(cliConfig.Tag, (config) =>
-    Effect.matchEffect(
-      command.parse(self.command, List.concat(prefixCommand(self.command), args), config),
+  Effect.contextWithEffect((context: Context.Context<never>) => {
+    const config = Option.getOrElse(Context.getOption(context, cliConfig.Tag), () => cliConfig.defaultConfig)
+    return Effect.matchEffect(
+      command.parse(self.command, [...prefixCommand(self.command), ...args], config),
       (error) =>
         Effect.zipRight(
           printDocs(error),
@@ -61,18 +62,19 @@ export const run = dual<
                 Option.some(Effect.zipRight(printDocs(error), Effect.fail(error))) :
                 Option.none()
           )
-    )))
+    )
+  }))
 
 const prefixCommandMap: {
-  [K in command.Instruction["_tag"]]: (self: Extract<command.Instruction, { _tag: K }>) => List.List<string>
+  [K in command.Instruction["_tag"]]: (self: Extract<command.Instruction, { _tag: K }>) => ReadonlyArray<string>
 } = {
-  Single: (self) => List.of(self.name),
+  Single: (self) => [self.name],
   Map: (self) => prefixCommandMap[self.command._tag](self.command as any),
-  OrElse: () => List.nil(),
+  OrElse: () => [],
   Subcommands: (self) => prefixCommandMap[self.parent._tag](self.parent as any)
 }
 
-const prefixCommand = <A>(self: Command.Command<A>): List.List<string> =>
+const prefixCommand = <A>(self: Command.Command<A>): ReadonlyArray<string> =>
   prefixCommandMap[(self as command.Instruction)._tag](self as any)
 
 const runBuiltInMap: {
@@ -122,7 +124,7 @@ const runBuiltInMap: {
       doc.sequence(cliApp.footer)
     )
     const helpText = doc.toAnsiText(helpDoc)
-    return Effect.serviceWithEffect(_console.Tag, (console) => console.printLine(helpText))
+    return Console.log(helpText)
   },
   Wizard: () =>
     Effect.sync(() => {
@@ -148,5 +150,4 @@ const runBuiltIn = <A>(
   cliApp: CliApp.CliApp<A>
 ): Effect.Effect<CliApp.CliApp.Context, never, void> => runBuiltInMap[self._tag](self as any, cliApp)
 
-const printDocs = (error: ValidationError.ValidationError) =>
-  Effect.serviceWithEffect(_console.Tag, (console) => console.printLine(doc.toAnsiText(error.error)))
+const printDocs = (error: ValidationError.ValidationError) => Console.log(doc.toAnsiText(error.error))

@@ -11,8 +11,8 @@ import type * as ValidationError from "@effect/cli/ValidationError"
 import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
 import { dual } from "@effect/data/Function"
-import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type { NonEmptyReadonlyArray } from "@effect/data/ReadonlyArray"
 import * as Debug from "@effect/io/Debug"
 import * as Effect from "@effect/io/Effect"
@@ -347,31 +347,31 @@ export const usage = <A>(self: Args.Args<A>): Usage.Usage => usageMap[(self as I
 const validateMap: {
   [K in Instruction["_tag"]]: (
     self: Extract<Instruction, { _tag: K }>,
-    args: List.List<string>
-  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [List.List<string>, any]>
+    args: ReadonlyArray<string>
+  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [ReadonlyArray<string>, any]>
 } = {
   Empty: (_, args) => Effect.succeed([args, void 0]),
   Single: (self, args) => {
-    if (List.isNil(args)) {
-      const choices = primitive.choices(self.primitiveType)
-      let message = ""
-      if (Option.isSome(self.pseudoName) && Option.isSome(choices)) {
-        message = `Missing argument <${self.pseudoName.value}> with values: ${choices.value}`
-      }
-      if (Option.isSome(self.pseudoName) && Option.isNone(choices)) {
-        message = `Missing argument <${self.pseudoName.value}>`
-      }
-      if (Option.isNone(self.pseudoName) && Option.isSome(choices)) {
-        message = `Missing a ${primitive.typeName(self.primitiveType)} argument with values: ${choices.value}`
-      }
-      message = `Missing a ${primitive.typeName(self.primitiveType)} argument`
-      return Effect.fail(validationError.invalidArgument(doc.p(message)))
+    if (ReadonlyArray.isNonEmptyReadonlyArray(args)) {
+      return Effect.mapBoth(
+        primitive.validate(self.primitiveType, Option.some(args[0])),
+        (text) => validationError.invalidArgument(doc.p(text)),
+        (a) => [args.slice(1), a]
+      )
     }
-    return Effect.mapBoth(
-      primitive.validate(self.primitiveType, Option.some(args.head)),
-      (text) => validationError.invalidArgument(doc.p(text)),
-      (a) => [args.tail, a]
-    )
+    const choices = primitive.choices(self.primitiveType)
+    let message = ""
+    if (Option.isSome(self.pseudoName) && Option.isSome(choices)) {
+      message = `Missing argument <${self.pseudoName.value}> with values: ${choices.value}`
+    }
+    if (Option.isSome(self.pseudoName) && Option.isNone(choices)) {
+      message = `Missing argument <${self.pseudoName.value}>`
+    }
+    if (Option.isNone(self.pseudoName) && Option.isSome(choices)) {
+      message = `Missing a ${primitive.typeName(self.primitiveType)} argument with values: ${choices.value}`
+    }
+    message = `Missing a ${primitive.typeName(self.primitiveType)} argument`
+    return Effect.fail(validationError.invalidArgument(doc.p(message)))
   },
   Map: (self, args) =>
     Effect.flatMap(
@@ -387,14 +387,17 @@ const validateMap: {
     const min = Option.getOrElse(self.min, () => 0)
     const max = Option.getOrElse(self.max, () => Infinity)
     const loop = (
-      args: List.List<string>,
+      args: ReadonlyArray<string>,
       acc: Chunk.Chunk<unknown>
-    ): Effect.Effect<never, ValidationError.ValidationError, readonly [List.List<string>, Chunk.Chunk<unknown>]> =>
+    ): Effect.Effect<never, ValidationError.ValidationError, readonly [ReadonlyArray<string>, Chunk.Chunk<unknown>]> =>
       acc.length >= max
         ? Effect.succeed([args, acc])
         : Effect.matchEffect(
           validateMap[self.value._tag](self.value as any, args),
-          (error) => acc.length >= min && List.isNil(args) ? Effect.succeed([args, acc]) : Effect.fail(error),
+          (error) =>
+            acc.length >= min && ReadonlyArray.isEmptyReadonlyArray(args) ?
+              Effect.succeed([args, acc]) :
+              Effect.fail(error),
           (tuple) => loop(tuple[0], Chunk.append(acc, tuple[1]))
         )
     return loop(args, Chunk.empty())
@@ -413,14 +416,14 @@ const validateMap: {
 /** @internal */
 export const validate = Debug.dualWithTrace<
   (
-    args: List.List<string>
+    args: ReadonlyArray<string>
   ) => <A>(
     self: Args.Args<A>
-  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [List.List<string>, A]>,
+  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [ReadonlyArray<string>, A]>,
   <A>(
     self: Args.Args<A>,
-    args: List.List<string>
-  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [List.List<string>, A]>
+    args: ReadonlyArray<string>
+  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [ReadonlyArray<string>, A]>
 >(2, (trace) => (self, args) => validateMap[(self as Instruction)._tag](self as any, args).traced(trace))
 
 /** @internal */

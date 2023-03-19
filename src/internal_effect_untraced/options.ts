@@ -14,7 +14,6 @@ import * as Chunk from "@effect/data/Chunk"
 import * as Either from "@effect/data/Either"
 import { dual, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
-import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
 import type { Predicate } from "@effect/data/Predicate"
 import * as RA from "@effect/data/ReadonlyArray"
@@ -48,7 +47,7 @@ export type Instruction =
   | OrElse
   | KeyValueMap
   | WithDefault
-  | Zip
+  | ZipWith
 
 /** @internal */
 export interface Empty extends Op<"Empty"> {}
@@ -94,7 +93,7 @@ export interface WithDefault extends
 {}
 
 /** @internal */
-export interface Zip extends
+export interface ZipWith extends
   Op<"Zip", {
     readonly left: Instruction
     readonly right: Instruction
@@ -280,7 +279,7 @@ export const mapTryCatch = dual<
   }))
 
 /** @internal */
-export const none: Options.Options<never> = (() => {
+export const none: Options.Options<void> = (() => {
   const op = Object.create(proto)
   op._tag = "Empty"
   return op
@@ -362,44 +361,44 @@ export const usage = <A>(self: Options.Options<A>): Usage.Usage => usageMap[(sel
 const validateMap: {
   [K in Instruction["_tag"]]: (
     self: Extract<Instruction, { _tag: K }>,
-    args: List.List<string>,
+    args: ReadonlyArray<string>,
     config: CliConfig.CliConfig
-  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [List.List<string>, any]>
+  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [ReadonlyArray<string>, any]>
 } = {
   Empty: (_, args) => Effect.succeed([args, void 0]),
   Single: (self, args, config) => {
-    if (List.isNil(args)) {
-      const error = validationError.missingValue(
-        doc.p(span.error(`Expected to find option: '${singleFullName(self)}'`))
-      )
-      return Effect.fail(error)
-    }
-    const [rest, supported] = processSingleArg(self, args.head, args.tail, config)
-    if (supported) {
-      if (primitive.isBool(self.primitiveType)) {
+    if (RA.isNonEmptyReadonlyArray(args)) {
+      const [rest, supported] = processSingleArg(self, args[0], args.slice(1), config)
+      if (supported) {
+        if (primitive.isBool(self.primitiveType)) {
+          return Effect.mapBoth(
+            primitive.validate(self.primitiveType, Option.none()),
+            (error) => validationError.invalidValue(doc.p(error)),
+            (a) => [rest, a]
+          )
+        }
         return Effect.mapBoth(
-          primitive.validate(self.primitiveType, Option.none()),
+          primitive.validate(self.primitiveType, RA.head(rest)),
           (error) => validationError.invalidValue(doc.p(error)),
-          (a) => [rest, a]
+          (a) => [rest.slice(1), a]
         )
       }
-      return Effect.mapBoth(
-        primitive.validate(self.primitiveType, List.head(rest)),
-        (error) => validationError.invalidValue(doc.p(error)),
-        (a) => [List.drop(rest, 1), a]
+      const fullName = singleFullName(self)
+      const distance = autoCorrect.levensteinDistance(args[0], fullName, config)
+      if (self.name.length > config.autoCorrectLimit + 1 && distance <= config.autoCorrectLimit) {
+        const message = `The flag '${args[0]}' is not recognized. Did you mean '${fullName}'?`
+        const error = validationError.invalidValue(doc.p(span.error(message)))
+        return Effect.fail(error)
+      }
+      return Effect.map(
+        validateMap[self._tag](self, rest, config),
+        (tuple) => [RA.prepend(tuple[0], args[0]), tuple[1]]
       )
     }
-    const fullName = singleFullName(self)
-    const distance = autoCorrect.levensteinDistance(args.head, fullName, config)
-    if (self.name.length > config.autoCorrectLimit + 1 && distance <= config.autoCorrectLimit) {
-      const message = `The flag '${args.head}' is not recognized. Did you mean '${fullName}'?`
-      const error = validationError.invalidValue(doc.p(span.error(message)))
-      return Effect.fail(error)
-    }
-    return Effect.map(
-      validateMap[self._tag](self, rest, config),
-      (tuple) => [List.prepend(tuple[0], args.head), tuple[1]]
+    const error = validationError.missingValue(
+      doc.p(span.error(`Expected to find option: '${singleFullName(self)}'`))
     )
+    return Effect.fail(error)
   },
   Map: (self, args, config) =>
     Effect.flatMap(
@@ -483,16 +482,16 @@ const validateMap: {
 /** @internal */
 export const validate = Debug.dualWithTrace<
   (
-    args: List.List<string>,
+    args: ReadonlyArray<string>,
     config: CliConfig.CliConfig
   ) => <A>(
     self: Options.Options<A>
-  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [List.List<string>, A]>,
+  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [ReadonlyArray<string>, A]>,
   <A>(
     self: Options.Options<A>,
-    args: List.List<string>,
+    args: ReadonlyArray<string>,
     config: CliConfig.CliConfig
-  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [List.List<string>, A]>
+  ) => Effect.Effect<never, ValidationError.ValidationError, readonly [ReadonlyArray<string>, A]>
 >(3, (trace) =>
   (self, args, config) =>
     validateMap[(self as Instruction)._tag](
@@ -652,10 +651,10 @@ const modifySingle = (self: Instruction, f: (single: Single) => Single): Options
 
 const processKeyValueMapArg = (
   self: KeyValueMap,
-  input: List.List<string>,
+  input: ReadonlyArray<string>,
   first: string,
   config: CliConfig.CliConfig
-): readonly [List.List<string>, HashMap.HashMap<string, string>] => {
+): readonly [ReadonlyArray<string>, HashMap.HashMap<string, string>] => {
   const makeFullName = (s: string): string => s.length === 1 ? `-${s}` : `--${s}`
   const supports = (s: string, config: CliConfig.CliConfig): boolean => {
     const argumentNames = Chunk.prepend(
@@ -671,7 +670,7 @@ const processKeyValueMapArg = (
   const createMap = (input: ReadonlyArray<string>): HashMap.HashMap<string, string> =>
     HashMap.fromIterable(RA.map(RA.filter(input, (s) => !s.startsWith("-")), createMapEntry))
   const tuple = RA.span(RA.fromIterable(input), (s) => !s.startsWith("-") || supports(s, config))
-  const remaining = List.fromIterable(tuple[1])
+  const remaining = tuple[1]
   const firstEntry = createMapEntry(first)
   const map = HashMap.set(createMap(tuple[0]), firstEntry[0], firstEntry[1])
   return [remaining, map]
@@ -680,17 +679,17 @@ const processKeyValueMapArg = (
 const processSingleArg = (
   self: Single,
   arg: string,
-  remaining: List.List<string>,
+  remaining: ReadonlyArray<string>,
   config: CliConfig.CliConfig
-): readonly [List.List<string>, boolean] => {
-  const process = (predicate: Predicate<string>): readonly [List.List<string>, boolean] => {
+): readonly [ReadonlyArray<string>, boolean] => {
+  const process = (predicate: Predicate<string>): readonly [ReadonlyArray<string>, boolean] => {
     if (predicate(arg)) {
       return [remaining, true]
     }
     if (arg.startsWith("--")) {
       const splitArg = arg.split("=")
       return splitArg.length === 2
-        ? [List.prepend(remaining, splitArg[1]), predicate(splitArg[0])]
+        ? [RA.prepend(remaining, splitArg[1]), predicate(splitArg[0])]
         : [remaining, false]
     }
     return [remaining, false]
@@ -721,7 +720,7 @@ const tuple = <T extends ArrayLike<Options.Options<any>>>(tuple: T): Options.Opt
   }
 > => {
   if (tuple.length === 0) {
-    return none
+    return none as any
   }
   if (tuple.length === 1) {
     return map(tuple[0], (x) => [x]) as any

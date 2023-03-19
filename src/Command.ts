@@ -12,7 +12,7 @@ import type { ValidationError } from "@effect/cli/ValidationError"
 import type { Either } from "@effect/data/Either"
 import type { HashMap } from "@effect/data/HashMap"
 import type { HashSet } from "@effect/data/HashSet"
-import type { List } from "@effect/data/List"
+import type { Option } from "@effect/data/Option"
 import type { NonEmptyReadonlyArray } from "@effect/data/ReadonlyArray"
 import type { Effect } from "@effect/io/Effect"
 
@@ -53,6 +53,43 @@ export declare namespace Command {
       readonly _A: (_: never) => A
     }
   }
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface ConstructorConfig<OptionsType = void, ArgsType = void> {
+    readonly options?: Options<OptionsType>
+    readonly args?: Args<ArgsType>
+  }
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export type Parsed<Name extends string, OptionsType, ArgsType> = Command.ComputeParsedType<{
+    readonly name: Name
+    readonly options: OptionsType
+    readonly args: ArgsType
+  }>
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export type GetParsedType<C> = C extends Command<infer P> ? P : never
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export type ComputeParsedType<A> = { [K in keyof A]: A[K] } extends infer X ? X : never
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export type Subcommands<A extends NonEmptyReadonlyArray<Command<any>>> = GetParsedType<A[number]>
 }
 
 /**
@@ -71,11 +108,10 @@ export const helpDoc: <A>(self: Command<A>) => HelpDoc = internal.helpDoc
  * @since 1.0.0
  * @category constructors
  */
-export const make: <OptionsType, ArgsType>(
-  name: string,
-  options: Options<OptionsType>,
-  args: Args<ArgsType>
-) => Command<readonly [OptionsType, ArgsType]> = internal.make
+export const make: <Name extends string, OptionsType = void, ArgsType = void>(
+  name: Name,
+  config?: Command.ConstructorConfig<OptionsType, ArgsType>
+) => Command<{ readonly name: Name; readonly options: OptionsType; readonly args: ArgsType }> = internal.make
 
 /**
  * @since 1.0.0
@@ -88,6 +124,15 @@ export const map: {
 
 /**
  * @since 1.0.0
+ * @category mapping
+ */
+export const mapOrFail: {
+  <A, B>(f: (a: A) => Either<ValidationError, B>): (self: Command<A>) => Command<B>
+  <A, B>(self: Command<A>, f: (a: A) => Either<ValidationError, B>): Command<B>
+} = internal.mapOrFail
+
+/**
+ * @since 1.0.0
  * @category getters
  */
 export const names: <A>(self: Command<A>) => HashSet<string> = internal.names
@@ -97,7 +142,7 @@ export const names: <A>(self: Command<A>) => HashSet<string> = internal.names
  * @category combinators
  */
 export const orElse: {
-  <B>(that: Command<B>): <A>(self: Command<A>) => Command<B | A>
+  <B>(that: Command<B>): <A>(self: Command<A>) => Command<A | B>
   <A, B>(self: Command<A>, that: Command<B>): Command<A | B>
 } = internal.orElse
 
@@ -115,8 +160,15 @@ export const orElseEither: {
  * @category parsing
  */
 export const parse: {
-  (args: List<string>, config: CliConfig): <A>(self: Command<A>) => Effect<never, ValidationError, CommandDirective<A>>
-  <A>(self: Command<A>, args: List<string>, config: CliConfig): Effect<never, ValidationError, CommandDirective<A>>
+  (
+    args: ReadonlyArray<string>,
+    config: CliConfig
+  ): <A>(self: Command<A>) => Effect<never, ValidationError, CommandDirective<A>>
+  <A>(
+    self: Command<A>,
+    args: ReadonlyArray<string>,
+    config: CliConfig
+  ): Effect<never, ValidationError, CommandDirective<A>>
 } = internal.parse
 
 /**
@@ -124,8 +176,19 @@ export const parse: {
  * @category combinators
  */
 export const subcommands: {
-  <B>(subcommands: NonEmptyReadonlyArray<Command<B>>): <A>(self: Command<A>) => Command<readonly [A, B]>
-  <A, B>(self: Command<A>, subcommands: NonEmptyReadonlyArray<Command<B>>): Command<readonly [A, B]>
+  <Subcommands extends NonEmptyReadonlyArray<Command<any>>>(
+    subcommands: [...Subcommands]
+  ): <A>(
+    self: Command<A>
+  ) => Command<
+    Command.ComputeParsedType<A & Readonly<{ subcommand: Option<Command.GetParsedType<Subcommands[number]>> }>>
+  >
+  <A, Subcommands extends NonEmptyReadonlyArray<Command<any>>>(
+    self: Command<A>,
+    subcommands: [...Subcommands]
+  ): Command<
+    Command.ComputeParsedType<A & Readonly<{ subcommand: Option<Command.GetParsedType<Subcommands[number]>> }>>
+  >
 } = internal.subcommands
 
 /**

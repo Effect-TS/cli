@@ -8,7 +8,6 @@ import type { Usage } from "@effect/cli/Usage"
 import type { ValidationError } from "@effect/cli/ValidationError"
 import type { Either } from "@effect/data/Either"
 import type { HashMap } from "@effect/data/HashMap"
-import type { List } from "@effect/data/List"
 import type { Option } from "@effect/data/Option"
 import type { NonEmptyReadonlyArray } from "@effect/data/ReadonlyArray"
 import type { Effect } from "@effect/io/Effect"
@@ -87,9 +86,7 @@ export const all: {
   >
   <T extends Readonly<{ [K: string]: Options<any> }>>(
     args: T
-  ): Options<
-    Readonly<{ [K in keyof T]: [T[K]] extends [Options<infer A>] ? A : never }>
-  >
+  ): Options<Readonly<{ [K in keyof T]: [T[K]] extends [Options<infer A>] ? A : never }>>
 } = internal.all
 
 /**
@@ -199,7 +196,7 @@ export const mapTryCatch: {
  * @since 1.0.0
  * @category constructors
  */
-export const none: Options<never> = internal.none
+export const none: Options<void> = internal.none
 
 /**
  * @since 1.0.0
@@ -249,14 +246,14 @@ export const usage: <A>(self: Options<A>) => Usage = internal.usage
  */
 export const validate: {
   (
-    args: List<string>,
+    args: ReadonlyArray<string>,
     config: CliConfig
-  ): <A>(self: Options<A>) => Effect<never, ValidationError, readonly [List<string>, A]>
+  ): <A>(self: Options<A>) => Effect<never, ValidationError, readonly [ReadonlyArray<string>, A]>
   <A>(
     self: Options<A>,
-    args: List<string>,
+    args: ReadonlyArray<string>,
     config: CliConfig
-  ): Effect<never, ValidationError, readonly [List<string>, A]>
+  ): Effect<never, ValidationError, readonly [ReadonlyArray<string>, A]>
 } = internal.validate
 
 /**

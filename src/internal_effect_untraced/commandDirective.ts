@@ -1,7 +1,6 @@
 import type * as BuiltInOption from "@effect/cli/BuiltInOption"
 import type * as CommandDirective from "@effect/cli/CommandDirective"
 import { dual } from "@effect/data/Function"
-import type * as List from "@effect/data/List"
 
 /** @internal */
 export const builtIn = (option: BuiltInOption.BuiltInOption): CommandDirective.CommandDirective<never> => ({
@@ -10,7 +9,7 @@ export const builtIn = (option: BuiltInOption.BuiltInOption): CommandDirective.C
 })
 
 /** @internal */
-export const userDefined = <A>(leftover: List.List<string>, value: A): CommandDirective.CommandDirective<A> => ({
+export const userDefined = <A>(leftover: ReadonlyArray<string>, value: A): CommandDirective.CommandDirective<A> => ({
   _tag: "UserDefined",
   leftover,
   value

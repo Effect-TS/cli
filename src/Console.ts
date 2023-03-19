@@ -1,10 +1,9 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/cli/internal_effect_untraced/console"
-import type * as Context from "@effect/data/Context"
-import type { Effect } from "@effect/io/Effect"
-import type { Layer } from "@effect/io/Layer"
+import * as Context from "@effect/data/Context"
+import * as Effect from "@effect/io/Effect"
+import * as Layer from "@effect/io/Layer"
 
 // TODO: move this to a better place
 
@@ -13,17 +12,33 @@ import type { Layer } from "@effect/io/Layer"
  * @category models
  */
 export interface Console {
-  printLine(text: string): Effect<never, never, void>
+  log(text: string): Effect.Effect<never, never, void>
+}
+
+/** @internal */
+class ConsoleImpl implements Console {
+  log(text: string): Effect.Effect<never, never, void> {
+    return Effect.sync(() => {
+      console.log(text)
+    })
+  }
 }
 
 /**
  * @since 1.0.0
  * @category context
  */
-export const Tag: Context.Tag<Console> = internal.Tag
+export const Console = Context.Tag<Console>()
 
 /**
  * @since 1.0.0
  * @category context
  */
-export const layer: Layer<never, never, Console> = internal.layer
+export const layer: Layer.Layer<never, never, Console> = Layer.sync(Console, () => new ConsoleImpl())
+
+/**
+ * @since 1.0.0
+ * @category accessors
+ */
+export const log = (text: string): Effect.Effect<Console, never, void> =>
+  Effect.serviceWithEffect(Console, (console) => console.log(text))

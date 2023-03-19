@@ -1,14 +1,12 @@
 /**
  * @since 1.0.0
  */
-import type { CliConfig } from "@effect/cli/CliConfig"
 import type { Command } from "@effect/cli/Command"
 import type { Console } from "@effect/cli/Console"
 import type { HelpDoc } from "@effect/cli/HelpDoc"
 import type { Span } from "@effect/cli/HelpDoc/Span"
 import * as internal from "@effect/cli/internal_effect_untraced/cliApp"
 import type { ValidationError } from "@effect/cli/ValidationError"
-import type { List } from "@effect/data/List"
 import type { Effect } from "@effect/io/Effect"
 
 /**
@@ -33,7 +31,7 @@ export declare namespace CliApp {
    * @since 1.0.0
    * @category models
    */
-  export type Context = CliConfig | Console
+  export type Context = Console
 }
 
 /**
@@ -56,12 +54,12 @@ export const make: <A>(
  */
 export const run: {
   <R, E, A>(
-    args: List<string>,
+    args: ReadonlyArray<string>,
     f: (a: A) => Effect<CliApp.Context | R, E, void>
   ): (self: CliApp<A>) => Effect<CliApp.Context | R, E | ValidationError, void>
   <R, E, A>(
     self: CliApp<A>,
-    args: List<string>,
+    args: ReadonlyArray<string>,
     f: (a: A) => Effect<CliApp.Context | R, E, void>
   ): Effect<CliApp.Context | R, ValidationError | E, void>
 } = internal.run

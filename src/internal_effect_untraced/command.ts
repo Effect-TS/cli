@@ -20,8 +20,8 @@ import * as Either from "@effect/data/Either"
 import { dual, pipe } from "@effect/data/Function"
 import * as HashMap from "@effect/data/HashMap"
 import * as HashSet from "@effect/data/HashSet"
-import * as List from "@effect/data/List"
 import * as Option from "@effect/data/Option"
+import * as ReadonlyArray from "@effect/data/ReadonlyArray"
 import type { NonEmptyReadonlyArray } from "@effect/data/ReadonlyArray"
 import * as Debug from "@effect/io/Debug"
 import * as Effect from "@effect/io/Effect"
@@ -66,7 +66,7 @@ export interface Single extends
 export interface Map extends
   Op<"Map", {
     readonly command: Instruction
-    readonly f: (a: unknown) => unknown
+    readonly f: (a: unknown) => Either.Either<ValidationError.ValidationError, unknown>
   }>
 {}
 
@@ -140,17 +140,35 @@ const helpDocMap: {
 export const helpDoc = <A>(self: Command.Command<A>): HelpDoc.HelpDoc =>
   helpDocMap[(self as Instruction)._tag](self as any)
 
+const defaultConstructorConfig = {
+  options: options.none,
+  args: _args.none
+}
+
 /** @internal */
-export const make = <OptionsType, ArgsType>(
-  name: string,
-  options: Options.Options<OptionsType>,
-  args: Args.Args<ArgsType>
-): Command.Command<readonly [OptionsType, ArgsType]> => single(name, doc.empty, options, args)
+export const make = <Name extends string, OptionsType = void, ArgsType = void>(
+  name: Name,
+  config: Command.Command.ConstructorConfig<OptionsType, ArgsType> = defaultConstructorConfig as any
+): Command.Command<Command.Command.Parsed<Name, OptionsType, ArgsType>> => {
+  const { args, options } = { ...defaultConstructorConfig, ...config }
+  return single(name, doc.empty, options, args) as any
+}
 
 /** @internal */
 export const map = dual<
   <A, B>(f: (a: A) => B) => (self: Command.Command<A>) => Command.Command<B>,
   <A, B>(self: Command.Command<A>, f: (a: A) => B) => Command.Command<B>
+>(2, (self, f) => mapOrFail(self, (a) => Either.right(f(a))))
+
+/** @internal */
+export const mapOrFail = dual<
+  <A, B>(
+    f: (a: A) => Either.Either<ValidationError.ValidationError, B>
+  ) => (self: Command.Command<A>) => Command.Command<B>,
+  <A, B>(
+    self: Command.Command<A>,
+    f: (a: A) => Either.Either<ValidationError.ValidationError, B>
+  ) => Command.Command<B>
 >(2, (self, f) => {
   const op = Object.create(proto)
   op._tag = "Map"
@@ -197,41 +215,45 @@ export const orElseEither = dual<
 const parseMap: {
   [K in Instruction["_tag"]]: (
     self: Extract<Instruction, { _tag: K }>,
-    args: List.List<string>,
+    args: ReadonlyArray<string>,
     config: CliConfig.CliConfig
   ) => Effect.Effect<never, ValidationError.ValidationError, CommandDirective.CommandDirective<any>>
 } = {
   Single: (self, args, config) => {
-    const parseBuiltInArgs = Option.exists(
-        List.head(args),
-        (name) => cliConfig.normalizeCase(config, self.name) === cliConfig.normalizeCase(config, name)
-      )
-      ? pipe(
-        builtInOption.builtInOptions(self, usage(self), helpDoc(self)),
-        options.validate(args, config),
-        Effect.mapBoth((error) => error.error, (tuple) => tuple[1]),
-        Effect.some,
-        Effect.map(commandDirective.builtIn)
-      )
-      : Effect.fail(Option.none())
+    const parseBuiltInArgs =
+      args[0] !== undefined && cliConfig.normalizeCase(config, self.name) === cliConfig.normalizeCase(config, args[0])
+        ? pipe(
+          builtInOption.builtInOptions(self, usage(self), helpDoc(self)),
+          options.validate(args, config),
+          Effect.mapBoth((error) => error.error, (tuple) => tuple[1]),
+          Effect.some,
+          Effect.map(commandDirective.builtIn)
+        )
+        : Effect.fail(Option.none())
     const parseUserDefinedArgs = pipe(
-      List.isNil(args)
-        ? Effect.fail(validationError.commandMismatch(doc.p(span.error(`Missing command name: '${self.name}'`))))
-        : pipe(
-          Effect.succeed(args.tail),
-          Effect.when(() => cliConfig.normalizeCase(config, args.head) === cliConfig.normalizeCase(config, self.name)),
+      ReadonlyArray.isNonEmptyReadonlyArray(args)
+        ? pipe(
+          Effect.succeed(args.slice(1)),
+          Effect.when(() => cliConfig.normalizeCase(config, args[0]) === cliConfig.normalizeCase(config, self.name)),
           Effect.some,
           Effect.orElseFail(() =>
             validationError.commandMismatch(doc.p(span.error(`Missing command name: '${self.name}'`)))
           )
-        ),
+        )
+        : Effect.fail(validationError.commandMismatch(doc.p(span.error(`Missing command name: '${self.name}'`)))),
       Effect.flatMap((commandOptionsAndArgs) =>
         pipe(
           options.validate(self.options, unCluster(commandOptionsAndArgs), config),
           Effect.flatMap(([commandArgs, options]) =>
             pipe(
               _args.validate(self.args, commandArgs),
-              Effect.map(([argsLeftover, args]) => commandDirective.userDefined(argsLeftover, [options, args]))
+              Effect.map(([argsLeftover, args]) =>
+                commandDirective.userDefined(argsLeftover, {
+                  name: self.name,
+                  options,
+                  args
+                })
+              )
             )
           )
         )
@@ -240,9 +262,17 @@ const parseMap: {
     return Effect.orElse(parseBuiltInArgs, () => parseUserDefinedArgs)
   },
   Map: (self, args, config) =>
-    Effect.map(
+    Effect.flatMap(
       parseMap[self.command._tag](self.command as any, args, config),
-      commandDirective.map(self.f)
+      (directive) => {
+        if (commandDirective.isUserDefined(directive)) {
+          const either = self.f(directive.value)
+          return Either.isLeft(either)
+            ? Effect.fail(either.left)
+            : Effect.succeed(commandDirective.userDefined(directive.leftover, either.right))
+        }
+        return Effect.succeed(directive)
+      }
     ),
   OrElse: (self, args, config) =>
     Effect.catchSome(
@@ -254,7 +284,11 @@ const parseMap: {
     ),
   Subcommands: (self, args, config) => {
     const helpDirectiveForChild = Effect.continueOrFail(
-      parseMap[self.child._tag](self.child as any, List.isNil(args) ? List.nil() : args.tail, config),
+      parseMap[self.child._tag](
+        self.child as any,
+        ReadonlyArray.isEmptyReadonlyArray(args) ? [] : args.slice(1),
+        config
+      ),
       () => validationError.invalidArgument(doc.empty),
       (directive) => {
         if (commandDirective.isBuiltIn(directive) && builtInOption.isShowHelp(directive.option)) {
@@ -276,7 +310,11 @@ const parseMap: {
       helpDoc(self)
     )))
     const wizardDirectiveForChild = Effect.continueOrFail(
-      parseMap[self.child._tag](self.child as any, List.isNil(args) ? List.nil() : args.tail, config),
+      parseMap[self.child._tag](
+        self.child as any,
+        ReadonlyArray.isEmptyReadonlyArray(args) ? [] : args.slice(1),
+        config
+      ),
       () => validationError.invalidArgument(doc.empty),
       (directive) =>
         commandDirective.isBuiltIn(directive) && builtInOption.isWizard(directive.option)
@@ -296,16 +334,22 @@ const parseMap: {
           }
           return Effect.succeed(directive)
         }
-        if (List.isCons(directive.leftover)) {
+        if (ReadonlyArray.isNonEmptyReadonlyArray(directive.leftover)) {
           return Effect.map(
             parseMap[self.child._tag](self.child as any, directive.leftover, config),
-            commandDirective.map((a) => [directive.value, a])
+            commandDirective.map((subcommand) => ({
+              ...directive.value,
+              subcommand: Option.some(subcommand)
+            }))
           )
         }
-        return Effect.succeed(directive)
+        return Effect.succeed(commandDirective.map(directive, () => ({
+          ...directive.value,
+          subcommand: Option.none()
+        })))
       }),
       Effect.catchSome(() =>
-        List.isNil(args)
+        ReadonlyArray.isEmptyReadonlyArray(args)
           ? Option.some(helpDirectiveForParent)
           : Option.none()
       )
@@ -316,29 +360,37 @@ const parseMap: {
 /** @internal */
 export const parse = Debug.dualWithTrace<
   (
-    args: List.List<string>,
+    args: ReadonlyArray<string>,
     config: CliConfig.CliConfig
   ) => <A>(
     self: Command.Command<A>
   ) => Effect.Effect<never, ValidationError.ValidationError, CommandDirective.CommandDirective<A>>,
   <A>(
     self: Command.Command<A>,
-    args: List.List<string>,
+    args: ReadonlyArray<string>,
     config: CliConfig.CliConfig
   ) => Effect.Effect<never, ValidationError.ValidationError, CommandDirective.CommandDirective<A>>
 >(3, (trace) => (self, args, config) => parseMap[(self as Instruction)._tag](self as any, args, config).traced(trace))
 
 /** @internal */
 export const subcommands = dual<
-  <B>(
-    subcommands: NonEmptyReadonlyArray<Command.Command<B>>
+  <Subcommands extends NonEmptyReadonlyArray<Command.Command<any>>>(
+    subcommands: [...Subcommands]
   ) => <A>(
     self: Command.Command<A>
-  ) => Command.Command<readonly [A, B]>,
-  <A, B>(
+  ) => Command.Command<
+    Command.Command.ComputeParsedType<
+      A & Readonly<{ subcommand: Option.Option<Command.Command.Subcommands<Subcommands>> }>
+    >
+  >,
+  <A, Subcommands extends NonEmptyReadonlyArray<Command.Command<any>>>(
     self: Command.Command<A>,
-    subcommands: NonEmptyReadonlyArray<Command.Command<B>>
-  ) => Command.Command<readonly [A, B]>
+    subcommands: [...Subcommands]
+  ) => Command.Command<
+    Command.Command.ComputeParsedType<
+      A & Readonly<{ subcommand: Option.Option<Command.Command.Subcommands<Subcommands>> }>
+    >
+  >
 >(2, (self, subcommands) => {
   const head = subcommands[0]
   const tail = subcommands.slice(1)
@@ -393,12 +445,12 @@ export const withHelp = dual<
   <A>(self: Command.Command<A>, help: string | HelpDoc.HelpDoc) => Command.Command<A>
 >(2, (self, help) => withHelpMap[(self as Instruction)._tag](self as any, help))
 
-const single = <OptionsType, ArgsType>(
-  name: string,
+const single = <Name extends string, OptionsType, ArgsType>(
+  name: Name,
   help: HelpDoc.HelpDoc,
   options: Options.Options<OptionsType>,
   args: Args.Args<ArgsType>
-): Command.Command<readonly [OptionsType, ArgsType]> => {
+): Command.Command<Command.Command.Parsed<Name, OptionsType, ArgsType>> => {
   const op = Object.create(proto)
   op._tag = "Single"
   op.name = name
@@ -408,10 +460,7 @@ const single = <OptionsType, ArgsType>(
   return op
 }
 
-const makeSubcommand = <A, B>(
-  parent: Command.Command<A>,
-  child: Command.Command<B>
-): Instruction => {
+const makeSubcommand = <A, B>(parent: Command.Command<A>, child: Command.Command<B>): Instruction => {
   const op = Object.create(proto)
   op._tag = "Subcommands"
   op.parent = parent
@@ -421,11 +470,11 @@ const makeSubcommand = <A, B>(
 
 const clusteredOptionRegex = /^-{1}([^-]{2,}|$)/
 
-const unCluster = (args: List.List<string>): List.List<string> =>
-  List.flatMap(args, (arg) =>
+const unCluster = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  ReadonlyArray.flatMap(args, (arg) =>
     clusteredOptionRegex.test(arg.trim())
-      ? List.fromIterable(arg.substring(1).split("").map((c) => `-${c}`))
-      : List.of(arg))
+      ? arg.substring(1).split("").map((c) => `-${c}`)
+      : ReadonlyArray.of(arg))
 
 const subcommandMaxSynopsisLengthMap: {
   [K in Instruction["_tag"]]: (self: Extract<Instruction, { _tag: K }>) => number

@@ -3,7 +3,6 @@
  */
 import type { BuiltInOption } from "@effect/cli/BuiltInOption"
 import * as internal from "@effect/cli/internal_effect_untraced/commandDirective"
-import type { List } from "@effect/data/List"
 
 /**
  * @since 1.0.0
@@ -26,7 +25,7 @@ export interface BuiltIn {
  */
 export interface UserDefined<A> {
   readonly _tag: "UserDefined"
-  readonly leftover: List<string>
+  readonly leftover: ReadonlyArray<string>
   readonly value: A
 }
 
@@ -61,4 +60,4 @@ export const map: {
  * @since 1.0.0
  * @category constructors
  */
-export const userDefined: <A>(leftover: List<string>, value: A) => CommandDirective<A> = internal.userDefined
+export const userDefined: <A>(leftover: ReadonlyArray<string>, value: A) => CommandDirective<A> = internal.userDefined
