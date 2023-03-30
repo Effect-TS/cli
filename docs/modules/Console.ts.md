@@ -41,7 +41,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const Console: Context.Tag<Console>
+export declare const Console: Context.Tag<Console, Console>
 ```
 
 Added in v1.0.0
