@@ -505,16 +505,27 @@ const validateMap: {
       args: ReadonlyArray<string>,
       acc: Chunk.Chunk<unknown>
     ): Effect.Effect<never, ValidationError.ValidationError, readonly [ReadonlyArray<string>, Chunk.Chunk<unknown>]> =>
-      acc.length >= max
-        ? Effect.succeed([args, acc])
-        : Effect.matchEffect(
-          validateMap[self.options._tag](self.options as any, args, config),
-          (error) =>
-            acc.length >= min && validationError.isMissingValue(error) ?
-              Effect.succeed([args, acc]) :
-              Effect.fail(error),
-          (tuple) => loop(tuple[0], Chunk.append(acc, tuple[1]))
-        )
+      Effect.matchEffect(
+        validateMap[self.options._tag](self.options as any, args, config),
+        (error) => {
+          if (!validationError.isMissingValue(error)) {
+            return Effect.fail(error)
+          }
+
+          if (acc.length < min) {
+            return Effect.fail(validationError.missingValue(
+              doc.p(span.error(`Expected at least ${min} value(s) for option: '${singleFullName(self.options)}'`))
+            ))
+          } else if (acc.length > max) {
+            return Effect.fail(validationError.extraneousValue(
+              doc.p(span.error(`Expected at most ${max} value(s) for option: '${singleFullName(self.options)}'`))
+            ))
+          }
+
+          return Effect.succeed([args, acc])
+        },
+        (tuple) => loop(tuple[0], Chunk.append(acc, tuple[1]))
+      )
     return loop(args, Chunk.empty())
   },
   WithDefault: (self, args, config) =>

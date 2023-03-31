@@ -368,7 +368,18 @@ describe.concurrent("Options", () => {
       const args = ["--verbose"]
       const error = yield* $(Effect.flip(Options.validate(option, args, config)))
       expect(error).toEqual(ValidationError.missingValue(HelpDoc.p(Span.error(
-        "Expected to find option: '--defs'"
+        "Expected at least 1 value(s) for option: '--defs'"
+      ))))
+    }))
+
+  it.effect("variadic - extraneous value", () =>
+    Effect.gen(function*($) {
+      const config = CliConfig.defaultConfig
+      const option = Options.alias(Options.atMost(Options.integer("defs"), 2), "d")
+      const args = ["-d", "1", "-d", "2", "-d", "3", "--verbose"]
+      const error = yield* $(Effect.flip(Options.validate(option, args, config)))
+      expect(error).toEqual(ValidationError.extraneousValue(HelpDoc.p(Span.error(
+        "Expected at most 2 value(s) for option: '--defs'"
       ))))
     }))
 
@@ -376,17 +387,17 @@ describe.concurrent("Options", () => {
     Effect.gen(function*($) {
       const config = CliConfig.defaultConfig
       const option = Options.alias(Options.repeat1(Options.integer("defs")), "d")
-      const args = ["-d", "1", "-d", "2", "--verbose"]
+      const args = ["-d", "1", "-d", "2", "-d", "3", "--verbose"]
       const result = yield* $(Options.validate(option, args, config))
-      expect(result).toEqual([["--verbose"], Chunk.make(1, 2)])
+      expect(result).toEqual([["--verbose"], Chunk.make(1, 2, 3)])
     }))
 
   it.effect("variadic - integers atMost 2", () =>
     Effect.gen(function*($) {
       const config = CliConfig.defaultConfig
       const option = Options.alias(Options.atMost(Options.integer("defs"), 2), "d")
-      const args = ["-d", "1", "-d", "2", "-d", "3", "--verbose"]
+      const args = ["-d", "1", "-d", "2", "--verbose"]
       const result = yield* $(Options.validate(option, args, config))
-      expect(result).toEqual([["-d", "3", "--verbose"], Chunk.make(1, 2)])
+      expect(result).toEqual([["--verbose"], Chunk.make(1, 2)])
     }))
 })
