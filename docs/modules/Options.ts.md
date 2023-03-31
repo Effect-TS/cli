@@ -14,10 +14,15 @@ Added in v1.0.0
 
 - [combinators](#combinators)
   - [alias](#alias)
+  - [atLeast](#atleast)
+  - [atMost](#atmost)
+  - [between](#between)
   - [filterMap](#filtermap)
   - [optional](#optional)
   - [orElse](#orelse)
   - [orElseEither](#orelseeither)
+  - [repeat](#repeat)
+  - [repeat1](#repeat1)
   - [withDefault](#withdefault)
   - [withDescription](#withdescription)
 - [constructors](#constructors)
@@ -72,6 +77,45 @@ export declare const alias: {
 
 Added in v1.0.0
 
+## atLeast
+
+**Signature**
+
+```ts
+export declare const atLeast: {
+  (times: 0): <A>(self: Options<A>) => Options<Chunk<A>>
+  <A>(self: Options<A>, times: number): Options<Chunk<A>>
+}
+```
+
+Added in v1.0.0
+
+## atMost
+
+**Signature**
+
+```ts
+export declare const atMost: {
+  (times: number): <A>(self: Options<A>) => Options<Chunk<A>>
+  <A>(self: Options<A>, times: number): Options<Chunk<A>>
+}
+```
+
+Added in v1.0.0
+
+## between
+
+**Signature**
+
+```ts
+export declare const between: {
+  (min: number, max: number): <A>(self: Options<A>) => Options<Chunk<A>>
+  <A>(self: Options<A>, min: number, max: number): Options<Chunk<A>>
+}
+```
+
+Added in v1.0.0
+
 ## filterMap
 
 **Signature**
@@ -117,6 +161,26 @@ export declare const orElseEither: {
   <A>(that: Options<A>): <B>(self: Options<B>) => Options<Either<B, A>>
   <A, B>(self: Options<A>, that: Options<B>): Options<Either<B, A>>
 }
+```
+
+Added in v1.0.0
+
+## repeat
+
+**Signature**
+
+```ts
+export declare const repeat: <A>(self: Options<A>) => Options<Chunk<A>>
+```
+
+Added in v1.0.0
+
+## repeat1
+
+**Signature**
+
+```ts
+export declare const repeat1: <A>(self: Options<A>) => Options<NonEmptyChunk<A>>
 ```
 
 Added in v1.0.0

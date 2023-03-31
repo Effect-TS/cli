@@ -16,7 +16,7 @@ Added in v1.0.0
   - [defaultConfig](#defaultconfig)
   - [make](#make)
 - [context](#context)
-  - [Tag](#tag)
+  - [CliConfig](#cliconfig)
   - [defaultLayer](#defaultlayer)
   - [layer](#layer)
 - [models](#models)
@@ -50,12 +50,12 @@ Added in v1.0.0
 
 # context
 
-## Tag
+## CliConfig
 
 **Signature**
 
 ```ts
-export declare const Tag: Context.Tag<CliConfig>
+export declare const CliConfig: Context.Tag<CliConfig, CliConfig>
 ```
 
 Added in v1.0.0
