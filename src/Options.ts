@@ -169,7 +169,7 @@ export const choice: <A extends string, C extends NonEmptyReadonlyArray<A>>(
  *
  * export const Cat = Data.tagged<Cat>("Cat")
  *
- * export const animal: Options.Options<Animal> = Options.choice("animal", [
+ * export const animal: Options.Options<Animal> = Options.choiceWithValue("animal", [
  *   ["dog", Dog()],
  *   ["cat", Cat()],
  * ])
