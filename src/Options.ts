@@ -177,10 +177,10 @@ export const choice: <A extends string, C extends NonEmptyReadonlyArray<A>>(
  * @since 1.0.0
  * @category constructors
  */
-export const choiceWithValue: <A, C extends NonEmptyReadonlyArray<readonly [string, A]>>(
+export const choiceWithValue: <C extends NonEmptyReadonlyArray<readonly [string, any]>>(
   name: string,
   choices: C
-) => Options<A> = internal.choiceWithValue
+) => Options<C[number][1]> = internal.choiceWithValue
 
 /**
  * @since 1.0.0
