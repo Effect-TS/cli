@@ -145,7 +145,7 @@ export const boolean: (name: string, options?: Options.BooleanOptionConfig) => O
 export const choice: <A extends string, C extends NonEmptyReadonlyArray<A>>(
   name: string,
   choices: C
-) => Options<{ [K in keyof C]: C[K] }[number]> = internal.choice
+) => Options<C[number]> = internal.choice
 
 /**
  * Constructs command-line `Options` that represent a choice between several

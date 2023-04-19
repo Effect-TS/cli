@@ -183,7 +183,7 @@ export const boolean = (name: string, options: Options.Options.BooleanOptionConf
 export const choice = <A extends string, C extends RA.NonEmptyReadonlyArray<A>>(
   name: string,
   choices: C
-): Options.Options<{ [K in keyof C]: C[K] }[number]> =>
+): Options.Options<C[number]> =>
   single(
     name,
     Chunk.empty(),
