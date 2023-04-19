@@ -10,8 +10,6 @@ import { pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
 import * as Effect from "@effect/io/Effect"
 
-const x = Options.choice("animal", ["cat", "dog"])
-
 export interface Git extends Data.Case {
   readonly version: boolean
   readonly subcommand: Option.Option<GitSubcommand>
