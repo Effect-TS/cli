@@ -11,7 +11,7 @@ import * as Color from "@effect/printer-ansi/Color"
 import * as Doc from "@effect/printer/Doc"
 import * as Optimize from "@effect/printer/Optimize"
 
-interface TextState {
+interface State {
   readonly cursor: number
   readonly offset: number
   readonly value: string
@@ -58,7 +58,7 @@ const renderNextFrame = (promptMsg: string, input: AnsiDoc.AnsiDoc, offset: numb
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(Doc.text(pointerSmall), AnsiStyle.color(Color.black))),
       Doc.cat(Doc.space),
-      Doc.cat(Doc.annotate(input, AnsiStyle.color(Color.green))),
+      Doc.cat(Doc.annotate(input, AnsiStyle.combine(AnsiStyle.underlined, AnsiStyle.color(Color.green)))),
       Doc.cat(moveCursor(offset, 0))
     )
     return AnsiRender.prettyDefault(Optimize.optimize(doc, Optimize.Deep))
@@ -74,7 +74,7 @@ const renderSubmission = (promptMsg: string, input: AnsiDoc.AnsiDoc) =>
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(Doc.text(ellipsis), AnsiStyle.color(Color.black))),
       Doc.cat(Doc.space),
-      Doc.cat(Doc.annotate(input, AnsiStyle.color(Color.green))),
+      Doc.cat(Doc.annotate(input, AnsiStyle.color(Color.white))),
       Doc.cat(Doc.hardLine)
     )
     return AnsiRender.prettyDefault(Optimize.optimize(doc, Optimize.Deep))
@@ -94,7 +94,7 @@ const renderInput = (value: string, type: NonNullable<Prompt.Prompt.TextOptions[
   }
 }
 
-const processBackspace = (currentState: TextState) => {
+const processBackspace = (currentState: State) => {
   if (currentState.cursor <= 0) {
     return Effect.succeed(promptAction.beep)
   }
@@ -105,7 +105,7 @@ const processBackspace = (currentState: TextState) => {
   return Effect.succeed(promptAction.nextFrame({ ...currentState, cursor, value }))
 }
 
-const processCursorLeft = (currentState: TextState) => {
+const processCursorLeft = (currentState: State) => {
   if (currentState.cursor <= 0) {
     return Effect.succeed(promptAction.beep)
   }
@@ -114,7 +114,7 @@ const processCursorLeft = (currentState: TextState) => {
   return Effect.succeed(promptAction.nextFrame({ ...currentState, cursor, offset }))
 }
 
-const processCursorRight = (currentState: TextState) => {
+const processCursorRight = (currentState: State) => {
   if (currentState.cursor >= currentState.value.length) {
     return Effect.succeed(promptAction.beep)
   }
@@ -123,7 +123,7 @@ const processCursorRight = (currentState: TextState) => {
   return Effect.succeed(promptAction.nextFrame({ ...currentState, cursor, offset }))
 }
 
-const defaultProcessor = (input: string, currentState: TextState) => {
+const defaultProcessor = (input: string, currentState: State) => {
   const beforeCursor = currentState.value.slice(0, currentState.cursor)
   const afterCursor = currentState.value.slice(currentState.cursor)
   const value = `${beforeCursor}${input}${afterCursor}`
@@ -131,7 +131,7 @@ const defaultProcessor = (input: string, currentState: TextState) => {
   return Effect.succeed(promptAction.nextFrame({ ...currentState, cursor, value }))
 }
 
-const initialState: TextState = { cursor: 0, offset: 0, value: "" }
+const initialState: State = { cursor: 0, offset: 0, value: "" }
 
 /** @internal */
 export const text = (options: Prompt.Prompt.TextOptions): Prompt.Prompt<string> => {

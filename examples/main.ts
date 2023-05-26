@@ -12,17 +12,12 @@ const myPrompt: Prompt.Prompt<number> = pipe(
         Effect.succeed(value) :
         Effect.fail("Name must be provided")
   }),
-  Prompt.flatMap((name) =>
-    pipe(
-      Prompt.text({
-        message: `Hello, ${name}, what is your question?`,
-        validate: (value) =>
-          value.length > 0 ?
-            Effect.succeed(value) :
-            Effect.fail("Question must be provided")
-      }),
-      Prompt.map((question) => question.length)
-    )
+  Prompt.flatMap(() =>
+    Prompt.int({
+      message: `What is your favorite number?`,
+      min: 0,
+      max: 5
+    })
   )
 )
 

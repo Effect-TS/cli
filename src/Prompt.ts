@@ -2,6 +2,7 @@
  * @since 1.0.0
  */
 import * as internal from "@effect/cli/internal_effect_untraced/prompt"
+import * as numberPrompt from "@effect/cli/internal_effect_untraced/prompt/number"
 import * as textPrompt from "@effect/cli/internal_effect_untraced/prompt/text"
 import type { PromptAction } from "@effect/cli/Prompt/Action"
 import type { Terminal } from "@effect/cli/Terminal"
@@ -44,6 +45,19 @@ export declare namespace Prompt {
    * @category models
    */
   export type Action<State, Output> = PromptAction<State, Output>
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface IntOptions {
+    readonly message: string
+    readonly min?: number
+    readonly max?: number
+    readonly incrementBy?: number
+    readonly decrementBy?: number
+    readonly validate?: (value: number) => Effect<never, string, number>
+  }
 
   /**
    * @since 1.0.0
@@ -97,6 +111,12 @@ export const map: {
   <Output, Output2>(f: (output: Output) => Output2): (self: Prompt<Output>) => Prompt<Output2>
   <Output, Output2>(self: Prompt<Output>, f: (output: Output) => Output2): Prompt<Output2>
 } = internal.map
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const int: (options: Prompt.IntOptions) => Prompt<number> = numberPrompt.int
 
 /**
  * Executes the specified `Prompt`.
