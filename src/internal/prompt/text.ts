@@ -1,6 +1,6 @@
 import * as prompt from "@effect/cli/internal/prompt"
 import * as promptAction from "@effect/cli/internal/prompt/action"
-import { ansi, figures } from "@effect/cli/internal/prompt/ansi-utils"
+import * as ansiUtils from "@effect/cli/internal/prompt/ansi-utils"
 import type * as Prompt from "@effect/cli/Prompt"
 import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
@@ -17,62 +17,58 @@ interface State {
   readonly value: string
 }
 
-const moveCursor = (x: number, y = 0) => Doc.text(ansi.moveCursor(x, y))
-const saveCursor = Doc.text(ansi.cursorSave)
-const restoreCursor = Doc.text(ansi.cursorRestore)
-const resetLine = Doc.text(`${ansi.clearLine}${ansi.setCursorPosition(0)}`)
-const resetDown = Doc.text(`${ansi.clearDown}${ansi.setCursorPosition(0)}`)
+const renderBeep = AnsiRender.prettyDefault(ansiUtils.beep)
 
 const renderError = (promptMsg: string, errorMsg: string, input: AnsiDoc.AnsiDoc, offset: number) =>
-  Effect.map(figures, ({ pointerSmall }) => {
+  Effect.map(ansiUtils.figures, ({ pointerSmall }) => {
     const doc = pipe(
-      resetLine,
+      ansiUtils.resetLine,
       Doc.cat(Doc.annotate(Doc.text("?"), AnsiStyle.color(Color.cyan))),
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(Doc.text(promptMsg), AnsiStyle.bold)),
       Doc.cat(Doc.space),
-      Doc.cat(Doc.annotate(Doc.text(pointerSmall), AnsiStyle.color(Color.black))),
+      Doc.cat(Doc.annotate(pointerSmall, AnsiStyle.color(Color.black))),
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(input, AnsiStyle.color(Color.red))),
-      Doc.cat(saveCursor),
+      Doc.cat(ansiUtils.cursorSave),
       Doc.cat(Doc.hardLine),
-      Doc.cat(Doc.annotate(Doc.text(pointerSmall), AnsiStyle.color(Color.red))),
+      Doc.cat(Doc.annotate(pointerSmall, AnsiStyle.color(Color.red))),
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(
         Doc.text(errorMsg),
         AnsiStyle.combine(AnsiStyle.italicized, AnsiStyle.color(Color.red))
       )),
-      Doc.cat(restoreCursor),
-      Doc.cat(moveCursor(offset))
+      Doc.cat(ansiUtils.cursorRestore),
+      Doc.cat(ansiUtils.moveCursor(offset))
     )
     return AnsiRender.prettyDefault(Optimize.optimize(doc, Optimize.Deep))
   })
 
 const renderNextFrame = (promptMsg: string, input: AnsiDoc.AnsiDoc, offset: number) =>
-  Effect.map(figures, ({ pointerSmall }) => {
+  Effect.map(ansiUtils.figures, ({ pointerSmall }) => {
     const doc = pipe(
-      resetLine,
+      ansiUtils.resetLine,
       Doc.cat(Doc.annotate(Doc.text("?"), AnsiStyle.color(Color.cyan))),
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(Doc.text(promptMsg), AnsiStyle.bold)),
       Doc.cat(Doc.space),
-      Doc.cat(Doc.annotate(Doc.text(pointerSmall), AnsiStyle.color(Color.black))),
+      Doc.cat(Doc.annotate(pointerSmall, AnsiStyle.color(Color.black))),
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(input, AnsiStyle.combine(AnsiStyle.underlined, AnsiStyle.color(Color.green)))),
-      Doc.cat(moveCursor(offset, 0))
+      Doc.cat(ansiUtils.moveCursor(offset))
     )
     return AnsiRender.prettyDefault(Optimize.optimize(doc, Optimize.Deep))
   })
 
 const renderSubmission = (promptMsg: string, input: AnsiDoc.AnsiDoc) =>
-  Effect.map(figures, ({ ellipsis, tick }) => {
+  Effect.map(ansiUtils.figures, ({ ellipsis, tick }) => {
     const doc = pipe(
-      resetDown,
-      Doc.cat(Doc.annotate(Doc.text(tick), AnsiStyle.color(Color.green))),
+      ansiUtils.resetDown,
+      Doc.cat(Doc.annotate(tick, AnsiStyle.color(Color.green))),
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(Doc.text(promptMsg), AnsiStyle.bold)),
       Doc.cat(Doc.space),
-      Doc.cat(Doc.annotate(Doc.text(ellipsis), AnsiStyle.color(Color.black))),
+      Doc.cat(Doc.annotate(ellipsis, AnsiStyle.color(Color.black))),
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(input, AnsiStyle.color(Color.white))),
       Doc.cat(Doc.hardLine)
@@ -147,7 +143,7 @@ export const text = (options: Prompt.Prompt.TextOptions): Prompt.Prompt<string> 
       const input = renderInput(state.value, opts.type)
       switch (action._tag) {
         case "Beep": {
-          return Effect.succeed(ansi.beep)
+          return Effect.succeed(renderBeep)
         }
         case "Error": {
           return renderError(opts.message, action.message, input, state.offset)

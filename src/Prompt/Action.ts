@@ -1,6 +1,7 @@
 /**
  * @since 1.0.0
  */
+import * as internal from "@effect/cli/internal_effect_untraced/prompt/action"
 
 /**
  * @since 1.0.0
@@ -42,3 +43,27 @@ export interface Submit<Output> {
   readonly _tag: "Submit"
   readonly value: Output
 }
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const beep: PromptAction<never, never> = internal.beep
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const error: (message: string) => PromptAction<never, never> = internal.error
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const nextFrame: <State>(state: State) => PromptAction<State, never> = internal.nextFrame
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const submit: <Output>(value: Output) => PromptAction<never, Output> = internal.submit
