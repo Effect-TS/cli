@@ -4,21 +4,11 @@ import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 
 const myPrompt: Prompt.Prompt<number> = pipe(
-  Prompt.text({
-    message: "What is your name?",
-    type: "password",
-    validate: (value) =>
-      value.length > 0 ?
-        Effect.succeed(value) :
-        Effect.fail("Name must be provided")
-  }),
-  Prompt.flatMap(() =>
-    Prompt.int({
-      message: `What is your favorite number?`,
-      min: 0,
-      max: 5
-    })
-  )
+  Prompt.float({
+    message: `What is your favorite number?`,
+    min: 0,
+    max: 5
+  })
 )
 
 const program = pipe(

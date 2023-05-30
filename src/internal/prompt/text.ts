@@ -47,7 +47,7 @@ const renderError = (promptMsg: string, errorMsg: string, input: AnsiDoc.AnsiDoc
 const renderNextFrame = (promptMsg: string, input: AnsiDoc.AnsiDoc, offset: number) =>
   Effect.map(ansiUtils.figures, ({ pointerSmall }) => {
     const doc = pipe(
-      ansiUtils.resetLine,
+      ansiUtils.resetDown,
       Doc.cat(Doc.annotate(Doc.text("?"), AnsiStyle.color(Color.cyan))),
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(Doc.text(promptMsg), AnsiStyle.bold)),

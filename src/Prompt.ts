@@ -63,6 +63,14 @@ export declare namespace Prompt {
    * @since 1.0.0
    * @category models
    */
+  export interface FloatOptions extends IntOptions {
+    readonly precision?: number
+  }
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
   export interface TextOptions {
     readonly message: string
     readonly type?: "hidden" | "password" | "text"
@@ -105,18 +113,24 @@ export const flatMap: {
 
 /**
  * @since 1.0.0
- * @category combinators
+ * @category constructors
  */
-export const map: {
-  <Output, Output2>(f: (output: Output) => Output2): (self: Prompt<Output>) => Prompt<Output2>
-  <Output, Output2>(self: Prompt<Output>, f: (output: Output) => Output2): Prompt<Output2>
-} = internal.map
+export const float: (options: Prompt.FloatOptions) => Prompt<number> = numberPrompt.float
 
 /**
  * @since 1.0.0
  * @category constructors
  */
 export const int: (options: Prompt.IntOptions) => Prompt<number> = numberPrompt.int
+
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
+export const map: {
+  <Output, Output2>(f: (output: Output) => Output2): (self: Prompt<Output>) => Prompt<Output2>
+  <Output, Output2>(self: Prompt<Output>, f: (output: Output) => Output2): Prompt<Output2>
+} = internal.map
 
 /**
  * Executes the specified `Prompt`.
