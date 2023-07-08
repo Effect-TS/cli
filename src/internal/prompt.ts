@@ -1,9 +1,11 @@
+import * as ansiUtils from "@effect/cli/internal/prompt/ansi-utils"
 import * as terminal from "@effect/cli/internal/terminal"
 import type * as Prompt from "@effect/cli/Prompt"
 import type * as Terminal from "@effect/cli/Terminal"
 import { dual, pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
+import * as AnsiRender from "@effect/printer-ansi/AnsiRender"
 
 /** @internal */
 const PromptSymbolKey = "@effect/cli/Prompt"
@@ -64,11 +66,11 @@ export const custom = <State, Output>(
   render: (
     state: State,
     action: Prompt.Prompt.Action<State, Output>
-  ) => Effect.Effect<never, never, string>,
+  ) => Effect.Effect<Terminal.Terminal, never, string>,
   process: (
     input: Terminal.Terminal.UserInput,
     state: State
-  ) => Effect.Effect<never, never, Prompt.Prompt.Action<State, Output>>
+  ) => Effect.Effect<Terminal.Terminal, never, Prompt.Prompt.Action<State, Output>>
 ): Prompt.Prompt<Output> => {
   const op = Object.create(proto)
   op._tag = "Loop"
@@ -118,36 +120,41 @@ export const run = <Output>(
     const op = self as Primitive
     switch (op._tag) {
       case "Loop": {
-        return Effect.flatMap(Ref.make(op.initialState), (ref) => {
-          const loop = (
-            action: Exclude<Prompt.Prompt.Action<unknown, unknown>, { _tag: "Submit" }>
-          ): Effect.Effect<never, never, any> =>
-            Effect.flatMap(Ref.get(ref), (state) =>
-              pipe(
-                op.render(state, action),
-                Effect.flatMap(terminal.display),
-                Effect.zipRight(terminal.getUserInput),
-                Effect.flatMap((input) => op.process(input, state)),
-                Effect.flatMap((action) => {
-                  switch (action._tag) {
-                    case "NextFrame": {
-                      return Effect.zipRight(Ref.set(ref, action.state), loop(action))
+        return pipe(
+          Ref.make(op.initialState),
+          Effect.flatMap((ref) => {
+            const loop = (
+              action: Exclude<Prompt.Prompt.Action<unknown, unknown>, { _tag: "Submit" }>
+            ): Effect.Effect<never, never, any> =>
+              Effect.flatMap(Ref.get(ref), (state) =>
+                pipe(
+                  op.render(state, action),
+                  Effect.flatMap(terminal.display),
+                  Effect.zipRight(terminal.getUserInput),
+                  Effect.flatMap((input) => op.process(input, state)),
+                  Effect.flatMap((action) => {
+                    switch (action._tag) {
+                      case "NextFrame": {
+                        return Effect.zipRight(Ref.set(ref, action.state), loop(action))
+                      }
+                      case "Submit": {
+                        return pipe(
+                          op.render(state, action),
+                          Effect.flatMap(terminal.display),
+                          Effect.zipRight(Effect.succeed(action.value))
+                        )
+                      }
+                      default: {
+                        return loop(action)
+                      }
                     }
-                    case "Submit": {
-                      return pipe(
-                        op.render(state, action),
-                        Effect.flatMap(terminal.display),
-                        Effect.zipRight(Effect.succeed(action.value))
-                      )
-                    }
-                    default: {
-                      return loop(action)
-                    }
-                  }
-                })
-              ))
-          return loop({ _tag: "NextFrame", state: op.initialState })
-        })
+                  })
+                ))
+            return loop({ _tag: "NextFrame", state: op.initialState })
+          }),
+          // Always make sure to restore the display of the cursor
+          Effect.ensuring(terminal.display(AnsiRender.prettyDefault(ansiUtils.cursorShow)))
+        )
       }
       case "OnSuccess": {
         return Effect.flatMap(run(op.prompt), (a) => run(op.onSuccess(a))) as any

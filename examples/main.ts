@@ -3,11 +3,14 @@ import * as Terminal from "@effect/cli/Terminal"
 import { pipe } from "@effect/data/Function"
 import * as Effect from "@effect/io/Effect"
 
-const myPrompt: Prompt.Prompt<number> = pipe(
-  Prompt.float({
-    message: `What is your favorite number?`,
-    min: 0,
-    max: 5
+const myPrompt: Prompt.Prompt<string> = pipe(
+  Prompt.select({
+    message: "Pick a color",
+    choices: [
+      { title: "Red", description: "This option has a description", value: "#ff0000" },
+      { title: "Green", value: "#00ff00" },
+      { title: "Blue", value: "#0000ff" }
+    ]
   })
 )
 

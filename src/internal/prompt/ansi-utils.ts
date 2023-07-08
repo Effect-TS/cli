@@ -111,6 +111,32 @@ export const setCursorPosition = (x: number, y?: number): AnsiDoc.AnsiDoc => {
  */
 export const resetLine: AnsiDoc.AnsiDoc = Doc.cat(clearLine, setCursorPosition(0))
 
+const strip = (str: string) => {
+  const pattern = [
+    "[\\u001B\\u009B][[\\]()#;?]*(?:(?:(?:(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]+)*|[a-zA-Z\\d]+(?:;[-a-zA-Z\\d\\/#&.:=?%@~_]*)*)?\\u0007)",
+    "(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+  ].join("|")
+  const regex = new RegExp(pattern, "g")
+  return str.replace(regex, "")
+}
+
+const width = (str: string) => [...strip(str)].length
+
+/**
+ * @internal
+ */
+export const resetLines = (prompt: string, perLine?: number) => {
+  if (!perLine) {
+    return resetLine
+  }
+  let rows = 0
+  const lines = prompt.split(/\r?\n/)
+  for (const line of lines) {
+    rows += 1 + Math.floor(Math.max(width(line) - 1, 0) / perLine)
+  }
+  return clearLines(rows)
+}
+
 /**
  * Clears from the cursor to the end of the screen and resets the cursor
  * position to the beginning of the line.
@@ -129,11 +155,25 @@ export const clearLines = (lines: number): AnsiDoc.AnsiDoc => {
   for (let i = 0; i < lines; i++) {
     clear = Doc.cat(clear, Doc.cat(clearLine, i < lines - 1 ? moveCursorUp(1) : Doc.empty))
   }
-  if (lines) {
+  if (lines > 0) {
     clear = Doc.cat(clear, moveCursorLeft(1))
   }
   return clear
 }
+
+/**
+ * Hides the cursor.
+ *
+ * @internal
+ */
+export const cursorHide: AnsiDoc.AnsiDoc = Doc.text(`${CSI}?25l`)
+
+/**
+ * Shows the cursor.
+ *
+ * @internal
+ */
+export const cursorShow: AnsiDoc.AnsiDoc = Doc.text(`${CSI}?25h`)
 
 /**
  * Saves the position of the cursor.

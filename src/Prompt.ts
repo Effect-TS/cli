@@ -3,6 +3,7 @@
  */
 import * as internal from "@effect/cli/internal_effect_untraced/prompt"
 import * as numberPrompt from "@effect/cli/internal_effect_untraced/prompt/number"
+import * as selectPrompt from "@effect/cli/internal_effect_untraced/prompt/select"
 import * as textPrompt from "@effect/cli/internal_effect_untraced/prompt/text"
 import type { PromptAction } from "@effect/cli/Prompt/Action"
 import type { Terminal } from "@effect/cli/Terminal"
@@ -65,6 +66,19 @@ export declare namespace Prompt {
    */
   export interface FloatOptions extends IntOptions {
     readonly precision?: number
+  }
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface SelectOptions {
+    readonly message: string
+    readonly choices: ReadonlyArray<{
+      readonly title: string
+      readonly description?: string
+      readonly value: string
+    }>
   }
 
   /**
@@ -139,6 +153,12 @@ export const map: {
  * @category execution
  */
 export const run: <Output>(self: Prompt<Output>) => Effect<Terminal, never, Output> = internal.run
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const select: (options: Prompt.SelectOptions) => Prompt<string> = selectPrompt.select
 
 /**
  * Creates a `Prompt` which immediately succeeds with the specified value.
