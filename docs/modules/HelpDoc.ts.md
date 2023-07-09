@@ -88,7 +88,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const descriptionList: (definitions: readonly [[any, HelpDoc], ...[any, HelpDoc][]]) => HelpDoc
+export declare const descriptionList: (definitions: readonly [[Span, HelpDoc], ...[Span, HelpDoc][]]) => HelpDoc
 ```
 
 Added in v1.0.0
@@ -160,7 +160,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const getSpan: (self: HelpDoc) => any
+export declare const getSpan: (self: HelpDoc) => Span
 ```
 
 Added in v1.0.0
@@ -173,8 +173,8 @@ Added in v1.0.0
 
 ```ts
 export declare const mapDescriptionList: {
-  (f: (span: any, helpDoc: HelpDoc) => readonly [Span, HelpDoc]): (self: HelpDoc) => HelpDoc
-  (self: HelpDoc, f: (span: any, helpDoc: HelpDoc) => readonly [Span, HelpDoc]): HelpDoc
+  (f: (span: Span, helpDoc: HelpDoc) => readonly [Span, HelpDoc]): (self: HelpDoc) => HelpDoc
+  (self: HelpDoc, f: (span: Span, helpDoc: HelpDoc) => readonly [Span, HelpDoc]): HelpDoc
 }
 ```
 

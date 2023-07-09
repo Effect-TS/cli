@@ -34,7 +34,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const builtIn: (option: any) => CommandDirective<never>
+export declare const builtIn: (option: BuiltInOption) => CommandDirective<never>
 ```
 
 Added in v1.0.0

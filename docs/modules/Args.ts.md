@@ -74,8 +74,10 @@ Added in v1.0.0
 
 ```ts
 export declare const atLeast: {
-  (times: number): <A>(self: Args<A>) => Args<Chunk<A>>
-  <A>(self: Args<A>, times: number): Args<Chunk<A>>
+  (times: 0): <A>(self: Args<A>) => Args<Chunk<A>>
+  (times: number): <A>(self: Args<A>) => Args<NonEmptyChunk<A>>
+  <A>(self: Args<A>, times: 0): Args<Chunk<A>>
+  <A>(self: Args<A>, times: number): Args<NonEmptyChunk<A>>
 }
 ```
 
@@ -100,8 +102,10 @@ Added in v1.0.0
 
 ```ts
 export declare const between: {
-  (min: number, max: number): <A>(self: Args<A>) => Args<Chunk<A>>
-  <A>(self: Args<A>, min: number, max: number): Args<Chunk<A>>
+  (min: 0, max: number): <A>(self: Args<A>) => Args<Chunk<A>>
+  (min: number, max: number): <A>(self: Args<A>) => Args<NonEmptyChunk<A>>
+  <A>(self: Args<A>, min: 0, max: number): Args<Chunk<A>>
+  <A>(self: Args<A>, min: number, max: number): Args<NonEmptyChunk<A>>
 }
 ```
 
@@ -122,7 +126,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const repeat1: <A>(self: Args<A>) => Args<Chunk<A>>
+export declare const repeat1: <A>(self: Args<A>) => Args<NonEmptyChunk<A>>
 ```
 
 Added in v1.0.0
@@ -138,7 +142,7 @@ Can optionally provide a custom argument name (defaults to `"boolean"`).
 **Signature**
 
 ```ts
-export declare const boolean: (options?: Args.ArgsConfig | undefined) => Args<boolean>
+export declare const boolean: (options?: Args.ArgsConfig) => Args<boolean>
 ```
 
 Added in v1.0.0
@@ -152,10 +156,7 @@ Can optionally provide a custom argument name (defaults to `"choice"`).
 **Signature**
 
 ```ts
-export declare const choice: <A>(
-  choices: readonly [[string, A], ...[string, A][]],
-  config?: Args.ArgsConfig | undefined
-) => Args<A>
+export declare const choice: <A>(choices: readonly [[string, A], ...[string, A][]], config?: Args.ArgsConfig) => Args<A>
 ```
 
 Added in v1.0.0
@@ -169,7 +170,7 @@ Can optionally provide a custom argument name (defaults to `"date"`).
 **Signature**
 
 ```ts
-export declare const date: (config?: Args.ArgsConfig | undefined) => Args<globalThis.Date>
+export declare const date: (config?: Args.ArgsConfig) => Args<globalThis.Date>
 ```
 
 Added in v1.0.0
@@ -183,7 +184,7 @@ Can optionally provide a custom argument name (defaults to `"float"`).
 **Signature**
 
 ```ts
-export declare const float: (config?: Args.ArgsConfig | undefined) => Args<number>
+export declare const float: (config?: Args.ArgsConfig) => Args<number>
 ```
 
 Added in v1.0.0
@@ -197,7 +198,7 @@ Can optionally provide a custom argument name (defaults to `"integer"`).
 **Signature**
 
 ```ts
-export declare const integer: (config?: Args.ArgsConfig | undefined) => Args<number>
+export declare const integer: (config?: Args.ArgsConfig) => Args<number>
 ```
 
 Added in v1.0.0
@@ -223,7 +224,7 @@ Can optionally provide a custom argument name (defaults to `"text"`).
 **Signature**
 
 ```ts
-export declare const text: (config?: Args.ArgsConfig | undefined) => Args<string>
+export declare const text: (config?: Args.ArgsConfig) => Args<string>
 ```
 
 Added in v1.0.0
@@ -235,7 +236,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const helpDoc: <A>(self: Args<A>) => any
+export declare const helpDoc: <A>(self: Args<A>) => HelpDoc
 ```
 
 Added in v1.0.0
@@ -275,7 +276,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const usage: <A>(self: Args<A>) => any
+export declare const usage: <A>(self: Args<A>) => Usage
 ```
 
 Added in v1.0.0
@@ -301,8 +302,8 @@ Added in v1.0.0
 
 ```ts
 export declare const mapOrFail: {
-  <A, B>(f: (a: A) => Either<any, B>): (self: Args<A>) => Args<B>
-  <A, B>(self: Args<A>, f: (a: A) => Either<any, B>): Args<B>
+  <A, B>(f: (a: A) => Either<HelpDoc, B>): (self: Args<A>) => Args<B>
+  <A, B>(self: Args<A>, f: (a: A) => Either<HelpDoc, B>): Args<B>
 }
 ```
 
@@ -314,8 +315,8 @@ Added in v1.0.0
 
 ```ts
 export declare const mapTryCatch: {
-  <A, B>(f: (a: A) => B, onError: (e: unknown) => any): (self: Args<A>) => Args<B>
-  <A, B>(self: Args<A>, f: (a: A) => B, onError: (e: unknown) => any): Args<B>
+  <A, B>(f: (a: A) => B, onError: (e: unknown) => HelpDoc): (self: Args<A>) => Args<B>
+  <A, B>(self: Args<A>, f: (a: A) => B, onError: (e: unknown) => HelpDoc): Args<B>
 }
 ```
 
@@ -377,8 +378,8 @@ Added in v1.0.0
 
 ```ts
 export declare const validate: {
-  (args: ReadonlyArray<string>): <A>(self: Args<A>) => Effect<never, any, readonly [readonly string[], A]>
-  <A>(self: Args<A>, args: ReadonlyArray<string>): Effect<never, any, readonly [readonly string[], A]>
+  (args: ReadonlyArray<string>): <A>(self: Args<A>) => Effect<never, ValidationError, readonly [readonly string[], A]>
+  <A>(self: Args<A>, args: ReadonlyArray<string>): Effect<never, ValidationError, readonly [readonly string[], A]>
 }
 ```
 

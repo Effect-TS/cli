@@ -24,7 +24,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const levensteinDistance: (first: string, second: string, config: any) => number
+export declare const levensteinDistance: (first: string, second: string, config: CliConfig) => number
 ```
 
 Added in v1.0.0
