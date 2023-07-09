@@ -14,6 +14,7 @@ Added in v1.0.0
 
 - [constructors](#constructors)
   - [commandMismatch](#commandmismatch)
+  - [extraneousValue](#extraneousvalue)
   - [invalidArgument](#invalidargument)
   - [invalidValue](#invalidvalue)
   - [make](#make)
@@ -28,6 +29,7 @@ Added in v1.0.0
   - [isMissingSubCommand](#ismissingsubcommand)
   - [isMissingValue](#ismissingvalue)
 - [refinements](#refinements)
+  - [isExtraneousValue](#isextraneousvalue)
   - [isValidationError](#isvalidationerror)
 - [symbols](#symbols)
   - [ValidationErrorTypeId](#validationerrortypeid)
@@ -42,7 +44,17 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const commandMismatch: (error: any) => ValidationError
+export declare const commandMismatch: (error: HelpDoc) => ValidationError
+```
+
+Added in v1.0.0
+
+## extraneousValue
+
+**Signature**
+
+```ts
+export declare const extraneousValue: (error: HelpDoc) => ValidationError
 ```
 
 Added in v1.0.0
@@ -52,7 +64,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const invalidArgument: (error: any) => ValidationError
+export declare const invalidArgument: (error: HelpDoc) => ValidationError
 ```
 
 Added in v1.0.0
@@ -62,7 +74,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const invalidValue: (error: any) => ValidationError
+export declare const invalidValue: (error: HelpDoc) => ValidationError
 ```
 
 Added in v1.0.0
@@ -72,7 +84,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: (type: ValidationError.Type, error: any) => ValidationError
+export declare const make: (type: ValidationError.Type, error: HelpDoc) => ValidationError
 ```
 
 Added in v1.0.0
@@ -82,7 +94,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const missingSubCommand: (error: any) => ValidationError
+export declare const missingSubCommand: (error: HelpDoc) => ValidationError
 ```
 
 Added in v1.0.0
@@ -92,7 +104,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const missingValue: (error: any) => ValidationError
+export declare const missingValue: (error: HelpDoc) => ValidationError
 ```
 
 Added in v1.0.0
@@ -165,6 +177,16 @@ export declare const isMissingValue: (validationError: ValidationError) => boole
 Added in v1.0.0
 
 # refinements
+
+## isExtraneousValue
+
+**Signature**
+
+```ts
+export declare const isExtraneousValue: (validationError: ValidationError) => boolean
+```
+
+Added in v1.0.0
 
 ## isValidationError
 

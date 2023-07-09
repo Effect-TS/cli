@@ -61,7 +61,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const helpDoc: (self: Usage) => any
+export declare const helpDoc: (self: Usage) => HelpDoc
 ```
 
 Added in v1.0.0

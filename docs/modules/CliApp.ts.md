@@ -31,7 +31,7 @@ Added in v1.0.0
 export declare const make: <A>(config: {
   name: string
   version: string
-  command: any
+  command: Command<A>
   summary?: Span | undefined
   footer?: HelpDoc | undefined
 }) => CliApp<A>
@@ -47,8 +47,14 @@ Added in v1.0.0
 
 ```ts
 export declare const run: {
-  <R, E, A>(args: ReadonlyArray<string>, f: (a: A) => Effect<any, E, void>): (self: CliApp<A>) => Effect<any, any, void>
-  <R, E, A>(self: CliApp<A>, args: ReadonlyArray<string>, f: (a: A) => Effect<any, E, void>): Effect<any, any, void>
+  <R, E, A>(args: ReadonlyArray<string>, f: (a: A) => Effect<Console | R, E, void>): (
+    self: CliApp<A>
+  ) => Effect<Console | R, ValidationError | E, void>
+  <R, E, A>(self: CliApp<A>, args: ReadonlyArray<string>, f: (a: A) => Effect<Console | R, E, void>): Effect<
+    Console | R,
+    ValidationError | E,
+    void
+  >
 }
 ```
 

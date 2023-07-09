@@ -132,7 +132,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const helpDoc: <A>(self: Command<A>) => any
+export declare const helpDoc: <A>(self: Command<A>) => HelpDoc
 ```
 
 Added in v1.0.0
@@ -152,7 +152,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const usage: <A>(self: Command<A>) => any
+export declare const usage: <A>(self: Command<A>) => Usage
 ```
 
 Added in v1.0.0
@@ -178,8 +178,8 @@ Added in v1.0.0
 
 ```ts
 export declare const mapOrFail: {
-  <A, B>(f: (a: A) => Either<any, B>): (self: Command<A>) => Command<B>
-  <A, B>(self: Command<A>, f: (a: A) => Either<any, B>): Command<B>
+  <A, B>(f: (a: A) => Either<ValidationError, B>): (self: Command<A>) => Command<B>
+  <A, B>(self: Command<A>, f: (a: A) => Either<ValidationError, B>): Command<B>
 }
 ```
 
@@ -211,8 +211,14 @@ Added in v1.0.0
 
 ```ts
 export declare const parse: {
-  (args: ReadonlyArray<string>, config: any): <A>(self: Command<A>) => Effect<never, any, any>
-  <A>(self: Command<A>, args: ReadonlyArray<string>, config: any): Effect<never, any, any>
+  (args: ReadonlyArray<string>, config: CliConfig): <A>(
+    self: Command<A>
+  ) => Effect<never, ValidationError, CommandDirective<A>>
+  <A>(self: Command<A>, args: ReadonlyArray<string>, config: CliConfig): Effect<
+    never,
+    ValidationError,
+    CommandDirective<A>
+  >
 }
 ```
 

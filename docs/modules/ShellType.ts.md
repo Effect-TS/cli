@@ -89,7 +89,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const shellOption: any
+export declare const shellOption: Options<ShellType>
 ```
 
 Added in v1.0.0

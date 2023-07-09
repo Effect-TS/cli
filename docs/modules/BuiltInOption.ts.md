@@ -40,7 +40,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const showCompletionScript: (pathToExecutable: string, shellType: any) => BuiltInOption
+export declare const showCompletionScript: (pathToExecutable: string, shellType: ShellType) => BuiltInOption
 ```
 
 Added in v1.0.0
@@ -50,7 +50,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const showCompletions: (index: number, shellType: any) => BuiltInOption
+export declare const showCompletions: (index: number, shellType: ShellType) => BuiltInOption
 ```
 
 Added in v1.0.0
@@ -60,7 +60,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const showHelp: (usage: any, helpDoc: any) => BuiltInOption
+export declare const showHelp: (usage: Usage, helpDoc: HelpDoc) => BuiltInOption
 ```
 
 Added in v1.0.0
@@ -70,7 +70,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const wizard: (commmand: any) => BuiltInOption
+export declare const wizard: (commmand: Command<unknown>) => BuiltInOption
 ```
 
 Added in v1.0.0
@@ -149,7 +149,11 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const builtInOptions: <A>(command: any, usage: any, helpDoc: any) => any
+export declare const builtInOptions: <A>(
+  command: Command<A>,
+  usage: Usage,
+  helpDoc: HelpDoc
+) => Options<Option<BuiltInOption>>
 ```
 
 Added in v1.0.0

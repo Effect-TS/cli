@@ -29,6 +29,7 @@ Added in v1.0.0
   - [all](#all)
   - [boolean](#boolean)
   - [choice](#choice)
+  - [choiceWithValue](#choicewithvalue)
   - [date](#date)
   - [float](#float)
   - [integer](#integer)
@@ -84,7 +85,9 @@ Added in v1.0.0
 ```ts
 export declare const atLeast: {
   (times: 0): <A>(self: Options<A>) => Options<Chunk<A>>
-  <A>(self: Options<A>, times: number): Options<Chunk<A>>
+  (times: number): <A>(self: Options<A>) => Options<NonEmptyChunk<A>>
+  <A>(self: Options<A>, times: 0): Options<Chunk<A>>
+  <A>(self: Options<A>, times: number): Options<NonEmptyChunk<A>>
 }
 ```
 
@@ -109,8 +112,10 @@ Added in v1.0.0
 
 ```ts
 export declare const between: {
-  (min: number, max: number): <A>(self: Options<A>) => Options<Chunk<A>>
-  <A>(self: Options<A>, min: number, max: number): Options<Chunk<A>>
+  (min: 0, max: number): <A>(self: Options<A>) => Options<Chunk<A>>
+  (min: number, max: number): <A>(self: Options<A>) => Options<NonEmptyChunk<A>>
+  <A>(self: Options<A>, min: 0, max: number): Options<Chunk<A>>
+  <A>(self: Options<A>, min: number, max: number): Options<NonEmptyChunk<A>>
 }
 ```
 
@@ -241,20 +246,73 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const boolean: (name: string, options?: Options.BooleanOptionConfig | undefined) => Options<boolean>
+export declare const boolean: (name: string, options?: Options.BooleanOptionConfig) => Options<boolean>
 ```
 
 Added in v1.0.0
 
 ## choice
 
+Constructs command-line `Options` that represent a choice between several
+inputs. The input will be mapped to it's associated value during parsing.
+
 **Signature**
 
 ```ts
-export declare const choice: <A, C extends readonly [readonly [string, A], ...(readonly [string, A])[]]>(
+export declare const choice: <A extends string, C extends readonly [A, ...A[]]>(
   name: string,
   choices: C
-) => Options<A>
+) => Options<C[number]>
+```
+
+**Example**
+
+```ts
+import * as Options from '@effect/cli/Options'
+
+export const animal: Options.Options<'dog' | 'cat'> = Options.choice('animal', ['dog', 'cat'])
+```
+
+Added in v1.0.0
+
+## choiceWithValue
+
+Constructs command-line `Options` that represent a choice between several
+inputs. The input will be mapped to it's associated value during parsing.
+
+**Signature**
+
+```ts
+export declare const choiceWithValue: <C extends readonly [readonly [string, any], ...(readonly [string, any])[]]>(
+  name: string,
+  choices: C
+) => Options<C[number][1]>
+```
+
+**Example**
+
+```ts
+import * as Options from '@effect/cli/Options'
+import * as Data from '@effect/data/Data'
+
+export type Animal = Dog | Cat
+
+export interface Dog extends Data.Case {
+  readonly _tag: 'Dog'
+}
+
+export const Dog = Data.tagged<Dog>('Dog')
+
+export interface Cat extends Data.Case {
+  readonly _tag: 'Cat'
+}
+
+export const Cat = Data.tagged<Cat>('Cat')
+
+export const animal: Options.Options<Animal> = Options.choiceWithValue('animal', [
+  ['dog', Dog()],
+  ['cat', Cat()],
+])
 ```
 
 Added in v1.0.0
@@ -336,7 +394,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const helpDoc: <A>(self: Options<A>) => any
+export declare const helpDoc: <A>(self: Options<A>) => HelpDoc
 ```
 
 Added in v1.0.0
@@ -356,7 +414,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const usage: <A>(self: Options<A>) => any
+export declare const usage: <A>(self: Options<A>) => Usage
 ```
 
 Added in v1.0.0
@@ -382,8 +440,8 @@ Added in v1.0.0
 
 ```ts
 export declare const mapOrFail: {
-  <A, B>(f: (a: A) => Either<any, B>): (self: Options<A>) => Options<B>
-  <A, B>(self: Options<A>, f: (a: A) => Either<any, B>): Options<B>
+  <A, B>(f: (a: A) => Either<ValidationError, B>): (self: Options<A>) => Options<B>
+  <A, B>(self: Options<A>, f: (a: A) => Either<ValidationError, B>): Options<B>
 }
 ```
 
@@ -395,8 +453,8 @@ Added in v1.0.0
 
 ```ts
 export declare const mapTryCatch: {
-  <A, B>(f: (a: A) => B, onError: (e: unknown) => any): (self: Options<A>) => Options<B>
-  <A, B>(self: Options<A>, f: (a: A) => B, onError: (e: unknown) => any): Options<B>
+  <A, B>(f: (a: A) => B, onError: (e: unknown) => HelpDoc): (self: Options<A>) => Options<B>
+  <A, B>(self: Options<A>, f: (a: A) => B, onError: (e: unknown) => HelpDoc): Options<B>
 }
 ```
 
@@ -471,10 +529,14 @@ Added in v1.0.0
 
 ```ts
 export declare const validate: {
-  (args: ReadonlyArray<string>, config: any): <A>(
+  (args: ReadonlyArray<string>, config: CliConfig): <A>(
     self: Options<A>
-  ) => Effect<never, any, readonly [readonly string[], A]>
-  <A>(self: Options<A>, args: ReadonlyArray<string>, config: any): Effect<never, any, readonly [readonly string[], A]>
+  ) => Effect<never, ValidationError, readonly [readonly string[], A]>
+  <A>(self: Options<A>, args: ReadonlyArray<string>, config: CliConfig): Effect<
+    never,
+    ValidationError,
+    readonly [readonly string[], A]
+  >
 }
 ```
 

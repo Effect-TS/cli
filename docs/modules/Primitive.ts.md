@@ -132,7 +132,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const helpDoc: <A>(self: Primitive<A>) => any
+export declare const helpDoc: <A>(self: Primitive<A>) => Span
 ```
 
 Added in v1.0.0
