@@ -196,8 +196,8 @@ Added in v1.0.0
 
 ```ts
 export declare const withDefault: {
-  <A>(value: A): (self: Options<A>) => Options<A>
-  <A>(self: Options<A>, value: A): Options<A>
+  <A, B extends A>(value: B): (self: Options<A>) => Options<A>
+  <A, B extends A>(self: Options<A>, value: B): Options<A>
 }
 ```
 
