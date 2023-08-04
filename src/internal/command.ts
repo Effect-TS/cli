@@ -53,6 +53,7 @@ export type Instruction =
   | Single
   | Map
   | OrElse
+  | Prompt
   | Subcommands
 
 /** @internal */
@@ -62,6 +63,13 @@ export interface Single extends
     readonly help: HelpDoc.HelpDoc
     readonly options: Options.Options<unknown>
     readonly args: Args.Args<unknown>
+  }>
+{}
+
+/** @internal */
+export interface Prompt extends
+  Op<"Prompt", {
+    readonly type: Command.Command.PromptType
   }>
 {}
 
@@ -375,6 +383,10 @@ export const parse = dual<
     config: CliConfig.CliConfig
   ) => Effect.Effect<never, ValidationError.ValidationError, CommandDirective.CommandDirective<A>>
 >(3, (self, args, config) => parseMap[(self as Instruction)._tag](self as any, args, config))
+
+export const prompt = (): Command.Command<unknown> => {
+  
+}
 
 /** @internal */
 export const subcommands = dual<

@@ -91,6 +91,12 @@ export declare namespace Command {
    * @category models
    */
   export type Subcommands<A extends NonEmptyReadonlyArray<Command<any>>> = GetParsedType<A[number]>
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export type PromptType = "integer" | "float" | "select" | "text"
 }
 
 /**

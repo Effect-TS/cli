@@ -1,10 +1,10 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/cli/internal_effect_untraced/prompt"
-import * as numberPrompt from "@effect/cli/internal_effect_untraced/prompt/number"
-import * as selectPrompt from "@effect/cli/internal_effect_untraced/prompt/select"
-import * as textPrompt from "@effect/cli/internal_effect_untraced/prompt/text"
+import * as internal from "@effect/cli/internal/prompt"
+import * as numberPrompt from "@effect/cli/internal/prompt/number"
+import * as selectPrompt from "@effect/cli/internal/prompt/select"
+import * as textPrompt from "@effect/cli/internal/prompt/text"
 import type { PromptAction } from "@effect/cli/Prompt/Action"
 import type { Terminal } from "@effect/cli/Terminal"
 import type { Effect } from "@effect/io/Effect"

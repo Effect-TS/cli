@@ -1,7 +1,7 @@
 /**
  * @since 1.0.0
  */
-import * as internal from "@effect/cli/internal_effect_untraced/terminal"
+import * as internal from "@effect/cli/internal/terminal"
 import type * as Context from "@effect/data/Context"
 import type { Effect } from "@effect/io/Effect"
 import type { Layer } from "@effect/io/Layer"
@@ -69,7 +69,7 @@ export declare namespace Terminal {
  * @since 1.0.0
  * @category context
  */
-export const Terminal: Context.Tag<Terminal, Terminal> = internal.Tag
+export const Terminal: Context.Tag<Terminal, Terminal> = internal.terminal
 
 /**
  * @since 1.0.0

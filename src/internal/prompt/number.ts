@@ -130,17 +130,14 @@ const defaultFloatProcessor = (
   if (currentState.value.length === 0 && input === "-") {
     return Effect.succeed(promptAction.nextFrame({ ...currentState, value: "-" }))
   }
-  return pipe(
-    parseFloat(currentState.value + input),
-    Effect.match(
-      () => promptAction.beep,
-      (value) =>
-        promptAction.nextFrame({
-          ...currentState,
-          value: input === "." ? `${value}.` : `${value}`
-        })
-    )
-  )
+  return Effect.match(parseFloat(currentState.value + input), {
+    onFailure: () => promptAction.beep,
+    onSuccess: (value) =>
+      promptAction.nextFrame({
+        ...currentState,
+        value: input === "." ? `${value}.` : `${value}`
+      })
+  })
 }
 
 const initialState: State = { cursor: 0, value: "" }
@@ -289,20 +286,18 @@ export const float = (options: Prompt.Prompt.FloatOptions): Prompt.Prompt<number
           )
         }
         case "Submit": {
-          return Effect.matchEffect(
-            parseFloat(state.value),
-            () => Effect.succeed(promptAction.error("Must provide a floating point value")),
-            (n) =>
+          return Effect.matchEffect(parseFloat(state.value), {
+            onFailure: () => Effect.succeed(promptAction.error("Must provide a floating point value")),
+            onSuccess: (n) =>
               Effect.flatMap(
                 Effect.sync(() => round(n, opts.precision)),
                 (rounded) =>
-                  Effect.match(
-                    opts.validate(rounded),
-                    promptAction.error,
-                    promptAction.submit
-                  )
+                  Effect.match(opts.validate(rounded), {
+                    onFailure: promptAction.error,
+                    onSuccess: promptAction.submit
+                  })
               )
-          )
+          })
         }
         default: {
           return defaultFloatProcessor(state, input.value)
