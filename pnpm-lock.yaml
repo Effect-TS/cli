@@ -4,14 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-dependencies:
-  '@effect/printer':
-    specifier: ^0.13.0
-    version: 0.13.0(@effect/data@0.17.1)(@effect/io@0.38.0)(@effect/typeclass@0.3.0)
-  '@effect/printer-ansi':
-    specifier: ^1.0.0
-    version: 1.0.0(@effect/data@0.17.1)(@effect/io@0.38.0)(@effect/printer@0.13.0)(@effect/typeclass@0.3.0)
-
 devDependencies:
   '@babel/cli':
     specifier: ^7.22.9
@@ -49,6 +41,12 @@ devDependencies:
   '@effect/language-service':
     specifier: ^0.0.19
     version: 0.0.19
+  '@effect/printer':
+    specifier: ^0.13.0
+    version: 0.13.0(@effect/data@0.17.1)(@effect/io@0.38.0)(@effect/typeclass@0.3.0)
+  '@effect/printer-ansi':
+    specifier: ^0.13.0
+    version: 0.13.0(@effect/data@0.17.1)(@effect/io@0.38.0)(@effect/printer@0.13.0)(@effect/typeclass@0.3.0)
   '@types/chai':
     specifier: ^4.3.5
     version: 4.3.5
@@ -648,6 +646,7 @@ packages:
 
   /@effect/data@0.17.1:
     resolution: {integrity: sha512-QCYkLE5Y5Dm5Yax5R3GmW4ZIgTx7W+kSZ7yq5eqQ/mFWa8i4yxbLuu8cudqzdeZtRtTGZKlhDxfFfgVtMywXJg==}
+    dev: true
 
   /@effect/docgen@0.1.2(@types/node@20.4.7)(typescript@5.1.6):
     resolution: {integrity: sha512-qy1pA8SKsqla7/35Q2NuUeT/VwO/olg9hdmmY929wSrKhRVVPOmnF4cbCvFxbykikYek0/6/thupSUenYV0DvQ==}
@@ -686,6 +685,7 @@ packages:
       '@effect/data': ^0.17.1
     dependencies:
       '@effect/data': 0.17.1
+    dev: true
 
   /@effect/language-service@0.0.19:
     resolution: {integrity: sha512-sKNVo031dkwLfe1jHZzdTiF1UXgLq1lAYd2JG7q416dlmMoxRcMXrZWyw6a/SxIDM0hyIJAEmrz5iUkQPcPdBQ==}
@@ -694,8 +694,8 @@ packages:
       '@fp-ts/data': 0.0.41
     dev: true
 
-  /@effect/printer-ansi@1.0.0(@effect/data@0.17.1)(@effect/io@0.38.0)(@effect/printer@0.13.0)(@effect/typeclass@0.3.0):
-    resolution: {integrity: sha512-Q0yZRboN14HjfZPbdVLBMCggRLmpvRsr2Vn/vmURvgaNkNl4N+bv2JGQWhDOW4VmaLLBJl56ImR6N9tFjYzYfQ==}
+  /@effect/printer-ansi@0.13.0(@effect/data@0.17.1)(@effect/io@0.38.0)(@effect/printer@0.13.0)(@effect/typeclass@0.3.0):
+    resolution: {integrity: sha512-Pua2lx+C6L8RfxGNSkaEFA63uYvwmYW0fD/2jwBvPIFSnaSIFtxjdyY2E2v/JjBD6q6FY3yHvwfYLzvFBRQUSw==}
     peerDependencies:
       '@effect/data': ^0.17.1
       '@effect/io': ^0.38.0
@@ -706,7 +706,7 @@ packages:
       '@effect/io': 0.38.0(@effect/data@0.17.1)
       '@effect/printer': 0.13.0(@effect/data@0.17.1)(@effect/io@0.38.0)(@effect/typeclass@0.3.0)
       '@effect/typeclass': 0.3.0
-    dev: false
+    dev: true
 
   /@effect/printer@0.13.0(@effect/data@0.17.1)(@effect/io@0.38.0)(@effect/typeclass@0.3.0):
     resolution: {integrity: sha512-vqKilbg36AEHZJNj9fiV6qUALojR2kVePKbuJJAkaGQao9Duc6rL3QSbaGEaEzar6v68j6TGTOndg/inI2bQFA==}
@@ -718,13 +718,13 @@ packages:
       '@effect/data': 0.17.1
       '@effect/io': 0.38.0(@effect/data@0.17.1)
       '@effect/typeclass': 0.3.0
-    dev: false
+    dev: true
 
   /@effect/typeclass@0.3.0:
     resolution: {integrity: sha512-eg91Dfpx8FqXIoq4DDVuY/wl+92K89HEgtwVcScRu7QAsp64QzkFpmNgHKPyA3tzT7ku+cV16NdoDId58sJgiQ==}
     dependencies:
       '@effect/data': 0.17.1
-    dev: false
+    dev: true
 
   /@esbuild/android-arm64@0.18.17:
     resolution: {integrity: sha512-9np+YYdNDed5+Jgr1TdWBsozZ85U1Oa3xW0c7TWqH0y2aGghXtZsuT8nYRbzOMcl0bXZXjOGbksoTtVOlWrRZg==}
