@@ -143,8 +143,8 @@ const defaultFloatProcessor = (
 const initialState: State = { cursor: 0, value: "" }
 
 /** @internal */
-export const int = (options: Prompt.Prompt.IntOptions): Prompt.Prompt<number> => {
-  const opts: Required<Prompt.Prompt.IntOptions> = {
+export const integer = (options: Prompt.Prompt.IntegerOptions): Prompt.Prompt<number> => {
+  const opts: Required<Prompt.Prompt.IntegerOptions> = {
     min: Number.NEGATIVE_INFINITY,
     max: Number.POSITIVE_INFINITY,
     incrementBy: 1,

@@ -51,7 +51,7 @@ export declare namespace Prompt {
    * @since 1.0.0
    * @category models
    */
-  export interface IntOptions {
+  export interface IntegerOptions {
     readonly message: string
     readonly min?: number
     readonly max?: number
@@ -64,7 +64,7 @@ export declare namespace Prompt {
    * @since 1.0.0
    * @category models
    */
-  export interface FloatOptions extends IntOptions {
+  export interface FloatOptions extends IntegerOptions {
     readonly precision?: number
   }
 
@@ -135,7 +135,7 @@ export const float: (options: Prompt.FloatOptions) => Prompt<number> = numberPro
  * @since 1.0.0
  * @category constructors
  */
-export const int: (options: Prompt.IntOptions) => Prompt<number> = numberPrompt.int
+export const integer: (options: Prompt.IntegerOptions) => Prompt<number> = numberPrompt.integer
 
 /**
  * @since 1.0.0

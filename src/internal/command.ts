@@ -10,9 +10,12 @@ import * as commandDirective from "@effect/cli/internal/commandDirective"
 import * as doc from "@effect/cli/internal/helpDoc"
 import * as span from "@effect/cli/internal/helpDoc/span"
 import * as options from "@effect/cli/internal/options"
+import * as _prompt from "@effect/cli/internal/prompt"
 import * as _usage from "@effect/cli/internal/usage"
 import * as validationError from "@effect/cli/internal/validationError"
 import type * as Options from "@effect/cli/Options"
+import type * as _Prompt from "@effect/cli/Prompt"
+import type * as Terminal from "@effect/cli/Terminal"
 import type * as Usage from "@effect/cli/Usage"
 import type * as ValidationError from "@effect/cli/ValidationError"
 import * as Chunk from "effect/Chunk"
@@ -69,7 +72,8 @@ export interface Single extends
 /** @internal */
 export interface Prompt extends
   Op<"Prompt", {
-    readonly type: Command.Command.PromptType
+    readonly name: string
+    readonly prompt: _Prompt.Prompt<unknown>
   }>
 {}
 
@@ -107,6 +111,7 @@ const getSubcommandsMap: {
       getSubcommandsMap[self.left._tag](self.left as any),
       getSubcommandsMap[self.right._tag](self.right as any)
     ),
+  Prompt: (self) => HashMap.make([self.name, self]),
   Subcommands: (self) => getSubcommandsMap[self.child._tag](self.child as any)
 }
 
@@ -137,6 +142,7 @@ const helpDocMap: {
       helpDocMap[self.left._tag](self.left as any),
       helpDocMap[self.right._tag](self.right as any)
     ),
+  Prompt: () => doc.sequence(doc.h1("DESCRIPTION"), doc.p("This command will prompt the user for information")),
   Subcommands: (self) =>
     doc.sequence(
       helpDocMap[self.parent._tag](self.parent as any),
@@ -198,6 +204,7 @@ const namesMap: {
       namesMap[self.left._tag](self.left as any),
       namesMap[self.right._tag](self.right as any)
     ),
+  Prompt: (self) => HashSet.make(self.name),
   Subcommands: (self) => namesMap[self.parent._tag](self.parent as any)
 }
 
@@ -228,7 +235,7 @@ const parseMap: {
     self: Extract<Instruction, { _tag: K }>,
     args: ReadonlyArray<string>,
     config: CliConfig.CliConfig
-  ) => Effect.Effect<never, ValidationError.ValidationError, CommandDirective.CommandDirective<any>>
+  ) => Effect.Effect<Terminal.Terminal, ValidationError.ValidationError, CommandDirective.CommandDirective<any>>
 } = {
   Single: (self, args, config) => {
     const parseBuiltInArgs =
@@ -296,6 +303,7 @@ const parseMap: {
           ? Option.some(parseMap[self.right._tag](self.right as any, args, config))
           : Option.none()
     ),
+  Prompt: (self, args) => Effect.map(_prompt.run(self.prompt), (value) => commandDirective.userDefined(args, value)),
   Subcommands: (self, args, config) => {
     const helpDirectiveForChild = Effect.flatMap(
       parseMap[self.child._tag](
@@ -376,16 +384,20 @@ export const parse = dual<
     config: CliConfig.CliConfig
   ) => <A>(
     self: Command.Command<A>
-  ) => Effect.Effect<never, ValidationError.ValidationError, CommandDirective.CommandDirective<A>>,
+  ) => Effect.Effect<Terminal.Terminal, ValidationError.ValidationError, CommandDirective.CommandDirective<A>>,
   <A>(
     self: Command.Command<A>,
     args: ReadonlyArray<string>,
     config: CliConfig.CliConfig
-  ) => Effect.Effect<never, ValidationError.ValidationError, CommandDirective.CommandDirective<A>>
+  ) => Effect.Effect<Terminal.Terminal, ValidationError.ValidationError, CommandDirective.CommandDirective<A>>
 >(3, (self, args, config) => parseMap[(self as Instruction)._tag](self as any, args, config))
 
-export const prompt = (): Command.Command<unknown> => {
-  
+/** @internal */
+export const prompt = <A>(prompt: _Prompt.Prompt<A>): Command.Command<A> => {
+  const op = Object.create(proto)
+  op._tag = "Prompt"
+  op.prompt = prompt
+  return op
 }
 
 /** @internal */
@@ -429,6 +441,7 @@ const usageMap: {
     ),
   Map: (self) => usageMap[self.command._tag](self.command as any),
   OrElse: () => _usage.mixed,
+  Prompt: (self) => _usage.named(Chunk.of(self.name), Option.none()),
   Subcommands: (self) =>
     _usage.concat(
       usageMap[self.parent._tag](self.parent as any),
@@ -452,6 +465,7 @@ const withHelpMap: {
       withHelpMap[self.left._tag](self.left as any, help),
       withHelpMap[self.right._tag](self.right as any, help)
     ),
+  Prompt: (self) => self,
   Subcommands: (self, help) => makeSubcommand(withHelpMap[self.parent._tag](self.parent as any, help), self.child)
 }
 
@@ -502,6 +516,7 @@ const subcommandMaxSynopsisLengthMap: {
       subcommandMaxSynopsisLengthMap[self.left._tag](self.left as any),
       subcommandMaxSynopsisLengthMap[self.right._tag](self.right as any)
     ),
+  Prompt: (self) => span.size(doc.getSpan(_usage.helpDoc(usage(self)))),
   Subcommands: (self) => subcommandMaxSynopsisLengthMap[self.parent._tag](self.parent as any)
 }
 
@@ -525,6 +540,14 @@ const subcommandDescriptionMap: {
       subcommandDescriptionMap[self.left._tag](self.left as any, maxSynopsisLength),
       subcommandDescriptionMap[self.right._tag](self.right as any, maxSynopsisLength)
     ]),
+  Prompt: (self, maxSynopsisLength) => {
+    const usageSpan = doc.getSpan(_usage.helpDoc(usage(self)))
+    return doc.p(span.spans([
+      usageSpan,
+      span.text(" ".repeat(maxSynopsisLength - span.size(usageSpan) + 2))
+      // doc.getSpan(self.help)
+    ]))
+  },
   Subcommands: (self, maxSynopsisLength) =>
     subcommandDescriptionMap[self.parent._tag](self.parent as any, maxSynopsisLength)
 }

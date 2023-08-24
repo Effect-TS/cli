@@ -8,6 +8,7 @@ import * as command from "@effect/cli/internal/command"
 import * as commandDirective from "@effect/cli/internal/commandDirective"
 import * as doc from "@effect/cli/internal/helpDoc"
 import * as span from "@effect/cli/internal/helpDoc/span"
+import * as terminal from "@effect/cli/internal/terminal"
 import * as _usage from "@effect/cli/internal/usage"
 import * as validationError from "@effect/cli/internal/validationError"
 import type * as ValidationError from "@effect/cli/ValidationError"
@@ -61,7 +62,7 @@ export const run = dual<
             )
       }
     )
-  }))
+  }).pipe(Effect.provideSomeLayer(terminal.layer)))
 
 const prefixCommandMap: {
   [K in command.Instruction["_tag"]]: (self: Extract<command.Instruction, { _tag: K }>) => ReadonlyArray<string>
@@ -69,6 +70,7 @@ const prefixCommandMap: {
   Single: (self) => [self.name],
   Map: (self) => prefixCommandMap[self.command._tag](self.command as any),
   OrElse: () => [],
+  Prompt: (self) => [self.name],
   Subcommands: (self) => prefixCommandMap[self.parent._tag](self.parent as any)
 }
 

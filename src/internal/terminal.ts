@@ -98,7 +98,7 @@ export const layer: Layer.Layer<never, never, Terminal.Terminal> = Layer.scoped(
       )
     )
 
-    const getUserInput = Effect.asyncInterrupt<never, never, Terminal.Terminal.UserInput>((resume) => {
+    const getUserInput = Effect.async<never, never, Terminal.Terminal.UserInput>((resume) => {
       const handleKeypress = (input: string | undefined, key: readline.Key) => {
         resume(pipe(
           parseUserInput({ key, input }),
