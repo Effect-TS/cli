@@ -18,6 +18,9 @@ Added in v1.0.0
   - [run](#run)
 - [models](#models)
   - [CliApp (interface)](#cliapp-interface)
+- [utils](#utils)
+  - [CliApp (namespace)](#cliapp-namespace)
+    - [Context (type alias)](#context-type-alias)
 
 ---
 
@@ -76,6 +79,22 @@ export interface CliApp<A> {
   readonly summary: Span
   readonly footer: HelpDoc
 }
+```
+
+Added in v1.0.0
+
+# utils
+
+## CliApp (namespace)
+
+Added in v1.0.0
+
+### Context (type alias)
+
+**Signature**
+
+```ts
+export type Context = Console
 ```
 
 Added in v1.0.0

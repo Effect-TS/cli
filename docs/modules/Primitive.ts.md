@@ -36,6 +36,10 @@ Added in v1.0.0
 - [symbol](#symbol)
   - [PrimitiveTypeId](#primitivetypeid)
   - [PrimitiveTypeId (type alias)](#primitivetypeid-type-alias)
+- [utils](#utils)
+  - [Primitive (namespace)](#primitive-namespace)
+    - [Variance (interface)](#variance-interface)
+    - [ValueType (type alias)](#valuetype-type-alias)
 - [validation](#validation)
   - [validate](#validate)
 
@@ -276,6 +280,44 @@ Added in v1.0.0
 
 ```ts
 export type PrimitiveTypeId = typeof PrimitiveTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Primitive (namespace)
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> extends Pipeable {
+  readonly [PrimitiveTypeId]: {
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
+
+### ValueType (type alias)
+
+**Signature**
+
+```ts
+export type ValueType<P> = [P] extends [
+  {
+    readonly [PrimitiveTypeId]: {
+      readonly _A: (_: never) => infer A
+    }
+  }
+]
+  ? A
+  : never
 ```
 
 Added in v1.0.0
