@@ -44,6 +44,10 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [ArgsTypeId](#argstypeid)
   - [ArgsTypeId (type alias)](#argstypeid-type-alias)
+- [utils](#utils)
+  - [Args (namespace)](#args-namespace)
+    - [ArgsConfig (interface)](#argsconfig-interface)
+    - [Variance (interface)](#variance-interface)
 - [validation](#validation)
   - [validate](#validate)
 - [zipping](#zipping)
@@ -331,7 +335,7 @@ Represents arguments that can be passed to a command-line application.
 **Signature**
 
 ```ts
-export interface Args<A> extends Args.Variance<A> {}
+export interface Args<A> extends Args.Variance<A>, Pipeable {}
 ```
 
 Added in v1.0.0
@@ -366,6 +370,38 @@ Added in v1.0.0
 
 ```ts
 export type ArgsTypeId = typeof ArgsTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Args (namespace)
+
+Added in v1.0.0
+
+### ArgsConfig (interface)
+
+**Signature**
+
+```ts
+export interface ArgsConfig {
+  readonly name?: string
+}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> {
+  readonly [ArgsTypeId]: {
+    readonly _A: (_: never) => A
+  }
+}
 ```
 
 Added in v1.0.0

@@ -34,6 +34,10 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [ValidationErrorTypeId](#validationerrortypeid)
   - [ValidationErrorTypeId (type alias)](#validationerrortypeid-type-alias)
+- [utils](#utils)
+  - [ValidationError (namespace)](#validationerror-namespace)
+    - [Proto (interface)](#proto-interface)
+    - [Type (type alias)](#type-type-alias)
 
 ---
 
@@ -216,6 +220,40 @@ Added in v1.0.0
 
 ```ts
 export type ValidationErrorTypeId = typeof ValidationErrorTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## ValidationError (namespace)
+
+Added in v1.0.0
+
+### Proto (interface)
+
+**Signature**
+
+```ts
+export interface Proto {
+  readonly [ValidationErrorTypeId]: ValidationErrorTypeId
+}
+```
+
+Added in v1.0.0
+
+### Type (type alias)
+
+**Signature**
+
+```ts
+export type Type =
+  | 'ExtraneousValue'
+  | 'InvalidValue'
+  | 'MissingValue'
+  | 'CommandMismatch'
+  | 'MissingSubCommand'
+  | 'InvalidArgument'
 ```
 
 Added in v1.0.0

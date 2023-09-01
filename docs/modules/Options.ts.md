@@ -54,6 +54,10 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [OptionsTypeId](#optionstypeid)
   - [OptionsTypeId (type alias)](#optionstypeid-type-alias)
+- [utils](#utils)
+  - [Options (namespace)](#options-namespace)
+    - [BooleanOptionConfig (interface)](#booleanoptionconfig-interface)
+    - [Variance (interface)](#variance-interface)
 - [validation](#validation)
   - [validate](#validate)
 - [zipping](#zipping)
@@ -467,7 +471,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Options<A> extends Options.Variance<A> {}
+export interface Options<A> extends Options.Variance<A>, Pipeable {}
 ```
 
 Added in v1.0.0
@@ -517,6 +521,39 @@ Added in v1.0.0
 
 ```ts
 export type OptionsTypeId = typeof OptionsTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Options (namespace)
+
+Added in v1.0.0
+
+### BooleanOptionConfig (interface)
+
+**Signature**
+
+```ts
+export interface BooleanOptionConfig {
+  readonly ifPresent?: boolean
+  readonly negationNames?: NonEmptyReadonlyArray<string>
+}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> {
+  readonly [OptionsTypeId]: {
+    _A: (_: never) => A
+  }
+}
 ```
 
 Added in v1.0.0

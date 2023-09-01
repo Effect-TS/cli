@@ -34,6 +34,14 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [CommandTypeId](#commandtypeid)
   - [CommandTypeId (type alias)](#commandtypeid-type-alias)
+- [utils](#utils)
+  - [Command (namespace)](#command-namespace)
+    - [ConstructorConfig (interface)](#constructorconfig-interface)
+    - [Variance (interface)](#variance-interface)
+    - [ComputeParsedType (type alias)](#computeparsedtype-type-alias)
+    - [GetParsedType (type alias)](#getparsedtype-type-alias)
+    - [Parsed (type alias)](#parsed-type-alias)
+    - [Subcommands (type alias)](#subcommands-type-alias)
 
 ---
 
@@ -198,7 +206,7 @@ commands.
 **Signature**
 
 ```ts
-export interface Command<A> extends Command.Variance<A> {}
+export interface Command<A> extends Command.Variance<A>, Pipeable {}
 ```
 
 Added in v1.0.0
@@ -242,6 +250,83 @@ Added in v1.0.0
 
 ```ts
 export type CommandTypeId = typeof CommandTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Command (namespace)
+
+Added in v1.0.0
+
+### ConstructorConfig (interface)
+
+**Signature**
+
+```ts
+export interface ConstructorConfig<OptionsType = void, ArgsType = void> {
+  readonly options?: Options<OptionsType>
+  readonly args?: Args<ArgsType>
+}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<A> {
+  readonly [CommandTypeId]: {
+    readonly _A: (_: never) => A
+  }
+}
+```
+
+Added in v1.0.0
+
+### ComputeParsedType (type alias)
+
+**Signature**
+
+```ts
+export type ComputeParsedType<A> = { [K in keyof A]: A[K] } extends infer X ? X : never
+```
+
+Added in v1.0.0
+
+### GetParsedType (type alias)
+
+**Signature**
+
+```ts
+export type GetParsedType<C> = C extends Command<infer P> ? P : never
+```
+
+Added in v1.0.0
+
+### Parsed (type alias)
+
+**Signature**
+
+```ts
+export type Parsed<Name extends string, OptionsType, ArgsType> = Command.ComputeParsedType<{
+  readonly name: Name
+  readonly options: OptionsType
+  readonly args: ArgsType
+}>
+```
+
+Added in v1.0.0
+
+### Subcommands (type alias)
+
+**Signature**
+
+```ts
+export type Subcommands<A extends NonEmptyReadonlyArray<Command<any>>> = GetParsedType<A[number]>
 ```
 
 Added in v1.0.0
