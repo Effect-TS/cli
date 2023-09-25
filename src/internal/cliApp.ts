@@ -1,7 +1,6 @@
 import type * as BuiltInOption from "@effect/cli/BuiltInOption"
 import type * as CliApp from "@effect/cli/CliApp"
 import type * as Command from "@effect/cli/Command"
-import * as Console from "@effect/cli/Console"
 import type * as HelpDoc from "@effect/cli/HelpDoc"
 import type * as Span from "@effect/cli/HelpDoc/Span"
 import * as cliConfig from "@effect/cli/internal/cliConfig"
@@ -15,6 +14,7 @@ import type * as ValidationError from "@effect/cli/ValidationError"
 import * as Context from "@effect/data/Context"
 import { dual, pipe } from "@effect/data/Function"
 import * as Option from "@effect/data/Option"
+import * as Console from "@effect/io/Console"
 import * as Effect from "@effect/io/Effect"
 
 const defaultConfig = {
@@ -35,13 +35,13 @@ export const make = <A>(config: {
 export const run = dual<
   <R, E, A>(
     args: ReadonlyArray<string>,
-    f: (a: A) => Effect.Effect<R | CliApp.CliApp.Context, E, void>
-  ) => (self: CliApp.CliApp<A>) => Effect.Effect<R | CliApp.CliApp.Context, E | ValidationError.ValidationError, void>,
+    f: (a: A) => Effect.Effect<R, E, void>
+  ) => (self: CliApp.CliApp<A>) => Effect.Effect<R, E | ValidationError.ValidationError, void>,
   <R, E, A>(
     self: CliApp.CliApp<A>,
     args: ReadonlyArray<string>,
-    f: (a: A) => Effect.Effect<R | CliApp.CliApp.Context, E, void>
-  ) => Effect.Effect<R | CliApp.CliApp.Context, E | ValidationError.ValidationError, void>
+    f: (a: A) => Effect.Effect<R, E, void>
+  ) => Effect.Effect<R, E | ValidationError.ValidationError, void>
 >(3, (self, args, f) =>
   Effect.contextWithEffect((context: Context.Context<never>) => {
     const config = Option.getOrElse(Context.getOption(context, cliConfig.Tag), () => cliConfig.defaultConfig)
@@ -79,7 +79,7 @@ const runBuiltInMap: {
   [K in BuiltInOption.BuiltInOption["_tag"]]: (
     self: Extract<BuiltInOption.BuiltInOption, { _tag: K }>,
     cliApp: CliApp.CliApp<any>
-  ) => Effect.Effect<CliApp.CliApp.Context, never, void>
+  ) => Effect.Effect<never, never, void>
 } = {
   ShowCompletions: () =>
     Effect.sync(() => {
@@ -96,7 +96,7 @@ const runBuiltInMap: {
       //           ZIO.foreachDiscard(completions)(word => printLine(word))
       //         }
       //     }
-      console.log("Showing Completions")
+      Console.log("Showing Completions")
     }),
   ShowCompletionScript: () =>
     Effect.sync(() => {
@@ -104,7 +104,7 @@ const runBuiltInMap: {
       //     printLine(
       //       CompletionScript(path, if (self.command.names.nonEmpty) self.command.names else Set(self.name), shellType)
       //     )
-      console.log("Showing Completion Script")
+      Console.log("Showing Completion Script")
     }),
   ShowHelp: (self, cliApp) => {
     const banner = doc.h1(span.code(cliApp.name))
@@ -139,13 +139,13 @@ const runBuiltInMap: {
       //       _      <- Console.printLine(s"Executing command: ${(prefix(self.command) ++ args).mkString(" ")}")
       //       result <- self.run(args)
       //     } yield result
-      console.log("Running Wizard")
+      Console.log("Running Wizard")
     })
 }
 
 const runBuiltIn = <A>(
   self: BuiltInOption.BuiltInOption,
   cliApp: CliApp.CliApp<A>
-): Effect.Effect<CliApp.CliApp.Context, never, void> => runBuiltInMap[self._tag](self as any, cliApp)
+): Effect.Effect<never, never, void> => runBuiltInMap[self._tag](self as any, cliApp)
 
 const printDocs = (error: ValidationError.ValidationError) => Console.log(doc.toAnsiText(error.error))
