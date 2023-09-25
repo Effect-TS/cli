@@ -82,30 +82,26 @@ const runBuiltInMap: {
   ) => Effect.Effect<never, never, void>
 } = {
   ShowCompletions: () =>
-    Effect.sync(() => {
-      //   case ShowCompletions(index, _) =>
-      //     envs.flatMap { envMap =>
-      //       val compWords = envMap.collect {
-      //         case (idx, word) if idx.startsWith("COMP_WORD_") =>
-      //           (idx.drop("COMP_WORD_".length).toInt, word)
-      //       }.toList.sortBy(_._1).map(_._2)
+    //   case ShowCompletions(index, _) =>
+    //     envs.flatMap { envMap =>
+    //       val compWords = envMap.collect {
+    //         case (idx, word) if idx.startsWith("COMP_WORD_") =>
+    //           (idx.drop("COMP_WORD_".length).toInt, word)
+    //       }.toList.sortBy(_._1).map(_._2)
 
-      //       Completion
-      //         .complete(compWords, index, self.command, self.config)
-      //         .flatMap { completions =>
-      //           ZIO.foreachDiscard(completions)(word => printLine(word))
-      //         }
-      //     }
-      Console.log("Showing Completions")
-    }),
+    //       Completion
+    //         .complete(compWords, index, self.command, self.config)
+    //         .flatMap { completions =>
+    //           ZIO.foreachDiscard(completions)(word => printLine(word))
+    //         }
+    //     }
+    Console.log("Showing Completions"),
   ShowCompletionScript: () =>
-    Effect.sync(() => {
-      //   case ShowCompletionScript(path, shellType) =>
-      //     printLine(
-      //       CompletionScript(path, if (self.command.names.nonEmpty) self.command.names else Set(self.name), shellType)
-      //     )
-      Console.log("Showing Completion Script")
-    }),
+    //   case ShowCompletionScript(path, shellType) =>
+    //     printLine(
+    //       CompletionScript(path, if (self.command.names.nonEmpty) self.command.names else Set(self.name), shellType)
+    //     )
+    Console.log("Showing Completion Script"),
   ShowHelp: (self, cliApp) => {
     const banner = doc.h1(span.code(cliApp.name))
     const header = doc.p(span.concat(span.text(`${cliApp.name} v${cliApp.version} -- `), cliApp.summary))
@@ -125,22 +121,20 @@ const runBuiltInMap: {
     return Console.log(helpText)
   },
   Wizard: () =>
-    Effect.sync(() => {
-      //     val subcommands = command.getSubcommands
-      //     for {
-      //       subcommandName <- if (subcommands.size == 1) ZIO.succeed(subcommands.keys.head)
-      //                         else
-      //                           (print("Command" + subcommands.keys.mkString("(", "|", "): ")) *> readLine).orDie
-      //       subcommand <-
-      //         ZIO
-      //           .fromOption(subcommands.get(subcommandName))
-      //           .orElseFail(ValidationError(ValidationErrorType.InvalidValue, HelpDoc.p("Invalid subcommand")))
-      //       args   <- subcommand.generateArgs
-      //       _      <- Console.printLine(s"Executing command: ${(prefix(self.command) ++ args).mkString(" ")}")
-      //       result <- self.run(args)
-      //     } yield result
-      Console.log("Running Wizard")
-    })
+    //     val subcommands = command.getSubcommands
+    //     for {
+    //       subcommandName <- if (subcommands.size == 1) ZIO.succeed(subcommands.keys.head)
+    //                         else
+    //                           (print("Command" + subcommands.keys.mkString("(", "|", "): ")) *> readLine).orDie
+    //       subcommand <-
+    //         ZIO
+    //           .fromOption(subcommands.get(subcommandName))
+    //           .orElseFail(ValidationError(ValidationErrorType.InvalidValue, HelpDoc.p("Invalid subcommand")))
+    //       args   <- subcommand.generateArgs
+    //       _      <- Console.printLine(s"Executing command: ${(prefix(self.command) ++ args).mkString(" ")}")
+    //       result <- self.run(args)
+    //     } yield result
+    Console.log("Running Wizard")
 }
 
 const runBuiltIn = <A>(
