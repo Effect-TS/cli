@@ -62,7 +62,7 @@ export const run = dual<
             )
       }
     )
-  }).pipe(Effect.provideSomeLayer(terminal.layer)))
+  }).pipe(Effect.provide(terminal.layer)))
 
 const prefixCommandMap: {
   [K in command.Instruction["_tag"]]: (self: Extract<command.Instruction, { _tag: K }>) => ReadonlyArray<string>

@@ -6,7 +6,7 @@ import * as Effect from "@effect/io/Effect"
 const colorPrompt = Prompt.select({
   message: "Pick your favorite color!",
   choices: [
-    { title: "Red", value: "#ff0000" },
+    { title: "Red", value: "#ff0000", description: "This option has a description" },
     { title: "Green", value: "#00ff00" },
     { title: "Blue", value: "#0000ff" }
   ]

@@ -1,6 +1,7 @@
-import type * as Terminal from "@effect/cli/Terminal"
+import * as Terminal from "@effect/cli/Terminal"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
+import * as Layer from "effect/Layer"
 import { pipe } from "effect/Function"
 import * as Schedule from "effect/Schedule"
 import type * as Scope from "effect/Scope"
@@ -24,7 +25,7 @@ export const effect = (() => {
       () =>
         pipe(
           Effect.suspend(self),
-          Effect.provide(TestEnvironment.TestContext),
+          Effect.provide(Layer.merge(TestEnvironment.testContext(), Terminal.layer)),
           Effect.runPromise
         ),
       timeout
@@ -41,7 +42,7 @@ export const effect = (() => {
         () =>
           pipe(
             Effect.suspend(self),
-            Effect.provide(TestEnvironment.TestContext),
+            Effect.provide(Layer.merge(TestEnvironment.testContext(), Terminal.layer)),
             Effect.runPromise
           ),
         timeout
@@ -57,7 +58,7 @@ export const effect = (() => {
         () =>
           pipe(
             Effect.suspend(self),
-            Effect.provide(TestEnvironment.TestContext),
+            Effect.provide(Layer.merge(TestEnvironment.testContext(), Terminal.layer)),
             Effect.runPromise
           ),
         timeout
@@ -110,7 +111,7 @@ export const scoped = <E, A>(
       pipe(
         Effect.suspend(self),
         Effect.scoped,
-        Effect.provide(TestEnvironment.TestContext),
+        Effect.provide(Layer.merge(TestEnvironment.testContext(), Terminal.layer)),
         Effect.runPromise
       ),
     timeout

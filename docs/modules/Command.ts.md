@@ -19,6 +19,7 @@ Added in v1.0.0
   - [withHelp](#withhelp)
 - [constructors](#constructors)
   - [make](#make)
+  - [prompt](#prompt)
 - [getters](#getters)
   - [getSubcommands](#getsubcommands)
   - [helpDoc](#helpdoc)
@@ -123,6 +124,19 @@ export declare const make: <Name extends string, OptionsType = void, ArgsType = 
 
 Added in v1.0.0
 
+## prompt
+
+**Signature**
+
+```ts
+export declare const prompt: <Name extends string, A>(
+  name: Name,
+  prompt: Prompt<A>
+) => Command<{ readonly name: Name; readonly value: A }>
+```
+
+Added in v1.0.0
+
 # getters
 
 ## getSubcommands
@@ -221,9 +235,9 @@ Added in v1.0.0
 export declare const parse: {
   (args: ReadonlyArray<string>, config: CliConfig): <A>(
     self: Command<A>
-  ) => Effect<never, ValidationError, CommandDirective<A>>
+  ) => Effect<Terminal, ValidationError, CommandDirective<A>>
   <A>(self: Command<A>, args: ReadonlyArray<string>, config: CliConfig): Effect<
-    never,
+    Terminal,
     ValidationError,
     CommandDirective<A>
   >

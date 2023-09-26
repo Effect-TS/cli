@@ -1,6 +1,6 @@
 ---
 title: Prompt/Action.ts
-nav_order: 15
+nav_order: 14
 parent: Modules
 ---
 
@@ -12,6 +12,11 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
+- [constructors](#constructors)
+  - [beep](#beep)
+  - [error](#error)
+  - [nextFrame](#nextframe)
+  - [submit](#submit)
 - [models](#models)
   - [Beep (interface)](#beep-interface)
   - [Error (interface)](#error-interface)
@@ -20,6 +25,48 @@ Added in v1.0.0
   - [Submit (interface)](#submit-interface)
 
 ---
+
+# constructors
+
+## beep
+
+**Signature**
+
+```ts
+export declare const beep: PromptAction<never, never>
+```
+
+Added in v1.0.0
+
+## error
+
+**Signature**
+
+```ts
+export declare const error: (message: string) => PromptAction<never, never>
+```
+
+Added in v1.0.0
+
+## nextFrame
+
+**Signature**
+
+```ts
+export declare const nextFrame: <State>(state: State) => PromptAction<State, never>
+```
+
+Added in v1.0.0
+
+## submit
+
+**Signature**
+
+```ts
+export declare const submit: <Output>(value: Output) => PromptAction<never, Output>
+```
+
+Added in v1.0.0
 
 # models
 

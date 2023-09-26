@@ -16,7 +16,7 @@ const myPrompt: Prompt.Prompt<string> = pipe(
 
 const program = pipe(
   Prompt.run(myPrompt),
-  Effect.provideLayer(Terminal.layer)
+  Effect.provide(Terminal.layer)
 )
 
 Effect.runCallback(program, (exit) =>

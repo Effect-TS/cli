@@ -1,6 +1,6 @@
 ---
 title: Prompt.ts
-nav_order: 14
+nav_order: 13
 parent: Modules
 ---
 
@@ -17,6 +17,9 @@ Added in v1.0.0
   - [map](#map)
 - [constructors](#constructors)
   - [custom](#custom)
+  - [float](#float)
+  - [integer](#integer)
+  - [select](#select)
   - [succeed](#succeed)
   - [text](#text)
 - [execution](#execution)
@@ -26,6 +29,14 @@ Added in v1.0.0
 - [symbols](#symbols)
   - [PromptTypeId](#prompttypeid)
   - [PromptTypeId (type alias)](#prompttypeid-type-alias)
+- [utils](#utils)
+  - [Prompt (namespace)](#prompt-namespace)
+    - [FloatOptions (interface)](#floatoptions-interface)
+    - [IntegerOptions (interface)](#integeroptions-interface)
+    - [SelectOptions (interface)](#selectoptions-interface)
+    - [TextOptions (interface)](#textoptions-interface)
+    - [Variance (interface)](#variance-interface)
+    - [Action (type alias)](#action-type-alias)
 
 ---
 
@@ -73,9 +84,39 @@ function is invoked immediately after a user presses a key.
 ```ts
 export declare const custom: <State, Output>(
   initialState: State,
-  render: (state: State, action: PromptAction<State, Output>) => Effect<never, never, string>,
-  process: (input: Terminal.UserInput, state: State) => Effect<never, never, PromptAction<State, Output>>
+  render: (state: State, action: Prompt.Action<State, Output>) => Effect<never, never, string>,
+  process: (input: Terminal.UserInput, state: State) => Effect<never, never, Prompt.Action<State, Output>>
 ) => Prompt<Output>
+```
+
+Added in v1.0.0
+
+## float
+
+**Signature**
+
+```ts
+export declare const float: (options: Prompt.FloatOptions) => Prompt<number>
+```
+
+Added in v1.0.0
+
+## integer
+
+**Signature**
+
+```ts
+export declare const integer: (options: Prompt.IntegerOptions) => Prompt<number>
+```
+
+Added in v1.0.0
+
+## select
+
+**Signature**
+
+```ts
+export declare const select: (options: Prompt.SelectOptions) => Prompt<string>
 ```
 
 Added in v1.0.0
@@ -126,7 +167,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Prompt<Output> extends Prompt.Variance<Output> {}
+export interface Prompt<Output> extends Prompt.Variance<Output>, Pipeable {}
 ```
 
 Added in v1.0.0
@@ -149,6 +190,97 @@ Added in v1.0.0
 
 ```ts
 export type PromptTypeId = typeof PromptTypeId
+```
+
+Added in v1.0.0
+
+# utils
+
+## Prompt (namespace)
+
+Added in v1.0.0
+
+### FloatOptions (interface)
+
+**Signature**
+
+```ts
+export interface FloatOptions extends IntegerOptions {
+  readonly precision?: number
+}
+```
+
+Added in v1.0.0
+
+### IntegerOptions (interface)
+
+**Signature**
+
+```ts
+export interface IntegerOptions {
+  readonly message: string
+  readonly min?: number
+  readonly max?: number
+  readonly incrementBy?: number
+  readonly decrementBy?: number
+  readonly validate?: (value: number) => Effect<never, string, number>
+}
+```
+
+Added in v1.0.0
+
+### SelectOptions (interface)
+
+**Signature**
+
+```ts
+export interface SelectOptions {
+  readonly message: string
+  readonly choices: ReadonlyArray<{
+    readonly title: string
+    readonly description?: string
+    readonly value: string
+  }>
+}
+```
+
+Added in v1.0.0
+
+### TextOptions (interface)
+
+**Signature**
+
+```ts
+export interface TextOptions {
+  readonly message: string
+  readonly type?: 'hidden' | 'password' | 'text'
+  readonly default?: string
+  readonly validate?: (value: string) => Effect<never, string, string>
+}
+```
+
+Added in v1.0.0
+
+### Variance (interface)
+
+**Signature**
+
+```ts
+export interface Variance<Output> {
+  readonly [PromptTypeId]: {
+    readonly _Output: (_: never) => Output
+  }
+}
+```
+
+Added in v1.0.0
+
+### Action (type alias)
+
+**Signature**
+
+```ts
+export type Action<State, Output> = PromptAction<State, Output>
 ```
 
 Added in v1.0.0

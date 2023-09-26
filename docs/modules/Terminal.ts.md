@@ -1,6 +1,6 @@
 ---
 title: Terminal.ts
-nav_order: 17
+nav_order: 16
 parent: Modules
 ---
 
@@ -17,6 +17,10 @@ Added in v1.0.0
   - [layer](#layer)
 - [models](#models)
   - [Terminal (interface)](#terminal-interface)
+- [utils](#utils)
+  - [Terminal (namespace)](#terminal-namespace)
+    - [UserInput (interface)](#userinput-interface)
+    - [Action (type alias)](#action-type-alias)
 
 ---
 
@@ -62,6 +66,56 @@ export interface Terminal {
    */
   display(message: string): Effect<never, never, void>
 }
+```
+
+Added in v1.0.0
+
+# utils
+
+## Terminal (namespace)
+
+Added in v1.0.0
+
+### UserInput (interface)
+
+Represents a user's input to a terminal.
+
+**Signature**
+
+```ts
+export interface UserInput {
+  readonly action: Action
+  readonly value: string
+}
+```
+
+Added in v1.0.0
+
+### Action (type alias)
+
+Represents the action parsed from a user's input to a terminal.
+
+**Signature**
+
+```ts
+export type Action =
+  | 'Backspace'
+  | 'CursorFirst'
+  | 'CursorLast'
+  | 'CursorUp'
+  | 'CursorDown'
+  | 'CursorLeft'
+  | 'CursorRight'
+  | 'Delete'
+  | 'End'
+  | 'Exit'
+  | 'Next'
+  | 'NextPage'
+  | 'PreviousPage'
+  | 'Reset'
+  | 'Retry'
+  | 'Start'
+  | 'Submit'
 ```
 
 Added in v1.0.0
