@@ -1,3 +1,4 @@
+import type * as Terminal from "@effect/cli/Terminal"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import { pipe } from "effect/Function"
@@ -15,7 +16,7 @@ export const it: API = V.it
 export const effect = (() => {
   const f = <E, A>(
     name: string,
-    self: () => Effect.Effect<TestServices.TestServices, E, A>,
+    self: () => Effect.Effect<TestServices.TestServices | Terminal.Terminal, E, A>,
     timeout = 5_000
   ) => {
     return it(
@@ -32,7 +33,7 @@ export const effect = (() => {
   return Object.assign(f, {
     skip: <E, A>(
       name: string,
-      self: () => Effect.Effect<TestServices.TestServices, E, A>,
+      self: () => Effect.Effect<TestServices.TestServices | Terminal.Terminal, E, A>,
       timeout = 5_000
     ) => {
       return it.skip(
@@ -48,7 +49,7 @@ export const effect = (() => {
     },
     only: <E, A>(
       name: string,
-      self: () => Effect.Effect<TestServices.TestServices, E, A>,
+      self: () => Effect.Effect<TestServices.TestServices | Terminal.Terminal, E, A>,
       timeout = 5_000
     ) => {
       return it.only(
@@ -100,7 +101,7 @@ export const flakyTest = <R, E, A>(
 
 export const scoped = <E, A>(
   name: string,
-  self: () => Effect.Effect<Scope.Scope | TestServices.TestServices, E, A>,
+  self: () => Effect.Effect<Scope.Scope | TestServices.TestServices | Terminal.Terminal, E, A>,
   timeout = 5_000
 ) => {
   return it(

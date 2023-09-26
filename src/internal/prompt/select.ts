@@ -12,7 +12,6 @@ import * as Doc from "@effect/printer/Doc"
 import * as Optimize from "@effect/printer/Optimize"
 
 interface State {
-  readonly firstRender: boolean
   readonly cursor: number
 }
 
@@ -55,7 +54,7 @@ const renderNextFrame = (promptMsg: string, state: State, choices: Prompt.Prompt
     const renderedChoices = renderChoices(state, choices, pointer)
     const doc = pipe(
       ansiUtils.setCursorPosition(0),
-      Doc.cat(state.firstRender ? Doc.empty : ansiUtils.clearLines(choices.length + 1)),
+      Doc.cat(ansiUtils.clearLines(choices.length + 1)),
       Doc.cat(ansiUtils.cursorHide),
       Doc.cat(Doc.annotate(Doc.text("?"), AnsiStyle.color(Color.cyan))),
       Doc.cat(Doc.space),
@@ -73,7 +72,7 @@ const renderSubmission = (promptMsg: string, state: State, choices: Prompt.Promp
     const selected = Doc.text(choices[state.cursor].title)
     const doc = pipe(
       ansiUtils.setCursorPosition(0),
-      Doc.cat(state.firstRender ? Doc.empty : ansiUtils.clearLines(choices.length + 1)),
+      Doc.cat(ansiUtils.clearLines(choices.length + 1)),
       Doc.cat(Doc.annotate(tick, AnsiStyle.color(Color.green))),
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(Doc.text(promptMsg), AnsiStyle.bold)),
@@ -86,24 +85,24 @@ const renderSubmission = (promptMsg: string, state: State, choices: Prompt.Promp
     return AnsiRender.prettyDefault(Optimize.optimize(doc, Optimize.Deep))
   })
 
-const initialState: State = { firstRender: true, cursor: 0 }
+const initialState: State = { cursor: 0 }
 
 const processCursorUp = (state: State, choices: Prompt.Prompt.SelectOptions["choices"]) => {
   if (state.cursor === 0) {
-    return Effect.succeed(promptAction.nextFrame({ firstRender: false, cursor: choices.length - 1 }))
+    return Effect.succeed(promptAction.nextFrame({ cursor: choices.length - 1 }))
   }
-  return Effect.succeed(promptAction.nextFrame({ firstRender: false, cursor: state.cursor - 1 }))
+  return Effect.succeed(promptAction.nextFrame({ cursor: state.cursor - 1 }))
 }
 
 const processCursorDown = (state: State, choices: Prompt.Prompt.SelectOptions["choices"]) => {
   if (state.cursor === choices.length - 1) {
-    return Effect.succeed(promptAction.nextFrame({ firstRender: false, cursor: 0 }))
+    return Effect.succeed(promptAction.nextFrame({ cursor: 0 }))
   }
-  return Effect.succeed(promptAction.nextFrame({ firstRender: false, cursor: state.cursor + 1 }))
+  return Effect.succeed(promptAction.nextFrame({ cursor: state.cursor + 1 }))
 }
 
 const processNext = (state: State, choices: Prompt.Prompt.SelectOptions["choices"]) =>
-  Effect.succeed(promptAction.nextFrame({ firstRender: false, cursor: (state.cursor + 1) % choices.length }))
+  Effect.succeed(promptAction.nextFrame({ cursor: (state.cursor + 1) % choices.length }))
 
 /** @internal */
 export const select = (options: Prompt.Prompt.SelectOptions): Prompt.Prompt<string> => {

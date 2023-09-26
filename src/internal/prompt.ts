@@ -3,6 +3,7 @@ import * as terminal from "@effect/cli/internal/terminal"
 import type * as Prompt from "@effect/cli/Prompt"
 import type * as Terminal from "@effect/cli/Terminal"
 import { dual, pipe } from "@effect/data/Function"
+import { pipeArguments } from "@effect/data/Pipeable"
 import * as Effect from "@effect/io/Effect"
 import * as Ref from "@effect/io/Ref"
 import * as AnsiRender from "@effect/printer-ansi/AnsiRender"
@@ -19,6 +20,9 @@ export const PromptTypeId: Prompt.PromptTypeId = Symbol.for(
 const proto = {
   [PromptTypeId]: {
     _Output: (_: never) => _
+  },
+  pipe() {
+    return pipeArguments(this, arguments)
   }
 }
 

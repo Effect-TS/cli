@@ -70,7 +70,6 @@ const prefixCommandMap: {
   Single: (self) => [self.name],
   Map: (self) => prefixCommandMap[self.command._tag](self.command as any),
   OrElse: () => [],
-  Prompt: (self) => [self.name],
   Subcommands: (self) => prefixCommandMap[self.parent._tag](self.parent as any)
 }
 

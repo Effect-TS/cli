@@ -178,7 +178,10 @@ export const parse: {
  * @since 1.0.0
  * @category constructors
  */
-export const prompt: <A>(prompt: Prompt<A>) => Command<A> = internal.prompt
+export const prompt: <Name extends string, A>(
+  name: Name,
+  prompt: Prompt<A>
+) => Command<{ readonly name: Name; readonly value: A }> = internal.prompt
 
 /**
  * @since 1.0.0
