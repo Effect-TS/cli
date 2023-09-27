@@ -8,7 +8,7 @@ import * as TreeFormatter from "@effect/schema/TreeFormatter"
 import * as readline from "node:readline"
 
 /** @internal */
-export const terminal = Context.Tag<Terminal.Terminal>()
+export const Tag = Context.Tag<Terminal.Terminal>()
 
 const RawUserInput = Schema.struct({
   key: Schema.struct({
@@ -69,7 +69,7 @@ const parseAction = (key: readline.Key): Effect.Effect<never, never, Terminal.Te
 
 /** @internal */
 export const layer: Layer.Layer<never, never, Terminal.Terminal> = Layer.scoped(
-  terminal,
+  Tag,
   Effect.gen(function*($) {
     const { input, output } = yield* $(
       Effect.all({
@@ -127,6 +127,6 @@ export const layer: Layer.Layer<never, never, Terminal.Terminal> = Layer.scoped(
         })
       )
 
-    return terminal.of({ getUserInput, display })
+    return Tag.of({ getUserInput, display })
   })
 )

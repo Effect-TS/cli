@@ -120,7 +120,7 @@ export const flatMap = dual<
 export const run = <Output>(
   self: Prompt.Prompt<Output>
 ): Effect.Effect<Terminal.Terminal, never, Output> =>
-  Effect.flatMap(terminal.terminal, (terminal) => {
+  Effect.flatMap(terminal.Tag, (terminal) => {
     const op = self as Primitive
     switch (op._tag) {
       case "Loop": {

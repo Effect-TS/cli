@@ -69,7 +69,7 @@ export declare namespace Terminal {
  * @since 1.0.0
  * @category context
  */
-export const Terminal: Context.Tag<Terminal, Terminal> = internal.terminal
+export const Terminal: Context.Tag<Terminal, Terminal> = internal.Tag
 
 /**
  * @since 1.0.0
