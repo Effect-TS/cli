@@ -297,7 +297,7 @@ export declare const choiceWithValue: <C extends readonly [readonly [string, any
 
 ```ts
 import * as Options from '@effect/cli/Options'
-import * as Data from '@effect/data/Data'
+import * as Data from 'effect/Data'
 
 export type Animal = Dog | Cat
 
