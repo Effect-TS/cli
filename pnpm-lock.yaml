@@ -37,10 +37,10 @@ devDependencies:
     version: 0.0.21
   '@effect/printer':
     specifier: ^0.17.1
-    version: 0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.38)
+    version: 0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.39)
   '@effect/printer-ansi':
     specifier: ^0.17.1
-    version: 0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.38)
+    version: 0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.39)
   '@types/chai':
     specifier: ^4.3.6
     version: 4.3.6
@@ -66,8 +66,8 @@ devDependencies:
     specifier: ^8.2.1
     version: 8.2.1
   effect:
-    specifier: 2.0.0-next.38
-    version: 2.0.0-next.38
+    specifier: ^2.0.0-next.39
+    version: 2.0.0-next.39
   error-stack-parser:
     specifier: ^2.1.4
     version: 2.1.4
@@ -720,33 +720,33 @@ packages:
     resolution: {integrity: sha512-e8vfKbjnbYiyneBincEFS0tzXluopGK77OkVFbPRtUbNDS5tJfb+jiwOQEiqASDsadcZmd+9J9+Q6v/z7GuN2g==}
     dev: true
 
-  /@effect/printer-ansi@0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.38):
+  /@effect/printer-ansi@0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.39):
     resolution: {integrity: sha512-o7rsrtmohAjPThopJKyEZJE1/4T9OGQGuXgKpe7S9dK3mnjO2+cxxj+KCZvz9M4cLwNmRfRV7rZgTGegRUHPXQ==}
     peerDependencies:
       '@effect/typeclass': ^0.6.0
       effect: 2.0.0-next.38
     dependencies:
-      '@effect/printer': 0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.38)
-      '@effect/typeclass': 0.6.0(effect@2.0.0-next.38)
-      effect: 2.0.0-next.38
+      '@effect/printer': 0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.39)
+      '@effect/typeclass': 0.6.0(effect@2.0.0-next.39)
+      effect: 2.0.0-next.39
     dev: true
 
-  /@effect/printer@0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.38):
+  /@effect/printer@0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.39):
     resolution: {integrity: sha512-3o5r7Wx5roJkP+4klaaG8i3LIRAus6MmbiGLtURmjMuToxJsbBv+i1UTvabybhZyjQtUwIMFtUxxQ1DwjpaBeA==}
     peerDependencies:
       '@effect/typeclass': ^0.6.0
       effect: 2.0.0-next.38
     dependencies:
-      '@effect/typeclass': 0.6.0(effect@2.0.0-next.38)
-      effect: 2.0.0-next.38
+      '@effect/typeclass': 0.6.0(effect@2.0.0-next.39)
+      effect: 2.0.0-next.39
     dev: true
 
-  /@effect/typeclass@0.6.0(effect@2.0.0-next.38):
+  /@effect/typeclass@0.6.0(effect@2.0.0-next.39):
     resolution: {integrity: sha512-rVSKJUsI83s0mwi6Dv/ZdIS+CFoxY9ordb/Yl7WgXqX19In4Ew3graz1QfPG8wgQ1mlUx9EHoabJ15XT+9ZxBw==}
     peerDependencies:
       effect: 2.0.0-next.37
     dependencies:
-      effect: 2.0.0-next.38
+      effect: 2.0.0-next.39
     dev: true
 
   /@esbuild/android-arm64@0.18.20:
@@ -2400,8 +2400,8 @@ packages:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
     dev: true
 
-  /effect@2.0.0-next.38:
-    resolution: {integrity: sha512-J0e0v0l+1SkxrNFkcm6ubLqbocBQ3cHa+vJ8/bTjmbIX2uF0ZIS8CeRnwUNqbAJ+pzbWH+EfI7pjOYcoW3FNNg==}
+  /effect@2.0.0-next.39:
+    resolution: {integrity: sha512-4i6OI4pI55MeDALupg8wOX3Y6nvdwqJcJRGjwYNK7xqAGK3QXy6jbxAi4jf1FBVkIChtJLn2pQ42CbcrjNjewA==}
     dev: true
 
   /electron-to-chromium@1.4.529:
