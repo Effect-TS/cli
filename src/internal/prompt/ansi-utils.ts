@@ -1,6 +1,6 @@
-import * as Effect from "@effect/io/Effect"
 import type * as AnsiDoc from "@effect/printer-ansi/AnsiDoc"
 import * as Doc from "@effect/printer/Doc"
+import { Effect } from "effect"
 
 const defaultFigures = {
   arrowUp: Doc.text("↑"),

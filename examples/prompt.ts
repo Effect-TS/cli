@@ -1,7 +1,7 @@
 import * as CliApp from "@effect/cli/CliApp"
 import * as Command from "@effect/cli/Command"
 import * as Prompt from "@effect/cli/Prompt"
-import * as Effect from "@effect/io/Effect"
+import { Effect } from "effect"
 
 const colorPrompt = Prompt.select({
   message: "Pick your favorite color!",

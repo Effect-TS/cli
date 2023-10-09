@@ -3,14 +3,13 @@ import * as promptAction from "@effect/cli/internal/prompt/action"
 import * as ansiUtils from "@effect/cli/internal/prompt/ansi-utils"
 import type * as Prompt from "@effect/cli/Prompt"
 import type * as PromptAction from "@effect/cli/Prompt/Action"
-import { pipe } from "@effect/data/Function"
-import * as Effect from "@effect/io/Effect"
 import type * as AnsiDoc from "@effect/printer-ansi/AnsiDoc"
 import * as AnsiRender from "@effect/printer-ansi/AnsiRender"
 import * as AnsiStyle from "@effect/printer-ansi/AnsiStyle"
 import * as Color from "@effect/printer-ansi/Color"
 import * as Doc from "@effect/printer/Doc"
 import * as Optimize from "@effect/printer/Optimize"
+import { Effect, pipe } from "effect"
 
 interface State {
   readonly cursor: number

@@ -2,11 +2,8 @@ import * as ansiUtils from "@effect/cli/internal/prompt/ansi-utils"
 import * as terminal from "@effect/cli/internal/terminal"
 import type * as Prompt from "@effect/cli/Prompt"
 import type * as Terminal from "@effect/cli/Terminal"
-import { dual, pipe } from "@effect/data/Function"
-import { pipeArguments } from "@effect/data/Pipeable"
-import * as Effect from "@effect/io/Effect"
-import * as Ref from "@effect/io/Ref"
 import * as AnsiRender from "@effect/printer-ansi/AnsiRender"
+import { Effect, Function, pipe, Pipeable, Ref } from "effect"
 
 /** @internal */
 const PromptSymbolKey = "@effect/cli/Prompt"
@@ -22,7 +19,7 @@ const proto = {
     _Output: (_: never) => _
   },
   pipe() {
-    return pipeArguments(this, arguments)
+    return Pipeable.pipeArguments(this, arguments)
   }
 }
 
@@ -133,7 +130,7 @@ export const custom = <State, Output>(
 }
 
 /** @internal */
-export const map = dual<
+export const map = Function.dual<
   <Output, Output2>(
     f: (output: Output) => Output2
   ) => (
@@ -146,7 +143,7 @@ export const map = dual<
 >(2, (self, f) => flatMap(self, (a) => succeed(f(a))))
 
 /** @internal */
-export const flatMap = dual<
+export const flatMap = Function.dual<
   <Output, Output2>(
     f: (output: Output) => Prompt.Prompt<Output2>
   ) => (

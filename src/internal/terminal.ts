@@ -1,10 +1,7 @@
 import type * as Terminal from "@effect/cli/Terminal"
-import * as Context from "@effect/data/Context"
-import { pipe } from "@effect/data/Function"
-import * as Effect from "@effect/io/Effect"
-import * as Layer from "@effect/io/Layer"
 import * as Schema from "@effect/schema/Schema"
 import * as TreeFormatter from "@effect/schema/TreeFormatter"
+import { Context, Effect, Layer, pipe } from "effect"
 import * as readline from "node:readline"
 
 /** @internal */

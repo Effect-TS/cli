@@ -7,8 +7,7 @@ import * as selectPrompt from "@effect/cli/internal/prompt/select"
 import * as textPrompt from "@effect/cli/internal/prompt/text"
 import type { PromptAction } from "@effect/cli/Prompt/Action"
 import type { Terminal } from "@effect/cli/Terminal"
-import type { Pipeable } from "@effect/data/Pipeable"
-import type { Effect } from "@effect/io/Effect"
+import type { Effect, Pipeable } from "effect"
 
 /**
  * @since 1.0.0
@@ -26,7 +25,7 @@ export type PromptTypeId = typeof PromptTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Prompt<Output> extends Prompt.Variance<Output>, Pipeable {}
+export interface Prompt<Output> extends Prompt.Variance<Output>, Pipeable.Pipeable {}
 
 /**
  * @since 1.0.0
@@ -58,7 +57,7 @@ export declare namespace Prompt {
     readonly max?: number
     readonly incrementBy?: number
     readonly decrementBy?: number
-    readonly validate?: (value: number) => Effect<never, string, number>
+    readonly validate?: (value: number) => Effect.Effect<never, string, number>
   }
 
   /**
@@ -90,7 +89,7 @@ export declare namespace Prompt {
     readonly message: string
     readonly type?: "hidden" | "password" | "text"
     readonly default?: string
-    readonly validate?: (value: string) => Effect<never, string, string>
+    readonly validate?: (value: string) => Effect.Effect<never, string, string>
   }
 }
 
@@ -166,11 +165,11 @@ export const custom: <State, Output>(
   render: (
     state: State,
     action: Prompt.Action<State, Output>
-  ) => Effect<never, never, string>,
+  ) => Effect.Effect<never, never, string>,
   process: (
     input: Terminal.UserInput,
     state: State
-  ) => Effect<never, never, Prompt.Action<State, Output>>
+  ) => Effect.Effect<never, never, Prompt.Action<State, Output>>
 ) => Prompt<Output> = internal.custom
 
 /**
@@ -209,7 +208,7 @@ export const map: {
  * @since 1.0.0
  * @category execution
  */
-export const run: <Output>(self: Prompt<Output>) => Effect<Terminal, never, Output> = internal.run
+export const run: <Output>(self: Prompt<Output>) => Effect.Effect<Terminal, never, Output> = internal.run
 
 /**
  * @since 1.0.0

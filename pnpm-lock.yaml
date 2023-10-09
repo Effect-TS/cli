@@ -41,6 +41,9 @@ devDependencies:
   '@effect/printer-ansi':
     specifier: ^0.17.1
     version: 0.17.1(@effect/typeclass@0.6.0)(effect@2.0.0-next.38)
+  '@effect/schema':
+    specifier: ^0.42.0
+    version: 0.42.0(effect@2.0.0-next.38)(fast-check@3.13.1)
   '@types/chai':
     specifier: ^4.3.6
     version: 4.3.6
@@ -739,6 +742,16 @@ packages:
     dependencies:
       '@effect/typeclass': 0.6.0(effect@2.0.0-next.38)
       effect: 2.0.0-next.38
+    dev: true
+
+  /@effect/schema@0.42.0(effect@2.0.0-next.38)(fast-check@3.13.1):
+    resolution: {integrity: sha512-zhA6tX7rA4IhbUDsAkZYN8NdshZqGP2khjRgJzyLLZvTOBPDUJMLRv+VNztSj01RlYTfHGf7ztMtIyEmskeDnA==}
+    peerDependencies:
+      effect: 2.0.0-next.47
+      fast-check: ^3.13.1
+    dependencies:
+      effect: 2.0.0-next.38
+      fast-check: 3.13.1
     dev: true
 
   /@effect/typeclass@0.6.0(effect@2.0.0-next.38):
@@ -1866,7 +1879,7 @@ packages:
     hasBin: true
     dependencies:
       caniuse-lite: 1.0.30001522
-      electron-to-chromium: 1.4.500
+      electron-to-chromium: 1.4.529
       node-releases: 2.0.13
       update-browserslist-db: 1.0.11(browserslist@4.21.10)
     dev: true

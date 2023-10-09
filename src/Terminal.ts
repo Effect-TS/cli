@@ -2,9 +2,7 @@
  * @since 1.0.0
  */
 import * as internal from "@effect/cli/internal/terminal"
-import type * as Context from "@effect/data/Context"
-import type { Effect } from "@effect/io/Effect"
-import type { Layer } from "@effect/io/Layer"
+import type { Context, Effect, Layer } from "effect"
 
 /**
  * Represents a teletype-style (TTY) terminal interface that allows for
@@ -17,11 +15,11 @@ export interface Terminal {
   /**
    * Obtains the user's input from the terminal.
    */
-  readonly getUserInput: Effect<never, never, Terminal.UserInput>
+  readonly getUserInput: Effect.Effect<never, never, Terminal.UserInput>
   /**
    * Displays the provided message to the terminal.
    */
-  display(message: string): Effect<never, never, void>
+  display(message: string): Effect.Effect<never, never, void>
 }
 
 /**
@@ -75,4 +73,4 @@ export const Terminal: Context.Tag<Terminal, Terminal> = internal.Tag
  * @since 1.0.0
  * @category context
  */
-export const layer: Layer<never, never, Terminal> = internal.layer
+export const layer: Layer.Layer<never, never, Terminal> = internal.layer
