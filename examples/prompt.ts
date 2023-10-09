@@ -16,13 +16,10 @@ const numberPrompt = Prompt.float({
   message: `What is your favorite number?`
 })
 
-export const prompt = colorPrompt.pipe(
-  Prompt.flatMap((color) =>
-    numberPrompt.pipe(
-      Prompt.map((number) => [color, number] as const)
-    )
-  )
-)
+export const prompt = Prompt.all({
+  favColor: colorPrompt,
+  favNumber: numberPrompt
+})
 
 const cli = CliApp.make({
   name: "Your Favorite Things",

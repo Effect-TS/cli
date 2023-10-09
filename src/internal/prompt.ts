@@ -65,6 +65,54 @@ export interface Succeed extends
 {}
 
 /** @internal */
+export const isPrompt = (u: unknown): u is Prompt.Prompt<unknown> =>
+  typeof u === "object" && u != null && PromptTypeId in u
+
+const allTupled = <const T extends ArrayLike<Prompt.Prompt<any>>>(arg: T): Prompt.Prompt<
+  {
+    [K in keyof T]: [T[K]] extends [Prompt.Prompt<infer A>] ? A : never
+  }
+> => {
+  if (arg.length === 0) {
+    return succeed([]) as any
+  }
+  if (arg.length === 1) {
+    return map(arg[0], (x) => [x]) as any
+  }
+  let result = map(arg[0], (x) => [x])
+  for (let i = 1; i < arg.length; i++) {
+    const curr = arg[i]
+    result = flatMap(result, (tuple) => map(curr, (a) => [...tuple, a]))
+  }
+  return result as any
+}
+
+/** @internal */
+export const all: <
+  const Arg extends Iterable<Prompt.Prompt<any>> | Record<string, Prompt.Prompt<any>>
+>(arg: Arg) => Prompt.All.Return<Arg> = function() {
+  if (arguments.length === 1) {
+    if (isPrompt(arguments[0])) {
+      return map(arguments[0], (x) => [x])
+    } else if (Array.isArray(arguments[0])) {
+      return allTupled(arguments[0])
+    } else {
+      const entries = Object.entries(arguments[0] as Readonly<{ [K: string]: Prompt.Prompt<any> }>)
+      let result = map(entries[0][1], (value) => ({ [entries[0][0]]: value }))
+      if (entries.length === 1) {
+        return result as any
+      }
+      const rest = entries.slice(1)
+      for (const [key, curr] of rest) {
+        result = flatMap(result, (record) => map(curr, (a) => ({ ...record, [key]: a })))
+      }
+      return result as any
+    }
+  }
+  return allTupled(arguments[0])
+}
+
+/** @internal */
 export const custom = <State, Output>(
   initialState: State,
   render: (
