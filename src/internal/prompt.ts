@@ -86,27 +86,16 @@ const allTupled = <const T extends ArrayLike<Prompt.Prompt<any>>>(arg: T): Promp
 
 /** @internal */
 export const all: <
-  const Arg extends Iterable<Prompt.Prompt<any>> | Record<string, Prompt.Prompt<any>>
+  const Arg extends Iterable<Prompt.Prompt<any>>
 >(arg: Arg) => Prompt.All.Return<Arg> = function() {
   if (arguments.length === 1) {
     if (isPrompt(arguments[0])) {
-      return map(arguments[0], (x) => [x])
-    } else if (Array.isArray(arguments[0])) {
-      return allTupled(arguments[0])
+      return map(arguments[0], (x) => [x]) as any
     } else {
-      const entries = Object.entries(arguments[0] as Readonly<{ [K: string]: Prompt.Prompt<any> }>)
-      let result = map(entries[0][1], (value) => ({ [entries[0][0]]: value }))
-      if (entries.length === 1) {
-        return result as any
-      }
-      const rest = entries.slice(1)
-      for (const [key, curr] of rest) {
-        result = flatMap(result, (record) => map(curr, (a) => ({ ...record, [key]: a })))
-      }
-      return result as any
+      return allTupled(arguments[0]) as any
     }
   }
-  return allTupled(arguments[0])
+  return allTupled(arguments[0]) as any
 }
 
 /** @internal */
