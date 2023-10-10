@@ -40,7 +40,7 @@
     "lint": "eslint src test",
     "lint-fix": "eslint src test --fix",
     "fix": "preconstruct fix",
-    "docgen": "docgen",
+    "docs": "docgen",
     "dtslint": "dtslint --expectOnly dtslint"
   },
   "preconstruct": {
