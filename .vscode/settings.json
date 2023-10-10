@@ -48,5 +48,24 @@
     "**/target": true
   },
   "files.insertFinalNewline": true,
-  "nixEnvSelector.nixFile": "${workspaceRoot}/flake.nix"
+  "nixEnvSelector.nixFile": "${workspaceRoot}/flake.nix",
+  "files.exclude": {
+    "dist": true,
+    "Args": true,
+    "AutoCorrect": true,
+    "BuiltInOption": true,
+    "CliApp": true,
+    "CliConfig": true,
+    "Command": true,
+    "CommandDirective": true,
+    "Exists": true,
+    "HelpDoc": true,
+    "Options": true,
+    "Primitive": true,
+    "Prompt": true,
+    "ShellType": true,
+    "Terminal": true,
+    "Usage": true,
+    "ValidationError": true
+  }
 }
