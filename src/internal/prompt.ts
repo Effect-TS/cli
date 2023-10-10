@@ -3,7 +3,7 @@ import * as terminal from "@effect/cli/internal/terminal"
 import type * as Prompt from "@effect/cli/Prompt"
 import type * as Terminal from "@effect/cli/Terminal"
 import * as AnsiRender from "@effect/printer-ansi/AnsiRender"
-import { Effect, Function, pipe, Pipeable, Ref } from "effect"
+import { Effect, Effectable, Function, pipe, Pipeable, Ref } from "effect"
 
 /** @internal */
 const PromptSymbolKey = "@effect/cli/Prompt"
@@ -15,8 +15,12 @@ export const PromptTypeId: Prompt.PromptTypeId = Symbol.for(
 
 /** @internal */
 const proto = {
+  ...Effectable.CommitPrototype,
   [PromptTypeId]: {
     _Output: (_: never) => _
+  },
+  commit(): Effect.Effect<Terminal.Terminal, never, unknown> {
+    return run(this as Prompt.Prompt<unknown>)
   },
   pipe() {
     return Pipeable.pipeArguments(this, arguments)

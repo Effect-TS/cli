@@ -7,7 +7,7 @@ import * as selectPrompt from "@effect/cli/internal/prompt/select"
 import * as textPrompt from "@effect/cli/internal/prompt/text"
 import type { PromptAction } from "@effect/cli/Prompt/Action"
 import type { Terminal } from "@effect/cli/Terminal"
-import type { Effect, Pipeable } from "effect"
+import type { Effect, Effectable, Pipeable } from "effect"
 
 /**
  * @since 1.0.0
@@ -25,7 +25,9 @@ export type PromptTypeId = typeof PromptTypeId
  * @since 1.0.0
  * @category models
  */
-export interface Prompt<Output> extends Prompt.Variance<Output>, Pipeable.Pipeable {}
+export interface Prompt<Output>
+  extends Prompt.Variance<Output>, Pipeable.Pipeable, Effectable.Class<Terminal, never, Output>
+{}
 
 /**
  * @since 1.0.0
@@ -36,9 +38,15 @@ export declare namespace Prompt {
    * @category models
    */
   export interface Variance<Output> {
-    readonly [PromptTypeId]: {
-      readonly _Output: (_: never) => Output
-    }
+    readonly [PromptTypeId]: Prompt.VarianceStruct<Output>
+  }
+
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface VarianceStruct<Output> {
+    readonly _Output: (_: never) => Output
   }
 
   /**
