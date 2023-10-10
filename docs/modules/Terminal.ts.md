@@ -41,7 +41,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const layer: Layer<never, never, Terminal>
+export declare const layer: Layer.Layer<never, never, Terminal>
 ```
 
 Added in v1.0.0
@@ -60,11 +60,11 @@ export interface Terminal {
   /**
    * Obtains the user's input from the terminal.
    */
-  readonly getUserInput: Effect<never, never, Terminal.UserInput>
+  readonly getUserInput: Effect.Effect<never, never, Terminal.UserInput>
   /**
    * Displays the provided message to the terminal.
    */
-  display(message: string): Effect<never, never, void>
+  display(message: string): Effect.Effect<never, never, void>
 }
 ```
 

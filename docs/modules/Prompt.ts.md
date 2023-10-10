@@ -12,6 +12,8 @@ Added in v1.0.0
 
 <h2 class="text-delta">Table of contents</h2>
 
+- [collecting & elements](#collecting--elements)
+  - [all](#all)
 - [combinators](#combinators)
   - [flatMap](#flatmap)
   - [map](#map)
@@ -30,15 +32,39 @@ Added in v1.0.0
   - [PromptTypeId](#prompttypeid)
   - [PromptTypeId (type alias)](#prompttypeid-type-alias)
 - [utils](#utils)
+  - [All (namespace)](#all-namespace)
+    - [PromptAny (type alias)](#promptany-type-alias)
+    - [Return (type alias)](#return-type-alias)
+    - [ReturnIterable (type alias)](#returniterable-type-alias)
+    - [ReturnTuple (type alias)](#returntuple-type-alias)
   - [Prompt (namespace)](#prompt-namespace)
     - [FloatOptions (interface)](#floatoptions-interface)
     - [IntegerOptions (interface)](#integeroptions-interface)
     - [SelectOptions (interface)](#selectoptions-interface)
     - [TextOptions (interface)](#textoptions-interface)
     - [Variance (interface)](#variance-interface)
+    - [VarianceStruct (interface)](#variancestruct-interface)
     - [Action (type alias)](#action-type-alias)
 
 ---
+
+# collecting & elements
+
+## all
+
+Runs all the provided prompts in sequence respecting the structure provided
+in input.
+
+Supports multiple arguments, a single argument tuple / array or record /
+struct.
+
+**Signature**
+
+```ts
+export declare const all: <const Arg extends Iterable<Prompt<any>>>(arg: Arg) => All.Return<Arg>
+```
+
+Added in v1.0.0
 
 # combinators
 
@@ -84,8 +110,8 @@ function is invoked immediately after a user presses a key.
 ```ts
 export declare const custom: <State, Output>(
   initialState: State,
-  render: (state: State, action: Prompt.Action<State, Output>) => Effect<never, never, string>,
-  process: (input: Terminal.UserInput, state: State) => Effect<never, never, Prompt.Action<State, Output>>
+  render: (state: State, action: Prompt.Action<State, Output>) => Effect.Effect<never, never, string>,
+  process: (input: Terminal.UserInput, state: State) => Effect.Effect<never, never, Prompt.Action<State, Output>>
 ) => Prompt<Output>
 ```
 
@@ -155,7 +181,7 @@ Executes the specified `Prompt`.
 **Signature**
 
 ```ts
-export declare const run: <Output>(self: Prompt<Output>) => Effect<Terminal, never, Output>
+export declare const run: <Output>(self: Prompt<Output>) => Effect.Effect<Terminal, never, Output>
 ```
 
 Added in v1.0.0
@@ -167,7 +193,10 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Prompt<Output> extends Prompt.Variance<Output>, Pipeable {}
+export interface Prompt<Output>
+  extends Prompt.Variance<Output>,
+    Pipeable.Pipeable,
+    Effectable.Class<Terminal, never, Output> {}
 ```
 
 Added in v1.0.0
@@ -196,6 +225,60 @@ Added in v1.0.0
 
 # utils
 
+## All (namespace)
+
+Added in v1.0.0
+
+### PromptAny (type alias)
+
+**Signature**
+
+```ts
+export type PromptAny = Prompt<any>
+```
+
+Added in v1.0.0
+
+### Return (type alias)
+
+**Signature**
+
+```ts
+export type Return<Arg extends Iterable<PromptAny>> = [Arg] extends [ReadonlyArray<PromptAny>]
+  ? ReturnTuple<Arg>
+  : [Arg] extends [Iterable<PromptAny>]
+  ? ReturnIterable<Arg>
+  : never
+```
+
+Added in v1.0.0
+
+### ReturnIterable (type alias)
+
+**Signature**
+
+```ts
+export type ReturnIterable<T extends Iterable<PromptAny>> = [T] extends [Iterable<Prompt.Variance<infer A>>]
+  ? Prompt<Array<A>>
+  : never
+```
+
+Added in v1.0.0
+
+### ReturnTuple (type alias)
+
+**Signature**
+
+```ts
+export type ReturnTuple<T extends ReadonlyArray<unknown>> = Prompt<
+  T[number] extends never ? [] : { -readonly [K in keyof T]: [T[K]] extends [Prompt.Variance<infer _A>] ? _A : never }
+> extends infer X
+  ? X
+  : never
+```
+
+Added in v1.0.0
+
 ## Prompt (namespace)
 
 Added in v1.0.0
@@ -223,7 +306,7 @@ export interface IntegerOptions {
   readonly max?: number
   readonly incrementBy?: number
   readonly decrementBy?: number
-  readonly validate?: (value: number) => Effect<never, string, number>
+  readonly validate?: (value: number) => Effect.Effect<never, string, number>
 }
 ```
 
@@ -255,7 +338,7 @@ export interface TextOptions {
   readonly message: string
   readonly type?: 'hidden' | 'password' | 'text'
   readonly default?: string
-  readonly validate?: (value: string) => Effect<never, string, string>
+  readonly validate?: (value: string) => Effect.Effect<never, string, string>
 }
 ```
 
@@ -267,9 +350,19 @@ Added in v1.0.0
 
 ```ts
 export interface Variance<Output> {
-  readonly [PromptTypeId]: {
-    readonly _Output: (_: never) => Output
-  }
+  readonly [PromptTypeId]: Prompt.VarianceStruct<Output>
+}
+```
+
+Added in v1.0.0
+
+### VarianceStruct (interface)
+
+**Signature**
+
+```ts
+export interface VarianceStruct<Output> {
+  readonly _Output: (_: never) => Output
 }
 ```
 
