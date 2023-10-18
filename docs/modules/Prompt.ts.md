@@ -1,6 +1,6 @@
 ---
 title: Prompt.ts
-nav_order: 13
+nav_order: 14
 parent: Modules
 ---
 
@@ -196,7 +196,7 @@ Added in v1.0.0
 export interface Prompt<Output>
   extends Prompt.Variance<Output>,
     Pipeable.Pipeable,
-    Effectable.Class<Terminal, never, Output> {}
+    Effect.Effect<Terminal, never, Output> {}
 ```
 
 Added in v1.0.0
