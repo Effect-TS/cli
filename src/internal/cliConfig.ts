@@ -1,7 +1,7 @@
 import * as Context from "effect/Context"
 import { dual } from "effect/Function"
 import * as Layer from "effect/Layer"
-import type * as CliConfig from "../CliConfig"
+import type * as CliConfig from "../CliConfig.js"
 
 /** @internal */
 export const make = (params: Partial<CliConfig.CliConfig> = {}): CliConfig.CliConfig => ({

@@ -1,8 +1,8 @@
 /**
  * @since 1.0.0
  */
-import type { HelpDoc } from "./HelpDoc"
-import * as internal from "./internal/validationError"
+import type { HelpDoc } from "./HelpDoc.js"
+import * as internal from "./internal/validationError.js"
 
 /**
  * @since 1.0.0

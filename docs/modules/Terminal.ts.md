@@ -1,6 +1,6 @@
 ---
 title: Terminal.ts
-nav_order: 17
+nav_order: 18
 parent: Modules
 ---
 
@@ -99,23 +99,23 @@ Represents the action parsed from a user's input to a terminal.
 
 ```ts
 export type Action =
-  | 'Backspace'
-  | 'CursorFirst'
-  | 'CursorLast'
-  | 'CursorUp'
-  | 'CursorDown'
-  | 'CursorLeft'
-  | 'CursorRight'
-  | 'Delete'
-  | 'End'
-  | 'Exit'
-  | 'Next'
-  | 'NextPage'
-  | 'PreviousPage'
-  | 'Reset'
-  | 'Retry'
-  | 'Start'
-  | 'Submit'
+  | "Backspace"
+  | "CursorFirst"
+  | "CursorLast"
+  | "CursorUp"
+  | "CursorDown"
+  | "CursorLeft"
+  | "CursorRight"
+  | "Delete"
+  | "End"
+  | "Exit"
+  | "Next"
+  | "NextPage"
+  | "PreviousPage"
+  | "Reset"
+  | "Retry"
+  | "Start"
+  | "Submit"
 ```
 
 Added in v1.0.0

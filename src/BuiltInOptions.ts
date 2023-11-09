@@ -3,12 +3,12 @@
  */
 
 import type { Option } from "effect/Option"
-import type { Command } from "./Command"
-import type { HelpDoc } from "./HelpDoc"
-import * as InternalBuiltInOptions from "./internal/builtInOptions"
-import type { Options } from "./Options"
-import type { ShellType } from "./ShellType"
-import type { Usage } from "./Usage"
+import type { Command } from "./Command.js"
+import type { HelpDoc } from "./HelpDoc.js"
+import * as InternalBuiltInOptions from "./internal/builtInOptions.js"
+import type { Options } from "./Options.js"
+import type { ShellType } from "./ShellType.js"
+import type { Usage } from "./Usage.js"
 
 /**
  * @since 1.0.0

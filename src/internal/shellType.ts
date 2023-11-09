@@ -1,6 +1,6 @@
-import type * as Options from "../Options"
-import type * as ShellType from "../ShellType"
-import * as InternalOptions from "./options"
+import type * as Options from "../Options.js"
+import type * as ShellType from "../ShellType.js"
+import * as InternalOptions from "./options.js"
 
 /** @internal */
 export const bash: ShellType.ShellType = {

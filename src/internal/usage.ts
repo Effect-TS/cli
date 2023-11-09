@@ -1,13 +1,13 @@
 import { dual, pipe } from "effect/Function"
 import * as Option from "effect/Option"
 import * as ReadonlyArray from "effect/ReadonlyArray"
-import type * as CliConfig from "../CliConfig"
-import type * as HelpDoc from "../HelpDoc"
-import type * as Span from "../HelpDoc/Span"
-import type * as Usage from "../Usage"
-import * as InternalCliConfig from "./cliConfig"
-import * as InternalHelpDoc from "./helpDoc"
-import * as InternalSpan from "./helpDoc/span"
+import type * as CliConfig from "../CliConfig.js"
+import type * as HelpDoc from "../HelpDoc.js"
+import type * as Span from "../HelpDoc/Span.js"
+import type * as Usage from "../Usage.js"
+import * as InternalCliConfig from "./cliConfig.js"
+import * as InternalHelpDoc from "./helpDoc.js"
+import * as InternalSpan from "./helpDoc/span.js"
 
 // =============================================================================
 // Constructors

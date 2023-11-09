@@ -1,6 +1,6 @@
 import { dual } from "effect/Function"
-import type * as BuiltInOption from "../BuiltInOptions"
-import type * as CommandDirective from "../CommandDirective"
+import type * as BuiltInOption from "../BuiltInOptions.js"
+import type * as CommandDirective from "../CommandDirective.js"
 
 /** @internal */
 export const builtIn = (option: BuiltInOption.BuiltInOptions): CommandDirective.CommandDirective<never> => ({

@@ -2,10 +2,10 @@
  * @since 1.0.0
  */
 import type { Option } from "effect/Option"
-import type { CliConfig } from "./CliConfig"
-import type { HelpDoc } from "./HelpDoc"
-import type { Span } from "./HelpDoc/Span"
-import * as InternalUsage from "./internal/usage"
+import type { CliConfig } from "./CliConfig.js"
+import type { HelpDoc } from "./HelpDoc.js"
+import type { Span } from "./HelpDoc/Span.js"
+import * as InternalUsage from "./internal/usage.js"
 
 /**
  * @since 1.0.0

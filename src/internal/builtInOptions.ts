@@ -1,12 +1,12 @@
 import * as Option from "effect/Option"
-import type * as BuiltInOptions from "../BuiltInOptions"
-import type * as Command from "../Command"
-import type * as HelpDoc from "../HelpDoc"
-import type * as Options from "../Options"
-import type * as ShellType from "../ShellType"
-import type * as Usage from "../Usage"
-import * as options from "./options"
-import * as _shellType from "./shellType"
+import type * as BuiltInOptions from "../BuiltInOptions.js"
+import type * as Command from "../Command.js"
+import type * as HelpDoc from "../HelpDoc.js"
+import type * as Options from "../Options.js"
+import type * as ShellType from "../ShellType.js"
+import type * as Usage from "../Usage.js"
+import * as options from "./options.js"
+import * as _shellType from "./shellType.js"
 
 /** @internal */
 export const showCompletions = (index: number, shellType: ShellType.ShellType): BuiltInOptions.BuiltInOptions => ({

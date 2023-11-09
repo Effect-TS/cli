@@ -34,7 +34,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const builtIn: (option: BuiltInOption) => CommandDirective<never>
+export declare const builtIn: (option: BuiltInOptions) => CommandDirective<never>
 ```
 
 Added in v1.0.0
@@ -72,8 +72,8 @@ Added in v1.0.0
 
 ```ts
 export interface BuiltIn {
-  readonly _tag: 'BuiltIn'
-  readonly option: BuiltInOption
+  readonly _tag: "BuiltIn"
+  readonly option: BuiltInOptions
 }
 ```
 
@@ -95,7 +95,7 @@ Added in v1.0.0
 
 ```ts
 export interface UserDefined<A> {
-  readonly _tag: 'UserDefined'
+  readonly _tag: "UserDefined"
   readonly leftover: ReadonlyArray<string>
   readonly value: A
 }

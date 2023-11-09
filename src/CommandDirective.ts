@@ -1,8 +1,8 @@
 /**
  * @since 1.0.0
  */
-import type { BuiltInOptions } from "./BuiltInOptions"
-import * as InternalCommandDirective from "./internal/commandDirective"
+import type { BuiltInOptions } from "./BuiltInOptions.js"
+import * as InternalCommandDirective from "./internal/commandDirective.js"
 
 /**
  * @since 1.0.0

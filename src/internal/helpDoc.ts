@@ -5,9 +5,9 @@ import * as Doc from "@effect/printer/Doc"
 import * as Optimize from "@effect/printer/Optimize"
 import { dual } from "effect/Function"
 import * as ReadonlyArray from "effect/ReadonlyArray"
-import type * as HelpDoc from "../HelpDoc"
-import type * as Span from "../HelpDoc/Span"
-import * as InternalSpan from "./helpDoc/span"
+import type * as HelpDoc from "../HelpDoc.js"
+import type * as Span from "../HelpDoc/Span.js"
+import * as InternalSpan from "./helpDoc/span.js"
 
 /** @internal */
 export const isEmpty = (helpDoc: HelpDoc.HelpDoc): helpDoc is HelpDoc.Empty => helpDoc._tag === "Empty"

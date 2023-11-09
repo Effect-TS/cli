@@ -1,6 +1,6 @@
 ---
 title: Usage.ts
-nav_order: 18
+nav_order: 19
 parent: Modules
 ---
 
@@ -15,11 +15,12 @@ Added in v1.0.0
 - [combinators](#combinators)
   - [alternation](#alternation)
   - [concat](#concat)
-  - [helpDoc](#helpdoc)
+  - [getHelp](#gethelp)
   - [optional](#optional)
   - [repeated](#repeated)
 - [constructors](#constructors)
   - [empty](#empty)
+  - [enumerate](#enumerate)
   - [mixed](#mixed)
   - [named](#named)
 - [models](#models)
@@ -56,12 +57,12 @@ export declare const concat: { (that: Usage): (self: Usage) => Usage; (self: Usa
 
 Added in v1.0.0
 
-## helpDoc
+## getHelp
 
 **Signature**
 
 ```ts
-export declare const helpDoc: (self: Usage) => HelpDoc
+export declare const getHelp: (self: Usage) => HelpDoc
 ```
 
 Added in v1.0.0
@@ -98,6 +99,19 @@ export declare const empty: Usage
 
 Added in v1.0.0
 
+## enumerate
+
+**Signature**
+
+```ts
+export declare const enumerate: {
+  (config: CliConfig): (self: Usage) => ReadonlyArray<Span>
+  (self: Usage, config: CliConfig): ReadonlyArray<Span>
+}
+```
+
+Added in v1.0.0
+
 ## mixed
 
 **Signature**
@@ -113,7 +127,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const named: (names: Chunk<string>, acceptedValues: Option<string>) => Usage
+export declare const named: (names: ReadonlyArray<string>, acceptedValues: Option<string>) => Usage
 ```
 
 Added in v1.0.0
@@ -126,7 +140,7 @@ Added in v1.0.0
 
 ```ts
 export interface Alternation {
-  readonly _tag: 'Alternation'
+  readonly _tag: "Alternation"
   readonly left: Usage
   readonly right: Usage
 }
@@ -140,7 +154,7 @@ Added in v1.0.0
 
 ```ts
 export interface Concat {
-  readonly _tag: 'Concat'
+  readonly _tag: "Concat"
   readonly left: Usage
   readonly right: Usage
 }
@@ -154,7 +168,7 @@ Added in v1.0.0
 
 ```ts
 export interface Empty {
-  readonly _tag: 'Empty'
+  readonly _tag: "Empty"
 }
 ```
 
@@ -166,7 +180,7 @@ Added in v1.0.0
 
 ```ts
 export interface Mixed {
-  readonly _tag: 'Mixed'
+  readonly _tag: "Mixed"
 }
 ```
 
@@ -178,8 +192,8 @@ Added in v1.0.0
 
 ```ts
 export interface Named {
-  readonly _tag: 'Named'
-  readonly names: Chunk<string>
+  readonly _tag: "Named"
+  readonly names: ReadonlyArray<string>
   readonly acceptedValues: Option<string>
 }
 ```
@@ -192,7 +206,7 @@ Added in v1.0.0
 
 ```ts
 export interface Optional {
-  readonly _tag: 'Optional'
+  readonly _tag: "Optional"
   readonly usage: Usage
 }
 ```
@@ -205,7 +219,7 @@ Added in v1.0.0
 
 ```ts
 export interface Repeated {
-  readonly _tag: 'Repeated'
+  readonly _tag: "Repeated"
   readonly usage: Usage
 }
 ```

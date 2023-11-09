@@ -33,6 +33,13 @@ Added in v1.0.0
   - [Text (interface)](#text-interface)
   - [URI (interface)](#uri-interface)
   - [Weak (interface)](#weak-interface)
+- [refinements](#refinements)
+  - [isError](#iserror)
+  - [isSequence](#issequence)
+  - [isStrong](#isstrong)
+  - [isText](#istext)
+  - [isUri](#isuri)
+  - [isWeak](#isweak)
 
 ---
 
@@ -148,7 +155,7 @@ Added in v1.0.0
 
 ```ts
 export interface Code {
-  readonly _tag: 'Code'
+  readonly _tag: "Code"
   readonly value: string
 }
 ```
@@ -161,7 +168,7 @@ Added in v1.0.0
 
 ```ts
 export interface Error {
-  readonly _tag: 'Error'
+  readonly _tag: "Error"
   readonly value: Span
 }
 ```
@@ -174,7 +181,7 @@ Added in v1.0.0
 
 ```ts
 export interface Sequence {
-  readonly _tag: 'Sequence'
+  readonly _tag: "Sequence"
   readonly left: Span
   readonly right: Span
 }
@@ -198,7 +205,7 @@ Added in v1.0.0
 
 ```ts
 export interface Strong {
-  readonly _tag: 'Strong'
+  readonly _tag: "Strong"
   readonly value: Span
 }
 ```
@@ -211,7 +218,7 @@ Added in v1.0.0
 
 ```ts
 export interface Text {
-  readonly _tag: 'Text'
+  readonly _tag: "Text"
   readonly value: string
 }
 ```
@@ -224,7 +231,7 @@ Added in v1.0.0
 
 ```ts
 export interface URI {
-  readonly _tag: 'URI'
+  readonly _tag: "URI"
   readonly value: string
 }
 ```
@@ -237,9 +244,71 @@ Added in v1.0.0
 
 ```ts
 export interface Weak {
-  readonly _tag: 'Weak'
+  readonly _tag: "Weak"
   readonly value: Span
 }
+```
+
+Added in v1.0.0
+
+# refinements
+
+## isError
+
+**Signature**
+
+```ts
+export declare const isError: (self: Span) => self is Error
+```
+
+Added in v1.0.0
+
+## isSequence
+
+**Signature**
+
+```ts
+export declare const isSequence: (self: Span) => self is Sequence
+```
+
+Added in v1.0.0
+
+## isStrong
+
+**Signature**
+
+```ts
+export declare const isStrong: (self: Span) => self is Strong
+```
+
+Added in v1.0.0
+
+## isText
+
+**Signature**
+
+```ts
+export declare const isText: (self: Span) => self is Text
+```
+
+Added in v1.0.0
+
+## isUri
+
+**Signature**
+
+```ts
+export declare const isUri: (self: Span) => self is URI
+```
+
+Added in v1.0.0
+
+## isWeak
+
+**Signature**
+
+```ts
+export declare const isWeak: (self: Span) => self is Weak
 ```
 
 Added in v1.0.0

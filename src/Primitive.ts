@@ -5,9 +5,9 @@ import type { Effect } from "effect/Effect"
 import type { Option } from "effect/Option"
 import type { Pipeable } from "effect/Pipeable"
 import type { NonEmptyReadonlyArray } from "effect/ReadonlyArray"
-import type { CliConfig } from "./CliConfig"
-import type { Span } from "./HelpDoc/Span"
-import * as InternalPrimitive from "./internal/primitive"
+import type { CliConfig } from "./CliConfig.js"
+import type { Span } from "./HelpDoc/Span.js"
+import * as InternalPrimitive from "./internal/primitive.js"
 
 /**
  * @since 1.0.0

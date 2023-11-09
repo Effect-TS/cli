@@ -11,7 +11,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "[javascriptreact]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
@@ -44,29 +44,5 @@
   "editor.suggestSelection": "recentlyUsed",
   "editor.wordBasedSuggestions": true,
   "editor.parameterHints.enabled": true,
-  "files.watcherExclude": {
-    "**/target": true
-  },
-  "files.insertFinalNewline": true,
-  "nixEnvSelector.nixFile": "${workspaceRoot}/flake.nix",
-  "files.exclude": {
-    "dist": true,
-    "Args": true,
-    "AutoCorrect": true,
-    "BuiltInOptions": true,
-    "CliApp": true,
-    "CliConfig": true,
-    "Command": true,
-    "CommandDirective": true,
-    "Exists": true,
-    "HelpDoc": true,
-    "Options": true,
-    "Parameter": true,
-    "Primitive": true,
-    "Prompt": true,
-    "ShellType": true,
-    "Terminal": true,
-    "Usage": true,
-    "ValidationError": true
-  }
+  "files.insertFinalNewline": true
 }

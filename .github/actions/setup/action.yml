@@ -1,0 +1,37 @@
+name: Setup
+description: Perform standard setup and install dependencies.
+
+runs:
+  using: composite
+  steps:
+    - name: Install nix
+      uses: cachix/install-nix-action@v22
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+        extra_nix_config: |
+          auto-optimise-store = true
+          keep-outputs = true
+          keep-derivations = true
+    - name: Cache nix
+      uses: cachix/cachix-action@v12
+      with:
+        name: effect-ts
+        authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+    - name: Setup direnv
+      uses: HatsuneMiku3939/direnv-action@v1
+      with:
+        direnvVersion: 2.32.2
+    - name: Get pnpm store directory
+      id: pnpm-cache
+      run: |
+        echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
+    - uses: actions/cache@v3
+      name: Cache pnpm
+      with:
+        path: ${{ steps.pnpm-cache.outputs.pnpm_cache_dir }}
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --ignore-scripts

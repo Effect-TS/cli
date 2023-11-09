@@ -7,12 +7,12 @@ import type { HashMap } from "effect/HashMap"
 import type { Option } from "effect/Option"
 import type { Pipeable } from "effect/Pipeable"
 import type { NonEmptyReadonlyArray } from "effect/ReadonlyArray"
-import type { CliConfig } from "./CliConfig"
-import type { HelpDoc } from "./HelpDoc"
-import * as InternalOptions from "./internal/options"
-import type { Input, Parameter } from "./Parameter"
-import type { Usage } from "./Usage"
-import type { ValidationError } from "./ValidationError"
+import type { CliConfig } from "./CliConfig.js"
+import type { HelpDoc } from "./HelpDoc.js"
+import * as InternalOptions from "./internal/options.js"
+import type { Input, Parameter } from "./Parameter.js"
+import type { Usage } from "./Usage.js"
+import type { ValidationError } from "./ValidationError.js"
 
 /**
  * @since 1.0.0

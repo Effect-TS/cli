@@ -3,8 +3,8 @@
  */
 import type { AnsiDoc } from "@effect/printer-ansi/AnsiDoc"
 import type { NonEmptyReadonlyArray } from "effect/ReadonlyArray"
-import type { Span } from "./HelpDoc/Span"
-import * as InternalHelpDoc from "./internal/helpDoc"
+import type { Span } from "./HelpDoc/Span.js"
+import * as InternalHelpDoc from "./internal/helpDoc.js"
 
 /**
  * A `HelpDoc` models the full documentation for a command-line application.

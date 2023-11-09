@@ -2,12 +2,12 @@
  * @since 1.0.0
  */
 import type { Effect, Pipeable } from "effect"
-import * as internal from "./internal/prompt"
-import * as numberPrompt from "./internal/prompt/number"
-import * as selectPrompt from "./internal/prompt/select"
-import * as textPrompt from "./internal/prompt/text"
-import type { PromptAction } from "./Prompt/Action"
-import type { Terminal } from "./Terminal"
+import * as internal from "./internal/prompt.js"
+import * as numberPrompt from "./internal/prompt/number.js"
+import * as selectPrompt from "./internal/prompt/select.js"
+import * as textPrompt from "./internal/prompt/text.js"
+import type { PromptAction } from "./Prompt/Action.js"
+import type { Terminal } from "./Terminal.js"
 
 /**
  * @since 1.0.0

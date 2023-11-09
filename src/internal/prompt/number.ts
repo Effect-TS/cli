@@ -5,11 +5,11 @@ import * as Color from "@effect/printer-ansi/Color"
 import * as Doc from "@effect/printer/Doc"
 import * as Optimize from "@effect/printer/Optimize"
 import { Effect, pipe } from "effect"
-import type * as Prompt from "../../Prompt"
-import type * as PromptAction from "../../Prompt/Action"
-import * as prompt from "../prompt"
-import * as promptAction from "./action"
-import * as ansiUtils from "./ansi-utils"
+import type * as Prompt from "../../Prompt.js"
+import type * as PromptAction from "../../Prompt/Action.js"
+import * as prompt from "../prompt.js"
+import * as promptAction from "./action.js"
+import * as ansiUtils from "./ansi-utils.js"
 
 interface State {
   readonly cursor: number

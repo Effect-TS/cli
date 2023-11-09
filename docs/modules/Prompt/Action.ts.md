@@ -1,6 +1,6 @@
 ---
 title: Prompt/Action.ts
-nav_order: 15
+nav_order: 16
 parent: Modules
 ---
 
@@ -76,7 +76,7 @@ Added in v1.0.0
 
 ```ts
 export interface Beep {
-  readonly _tag: 'Beep'
+  readonly _tag: "Beep"
 }
 ```
 
@@ -88,7 +88,7 @@ Added in v1.0.0
 
 ```ts
 export interface Error {
-  readonly _tag: 'Error'
+  readonly _tag: "Error"
   readonly message: string
 }
 ```
@@ -101,7 +101,7 @@ Added in v1.0.0
 
 ```ts
 export interface NextFrame<State> {
-  readonly _tag: 'NextFrame'
+  readonly _tag: "NextFrame"
   readonly state: State
 }
 ```
@@ -124,7 +124,7 @@ Added in v1.0.0
 
 ```ts
 export interface Submit<Output> {
-  readonly _tag: 'Submit'
+  readonly _tag: "Submit"
   readonly value: Output
 }
 ```
