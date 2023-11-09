@@ -13,7 +13,7 @@ dist/
 /dist
 /Args
 /AutoCorrect
-/BuiltInOption
+/BuiltInOptions
 /CliApp
 /CliConfig
 /Command
@@ -21,6 +21,7 @@ dist/
 /Exists
 /HelpDoc
 /Options
+/Parameter
 /Primitive
 /Prompt
 /ShellType
