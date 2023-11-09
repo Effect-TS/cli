@@ -43,7 +43,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const make: (isCaseSensitive: boolean, autoCorrectLimit: number) => CliConfig
+export declare const make: (params: Partial<CliConfig>) => CliConfig
 ```
 
 Added in v1.0.0
@@ -75,7 +75,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const layer: (config: CliConfig) => Layer.Layer<never, never, CliConfig>
+export declare const layer: (config?: Partial<CliConfig>) => Layer.Layer<never, never, CliConfig>
 ```
 
 Added in v1.0.0
@@ -98,6 +98,21 @@ export interface CliConfig {
    * Threshold for when to show auto correct suggestions.
    */
   readonly autoCorrectLimit: number
+  /**
+   * Whether or not to perform a final check of the command-line arguments for
+   * a built-in option, even if the provided command is not valid.
+   */
+  readonly finalCheckBuiltIn: boolean
+  /**
+   * Whether or not to display all the names of an option in the usage of a
+   * particular command.
+   */
+  readonly showAllNames: boolean
+  /**
+   * Whether or not to display the type of an option in the usage of a
+   * particular command.
+   */
+  readonly showTypes: boolean
 }
 ```
 

@@ -13,18 +13,19 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [combinators](#combinators)
-  - [alias](#alias)
-  - [atLeast](#atleast)
-  - [atMost](#atmost)
-  - [between](#between)
   - [filterMap](#filtermap)
+  - [isBool](#isbool)
+  - [map](#map)
+  - [mapOrFail](#maporfail)
+  - [mapTryCatch](#maptrycatch)
   - [optional](#optional)
   - [orElse](#orelse)
   - [orElseEither](#orelseeither)
-  - [repeat](#repeat)
-  - [repeat1](#repeat1)
+  - [validate](#validate)
+  - [withAlias](#withalias)
   - [withDefault](#withdefault)
   - [withDescription](#withdescription)
+  - [withPseudoName](#withpseudoname)
 - [constructors](#constructors)
   - [all](#all)
   - [boolean](#boolean)
@@ -34,96 +35,29 @@ Added in v1.0.0
   - [float](#float)
   - [integer](#integer)
   - [keyValueMap](#keyvaluemap)
-  - [keyValueMapFromOption](#keyvaluemapfromoption)
   - [none](#none)
   - [text](#text)
-- [getters](#getters)
-  - [helpDoc](#helpdoc)
-  - [uid](#uid)
-  - [usage](#usage)
-- [mapping](#mapping)
-  - [map](#map)
-  - [mapOrFail](#maporfail)
-  - [mapTryCatch](#maptrycatch)
 - [models](#models)
   - [Options (interface)](#options-interface)
-- [predicates](#predicates)
-  - [isBool](#isbool)
 - [refinements](#refinements)
   - [isOptions](#isoptions)
 - [symbols](#symbols)
   - [OptionsTypeId](#optionstypeid)
   - [OptionsTypeId (type alias)](#optionstypeid-type-alias)
 - [utils](#utils)
+  - [All (namespace)](#all-namespace)
+    - [OptionsAny (type alias)](#optionsany-type-alias)
+    - [Return (type alias)](#return-type-alias)
+    - [ReturnIterable (type alias)](#returniterable-type-alias)
+    - [ReturnObject (type alias)](#returnobject-type-alias)
+    - [ReturnTuple (type alias)](#returntuple-type-alias)
   - [Options (namespace)](#options-namespace)
     - [BooleanOptionConfig (interface)](#booleanoptionconfig-interface)
     - [Variance (interface)](#variance-interface)
-- [validation](#validation)
-  - [validate](#validate)
-- [zipping](#zipping)
-  - [zip](#zip)
-  - [zipFlatten](#zipflatten)
-  - [zipWith](#zipwith)
 
 ---
 
 # combinators
-
-## alias
-
-**Signature**
-
-```ts
-export declare const alias: {
-  (alias: string): <A>(self: Options<A>) => Options<A>
-  <A>(self: Options<A>, alias: string): Options<A>
-}
-```
-
-Added in v1.0.0
-
-## atLeast
-
-**Signature**
-
-```ts
-export declare const atLeast: {
-  (times: 0): <A>(self: Options<A>) => Options<Chunk<A>>
-  (times: number): <A>(self: Options<A>) => Options<NonEmptyChunk<A>>
-  <A>(self: Options<A>, times: 0): Options<Chunk<A>>
-  <A>(self: Options<A>, times: number): Options<NonEmptyChunk<A>>
-}
-```
-
-Added in v1.0.0
-
-## atMost
-
-**Signature**
-
-```ts
-export declare const atMost: {
-  (times: number): <A>(self: Options<A>) => Options<Chunk<A>>
-  <A>(self: Options<A>, times: number): Options<Chunk<A>>
-}
-```
-
-Added in v1.0.0
-
-## between
-
-**Signature**
-
-```ts
-export declare const between: {
-  (min: 0, max: number): <A>(self: Options<A>) => Options<Chunk<A>>
-  (min: number, max: number): <A>(self: Options<A>) => Options<NonEmptyChunk<A>>
-  <A>(self: Options<A>, min: 0, max: number): Options<Chunk<A>>
-  <A>(self: Options<A>, min: number, max: number): Options<NonEmptyChunk<A>>
-}
-```
-
-Added in v1.0.0
 
 ## filterMap
 
@@ -133,6 +67,58 @@ Added in v1.0.0
 export declare const filterMap: {
   <A, B>(f: (a: A) => Option<B>, message: string): (self: Options<A>) => Options<B>
   <A, B>(self: Options<A>, f: (a: A) => Option<B>, message: string): Options<B>
+}
+```
+
+Added in v1.0.0
+
+## isBool
+
+Returns `true` if the specified `Options` is a boolean flag, `false`
+otherwise.
+
+**Signature**
+
+```ts
+export declare const isBool: <A>(self: Options<A>) => boolean
+```
+
+Added in v1.0.0
+
+## map
+
+**Signature**
+
+```ts
+export declare const map: {
+  <A, B>(f: (a: A) => B): (self: Options<A>) => Options<B>
+  <A, B>(self: Options<A>, f: (a: A) => B): Options<B>
+}
+```
+
+Added in v1.0.0
+
+## mapOrFail
+
+**Signature**
+
+```ts
+export declare const mapOrFail: {
+  <A, B>(f: (a: A) => Either<ValidationError, B>): (self: Options<A>) => Options<B>
+  <A, B>(self: Options<A>, f: (a: A) => Either<ValidationError, B>): Options<B>
+}
+```
+
+Added in v1.0.0
+
+## mapTryCatch
+
+**Signature**
+
+```ts
+export declare const mapTryCatch: {
+  <A, B>(f: (a: A) => B, onError: (e: unknown) => HelpDoc): (self: Options<A>) => Options<B>
+  <A, B>(self: Options<A>, f: (a: A) => B, onError: (e: unknown) => HelpDoc): Options<B>
 }
 ```
 
@@ -174,22 +160,35 @@ export declare const orElseEither: {
 
 Added in v1.0.0
 
-## repeat
+## validate
 
 **Signature**
 
 ```ts
-export declare const repeat: <A>(self: Options<A>) => Options<Chunk<A>>
+export declare const validate: {
+  (
+    args: ReadonlyArray<string>,
+    config: CliConfig
+  ): <A>(self: Options<A>) => Effect<never, ValidationError, readonly [Option<ValidationError>, readonly string[], A]>
+  <A>(
+    self: Options<A>,
+    args: ReadonlyArray<string>,
+    config: CliConfig
+  ): Effect<never, ValidationError, readonly [Option<ValidationError>, readonly string[], A]>
+}
 ```
 
 Added in v1.0.0
 
-## repeat1
+## withAlias
 
 **Signature**
 
 ```ts
-export declare const repeat1: <A>(self: Options<A>) => Options<NonEmptyChunk<A>>
+export declare const withAlias: {
+  (alias: string): <A>(self: Options<A>) => Options<A>
+  <A>(self: Options<A>, alias: string): Options<A>
+}
 ```
 
 Added in v1.0.0
@@ -200,8 +199,8 @@ Added in v1.0.0
 
 ```ts
 export declare const withDefault: {
-  <A, B extends A>(value: B): (self: Options<A>) => Options<A>
-  <A, B extends A>(self: Options<A>, value: B): Options<A>
+  <A>(fallback: A): (self: Options<A>) => Options<A>
+  <A>(self: Options<A>, fallback: A): Options<A>
 }
 ```
 
@@ -220,6 +219,19 @@ export declare const withDescription: {
 
 Added in v1.0.0
 
+## withPseudoName
+
+**Signature**
+
+```ts
+export declare const withPseudoName: {
+  (pseudoName: string): <A>(self: Options<A>) => Options<A>
+  <A>(self: Options<A>, pseudoName: string): Options<A>
+}
+```
+
+Added in v1.0.0
+
 # constructors
 
 ## all
@@ -227,20 +239,9 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const all: {
-  <A, T extends readonly Options<any>[]>(self: Options<A>, ...args: T): Options<
-    readonly [
-      A,
-      ...(T['length'] extends 0 ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Options<infer A>] ? A : never }>)
-    ]
-  >
-  <T extends readonly Options<any>[]>(args: [...T]): Options<
-    T[number] extends never ? [] : Readonly<{ [K in keyof T]: [T[K]] extends [Options<infer A>] ? A : never }>
-  >
-  <T extends Readonly<{ [K: string]: Options<any> }>>(args: T): Options<
-    Readonly<{ [K in keyof T]: [T[K]] extends [Options<infer A>] ? A : never }>
-  >
-}
+export declare const all: <const Arg extends Iterable<Options<any>> | Record<string, Options<any>>>(
+  arg: Arg
+) => All.Return<Arg>
 ```
 
 Added in v1.0.0
@@ -272,9 +273,9 @@ export declare const choice: <A extends string, C extends readonly [A, ...A[]]>(
 **Example**
 
 ```ts
-import * as Options from '@effect/cli/Options'
+import * as Options from "@effect/cli/Options"
 
-export const animal: Options.Options<'dog' | 'cat'> = Options.choice('animal', ['dog', 'cat'])
+export const animal: Options.Options<"dog" | "cat"> = Options.choice("animal", ["dog", "cat"])
 ```
 
 Added in v1.0.0
@@ -287,7 +288,7 @@ inputs. The input will be mapped to it's associated value during parsing.
 **Signature**
 
 ```ts
-export declare const choiceWithValue: <C extends readonly [readonly [string, any], ...(readonly [string, any])[]]>(
+export declare const choiceWithValue: <C extends readonly [[string, any], ...[string, any][]]>(
   name: string,
   choices: C
 ) => Options<C[number][1]>
@@ -296,26 +297,26 @@ export declare const choiceWithValue: <C extends readonly [readonly [string, any
 **Example**
 
 ```ts
-import * as Options from '@effect/cli/Options'
-import * as Data from 'effect/Data'
+import * as Options from "@effect/cli/Options"
+import * as Data from "effect/Data"
 
 export type Animal = Dog | Cat
 
 export interface Dog extends Data.Case {
-  readonly _tag: 'Dog'
+  readonly _tag: "Dog"
 }
 
-export const Dog = Data.tagged<Dog>('Dog')
+export const Dog = Data.tagged<Dog>("Dog")
 
 export interface Cat extends Data.Case {
-  readonly _tag: 'Cat'
+  readonly _tag: "Cat"
 }
 
-export const Cat = Data.tagged<Cat>('Cat')
+export const Cat = Data.tagged<Cat>("Cat")
 
-export const animal: Options.Options<Animal> = Options.choiceWithValue('animal', [
-  ['dog', Dog()],
-  ['cat', Cat()],
+export const animal: Options.Options<Animal> = Options.choiceWithValue("animal", [
+  ["dog", Dog()],
+  ["cat", Cat()]
 ])
 ```
 
@@ -361,16 +362,6 @@ export declare const keyValueMap: (name: string) => Options<HashMap<string, stri
 
 Added in v1.0.0
 
-## keyValueMapFromOption
-
-**Signature**
-
-```ts
-export declare const keyValueMapFromOption: (argumentOption: Options<string>) => Options<HashMap<string, string>>
-```
-
-Added in v1.0.0
-
 ## none
 
 **Signature**
@@ -391,79 +382,6 @@ export declare const text: (name: string) => Options<string>
 
 Added in v1.0.0
 
-# getters
-
-## helpDoc
-
-**Signature**
-
-```ts
-export declare const helpDoc: <A>(self: Options<A>) => HelpDoc
-```
-
-Added in v1.0.0
-
-## uid
-
-**Signature**
-
-```ts
-export declare const uid: <A>(self: Options<A>) => Option<string>
-```
-
-Added in v1.0.0
-
-## usage
-
-**Signature**
-
-```ts
-export declare const usage: <A>(self: Options<A>) => Usage
-```
-
-Added in v1.0.0
-
-# mapping
-
-## map
-
-**Signature**
-
-```ts
-export declare const map: {
-  <A, B>(f: (a: A) => B): (self: Options<A>) => Options<B>
-  <A, B>(self: Options<A>, f: (a: A) => B): Options<B>
-}
-```
-
-Added in v1.0.0
-
-## mapOrFail
-
-**Signature**
-
-```ts
-export declare const mapOrFail: {
-  <A, B>(f: (a: A) => Either<ValidationError, B>): (self: Options<A>) => Options<B>
-  <A, B>(self: Options<A>, f: (a: A) => Either<ValidationError, B>): Options<B>
-}
-```
-
-Added in v1.0.0
-
-## mapTryCatch
-
-**Signature**
-
-```ts
-export declare const mapTryCatch: {
-  <A, B>(f: (a: A) => B, onError: (e: unknown) => HelpDoc): (self: Options<A>) => Options<B>
-  <A, B>(self: Options<A>, f: (a: A) => B, onError: (e: unknown) => HelpDoc): Options<B>
-}
-```
-
-Added in v1.0.0
-
 # models
 
 ## Options (interface)
@@ -471,22 +389,14 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export interface Options<A> extends Options.Variance<A>, Pipeable {}
-```
-
-Added in v1.0.0
-
-# predicates
-
-## isBool
-
-Returns `true` if the specified `Options` is a boolean flag, `false`
-otherwise.
-
-**Signature**
-
-```ts
-export declare const isBool: <A>(self: Options<A>) => boolean
+export interface Options<A> extends Options.Variance<A>, Parameter, Pipeable {
+  get identifier(): Option<string>
+  get usage(): Usage
+  get flattened(): ReadonlyArray<Input>
+  validate(args: HashMap<string, ReadonlyArray<string>>, config: CliConfig): Effect<never, ValidationError, A>
+  /** @internal */
+  modifySingle(f: <_>(single: InternalOptions.Single<_>) => InternalOptions.Single<_>): Options<A>
+}
 ```
 
 Added in v1.0.0
@@ -527,6 +437,82 @@ Added in v1.0.0
 
 # utils
 
+## All (namespace)
+
+Added in v1.0.0
+
+### OptionsAny (type alias)
+
+**Signature**
+
+```ts
+export type OptionsAny = Options<any>
+```
+
+Added in v1.0.0
+
+### Return (type alias)
+
+**Signature**
+
+```ts
+export type Return<Arg extends Iterable<OptionsAny> | Record<string, OptionsAny>> = [Arg] extends [
+  ReadonlyArray<OptionsAny>
+]
+  ? ReturnTuple<Arg>
+  : [Arg] extends [Iterable<OptionsAny>]
+  ? ReturnIterable<Arg>
+  : [Arg] extends [Record<string, OptionsAny>]
+  ? ReturnObject<Arg>
+  : never
+```
+
+Added in v1.0.0
+
+### ReturnIterable (type alias)
+
+**Signature**
+
+```ts
+export type ReturnIterable<T extends Iterable<OptionsAny>> = [T] extends [Iterable<Options.Variance<infer A>>]
+  ? Options<Array<A>>
+  : never
+```
+
+Added in v1.0.0
+
+### ReturnObject (type alias)
+
+**Signature**
+
+```ts
+export type ReturnObject<T> = [T] extends [{ [K: string]: OptionsAny }]
+  ? Options<{
+      -readonly [K in keyof T]: [T[K]] extends [Options.Variance<infer _A>] ? _A : never
+    }>
+  : never
+```
+
+Added in v1.0.0
+
+### ReturnTuple (type alias)
+
+**Signature**
+
+```ts
+export type ReturnTuple<T extends ReadonlyArray<unknown>> = Options<
+  T[number] extends never
+    ? []
+    : {
+        -readonly [K in keyof T]: [T[K]] extends [Options.Variance<infer _A>] ? _A : never
+      }
+> extends infer X
+  ? X
+  : never
+```
+
+Added in v1.0.0
+
 ## Options (namespace)
 
 Added in v1.0.0
@@ -539,6 +525,7 @@ Added in v1.0.0
 export interface BooleanOptionConfig {
   readonly ifPresent?: boolean
   readonly negationNames?: NonEmptyReadonlyArray<string>
+  readonly aliases?: NonEmptyReadonlyArray<string>
 }
 ```
 
@@ -553,68 +540,6 @@ export interface Variance<A> {
   readonly [OptionsTypeId]: {
     _A: (_: never) => A
   }
-}
-```
-
-Added in v1.0.0
-
-# validation
-
-## validate
-
-**Signature**
-
-```ts
-export declare const validate: {
-  (args: ReadonlyArray<string>, config: CliConfig): <A>(
-    self: Options<A>
-  ) => Effect<never, ValidationError, readonly [readonly string[], A]>
-  <A>(self: Options<A>, args: ReadonlyArray<string>, config: CliConfig): Effect<
-    never,
-    ValidationError,
-    readonly [readonly string[], A]
-  >
-}
-```
-
-Added in v1.0.0
-
-# zipping
-
-## zip
-
-**Signature**
-
-```ts
-export declare const zip: {
-  <B>(that: Options<B>): <A>(self: Options<A>) => Options<readonly [A, B]>
-  <A, B>(self: Options<A>, that: Options<B>): Options<readonly [A, B]>
-}
-```
-
-Added in v1.0.0
-
-## zipFlatten
-
-**Signature**
-
-```ts
-export declare const zipFlatten: {
-  <B>(that: Options<B>): <A extends readonly any[]>(self: Options<A>) => Options<[...A, B]>
-  <A extends readonly any[], B>(self: Options<A>, that: Options<B>): Options<[...A, B]>
-}
-```
-
-Added in v1.0.0
-
-## zipWith
-
-**Signature**
-
-```ts
-export declare const zipWith: {
-  <B, A, C>(that: Options<B>, f: (a: A, b: B) => C): (self: Options<A>) => Options<C>
-  <A, B, C>(self: Options<A>, that: Options<B>, f: (a: A, b: B) => C): Options<C>
 }
 ```
 

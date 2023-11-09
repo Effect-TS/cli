@@ -1,6 +1,6 @@
 ---
 title: Prompt.ts
-nav_order: 14
+nav_order: 15
 parent: Modules
 ---
 
@@ -336,7 +336,7 @@ Added in v1.0.0
 ```ts
 export interface TextOptions {
   readonly message: string
-  readonly type?: 'hidden' | 'password' | 'text'
+  readonly type?: "hidden" | "password" | "text"
   readonly default?: string
   readonly validate?: (value: string) => Effect.Effect<never, string, string>
 }

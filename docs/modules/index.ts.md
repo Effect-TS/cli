@@ -13,215 +13,228 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [exports](#exports)
-  - [From "@effect/cli/Args"](#from-effectcliargs)
-  - [From "@effect/cli/AutoCorrect"](#from-effectcliautocorrect)
-  - [From "@effect/cli/BuiltInOption"](#from-effectclibuiltinoption)
-  - [From "@effect/cli/CliApp"](#from-effectclicliapp)
-  - [From "@effect/cli/CliConfig"](#from-effectclicliconfig)
-  - [From "@effect/cli/Command"](#from-effectclicommand)
-  - [From "@effect/cli/CommandDirective"](#from-effectclicommanddirective)
-  - [From "@effect/cli/Exists"](#from-effectcliexists)
-  - [From "@effect/cli/HelpDoc"](#from-effectclihelpdoc)
-  - [From "@effect/cli/Options"](#from-effectclioptions)
-  - [From "@effect/cli/Primitive"](#from-effectcliprimitive)
-  - [From "@effect/cli/Prompt"](#from-effectcliprompt)
-  - [From "@effect/cli/ShellType"](#from-effectclishelltype)
-  - [From "@effect/cli/Terminal"](#from-effectcliterminal)
-  - [From "@effect/cli/Usage"](#from-effectcliusage)
-  - [From "@effect/cli/ValidationError"](#from-effectclivalidationerror)
+  - [From "./Args.js"](#from-argsjs)
+  - [From "./AutoCorrect.js"](#from-autocorrectjs)
+  - [From "./BuiltInOptions.js"](#from-builtinoptionsjs)
+  - [From "./CliApp.js"](#from-cliappjs)
+  - [From "./CliConfig.js"](#from-cliconfigjs)
+  - [From "./Command.js"](#from-commandjs)
+  - [From "./CommandDirective.js"](#from-commanddirectivejs)
+  - [From "./Exists.js"](#from-existsjs)
+  - [From "./HelpDoc.js"](#from-helpdocjs)
+  - [From "./Options.js"](#from-optionsjs)
+  - [From "./Parameter.js"](#from-parameterjs)
+  - [From "./Primitive.js"](#from-primitivejs)
+  - [From "./Prompt.js"](#from-promptjs)
+  - [From "./ShellType.js"](#from-shelltypejs)
+  - [From "./Terminal.js"](#from-terminaljs)
+  - [From "./Usage.js"](#from-usagejs)
+  - [From "./ValidationError.js"](#from-validationerrorjs)
 
 ---
 
 # exports
 
-## From "@effect/cli/Args"
+## From "./Args.js"
 
-Re-exports all named exports from the "@effect/cli/Args" module as `Args`.
+Re-exports all named exports from the "./Args.js" module as `Args`.
 
 **Signature**
 
 ```ts
-export * as Args from '@effect/cli/Args'
+export * as Args from "./Args.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/AutoCorrect"
+## From "./AutoCorrect.js"
 
-Re-exports all named exports from the "@effect/cli/AutoCorrect" module as `AutoCorrect`.
+Re-exports all named exports from the "./AutoCorrect.js" module as `AutoCorrect`.
 
 **Signature**
 
 ```ts
-export * as AutoCorrect from '@effect/cli/AutoCorrect'
+export * as AutoCorrect from "./AutoCorrect.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/BuiltInOption"
+## From "./BuiltInOptions.js"
 
-Re-exports all named exports from the "@effect/cli/BuiltInOption" module as `BuiltInOption`.
+Re-exports all named exports from the "./BuiltInOptions.js" module as `BuiltInOptions`.
 
 **Signature**
 
 ```ts
-export * as BuiltInOption from '@effect/cli/BuiltInOption'
+export * as BuiltInOptions from "./BuiltInOptions.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/CliApp"
+## From "./CliApp.js"
 
-Re-exports all named exports from the "@effect/cli/CliApp" module as `CliApp`.
+Re-exports all named exports from the "./CliApp.js" module as `CliApp`.
 
 **Signature**
 
 ```ts
-export * as CliApp from '@effect/cli/CliApp'
+export * as CliApp from "./CliApp.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/CliConfig"
+## From "./CliConfig.js"
 
-Re-exports all named exports from the "@effect/cli/CliConfig" module as `CliConfig`.
+Re-exports all named exports from the "./CliConfig.js" module as `CliConfig`.
 
 **Signature**
 
 ```ts
-export * as CliConfig from '@effect/cli/CliConfig'
+export * as CliConfig from "./CliConfig.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/Command"
+## From "./Command.js"
 
-Re-exports all named exports from the "@effect/cli/Command" module as `Command`.
+Re-exports all named exports from the "./Command.js" module as `Command`.
 
 **Signature**
 
 ```ts
-export * as Command from '@effect/cli/Command'
+export * as Command from "./Command.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/CommandDirective"
+## From "./CommandDirective.js"
 
-Re-exports all named exports from the "@effect/cli/CommandDirective" module as `CommandDirective`.
+Re-exports all named exports from the "./CommandDirective.js" module as `CommandDirective`.
 
 **Signature**
 
 ```ts
-export * as CommandDirective from '@effect/cli/CommandDirective'
+export * as CommandDirective from "./CommandDirective.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/Exists"
+## From "./Exists.js"
 
-Re-exports all named exports from the "@effect/cli/Exists" module as `Exists`.
+Re-exports all named exports from the "./Exists.js" module as `Exists`.
 
 **Signature**
 
 ```ts
-export * as Exists from '@effect/cli/Exists'
+export * as Exists from "./Exists.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/HelpDoc"
+## From "./HelpDoc.js"
 
-Re-exports all named exports from the "@effect/cli/HelpDoc" module as `HelpDoc`.
+Re-exports all named exports from the "./HelpDoc.js" module as `HelpDoc`.
 
 **Signature**
 
 ```ts
-export * as HelpDoc from '@effect/cli/HelpDoc'
+export * as HelpDoc from "./HelpDoc.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/Options"
+## From "./Options.js"
 
-Re-exports all named exports from the "@effect/cli/Options" module as `Options`.
+Re-exports all named exports from the "./Options.js" module as `Options`.
 
 **Signature**
 
 ```ts
-export * as Options from '@effect/cli/Options'
+export * as Options from "./Options.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/Primitive"
+## From "./Parameter.js"
 
-Re-exports all named exports from the "@effect/cli/Primitive" module as `Primitive`.
+Re-exports all named exports from the "./Parameter.js" module as `Parameter`.
 
 **Signature**
 
 ```ts
-export * as Primitive from '@effect/cli/Primitive'
+export * as Parameter from "./Parameter.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/Prompt"
+## From "./Primitive.js"
 
-Re-exports all named exports from the "@effect/cli/Prompt" module as `Prompt`.
+Re-exports all named exports from the "./Primitive.js" module as `Primitive`.
 
 **Signature**
 
 ```ts
-export * as Prompt from '@effect/cli/Prompt'
+export * as Primitive from "./Primitive.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/ShellType"
+## From "./Prompt.js"
 
-Re-exports all named exports from the "@effect/cli/ShellType" module as `ShellType`.
+Re-exports all named exports from the "./Prompt.js" module as `Prompt`.
 
 **Signature**
 
 ```ts
-export * as ShellType from '@effect/cli/ShellType'
+export * as Prompt from "./Prompt.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/Terminal"
+## From "./ShellType.js"
 
-Re-exports all named exports from the "@effect/cli/Terminal" module as `Terminal`.
+Re-exports all named exports from the "./ShellType.js" module as `ShellType`.
 
 **Signature**
 
 ```ts
-export * as Terminal from '@effect/cli/Terminal'
+export * as ShellType from "./ShellType.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/Usage"
+## From "./Terminal.js"
 
-Re-exports all named exports from the "@effect/cli/Usage" module as `Usage`.
+Re-exports all named exports from the "./Terminal.js" module as `Terminal`.
 
 **Signature**
 
 ```ts
-export * as Usage from '@effect/cli/Usage'
+export * as Terminal from "./Terminal.js"
 ```
 
 Added in v1.0.0
 
-## From "@effect/cli/ValidationError"
+## From "./Usage.js"
 
-Re-exports all named exports from the "@effect/cli/ValidationError" module as `ValidationError`.
+Re-exports all named exports from the "./Usage.js" module as `Usage`.
 
 **Signature**
 
 ```ts
-export * as ValidationError from '@effect/cli/ValidationError'
+export * as Usage from "./Usage.js"
+```
+
+Added in v1.0.0
+
+## From "./ValidationError.js"
+
+Re-exports all named exports from the "./ValidationError.js" module as `ValidationError`.
+
+**Signature**
+
+```ts
+export * as ValidationError from "./ValidationError.js"
 ```
 
 Added in v1.0.0

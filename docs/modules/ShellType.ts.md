@@ -1,6 +1,6 @@
 ---
 title: ShellType.ts
-nav_order: 16
+nav_order: 17
 parent: Modules
 ---
 
@@ -54,7 +54,7 @@ Added in v1.0.0
 
 ```ts
 export interface Bash {
-  readonly _tag: 'Bash'
+  readonly _tag: "Bash"
 }
 ```
 
@@ -76,7 +76,7 @@ Added in v1.0.0
 
 ```ts
 export interface ZShell {
-  readonly _tag: 'ZShell'
+  readonly _tag: "ZShell"
 }
 ```
 

@@ -1,13 +1,10 @@
 /// <reference types="vitest" />
-
-import * as path from "path"
-import { defineConfig } from "vite"
+import * as path from "node:path"
+import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   test: {
-    include: ["./test/**/*.test.ts"],
-    exclude: ["./test/utils/**/*.ts", "./test/**/*.init.ts"],
-    globals: true
+    include: ["./test/**/*.test.ts"]
   },
   resolve: {
     alias: {

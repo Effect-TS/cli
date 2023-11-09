@@ -27,7 +27,7 @@ exist or not exist.
 **Signature**
 
 ```ts
-export type Exists = 'yes' | 'no' | 'either'
+export type Exists = "yes" | "no" | "either"
 ```
 
 Added in v1.0.0

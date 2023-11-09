@@ -18,20 +18,12 @@ Added in v1.0.0
   - [subcommands](#subcommands)
   - [withHelp](#withhelp)
 - [constructors](#constructors)
-  - [make](#make)
   - [prompt](#prompt)
-- [getters](#getters)
-  - [getSubcommands](#getsubcommands)
-  - [helpDoc](#helpdoc)
-  - [names](#names)
-  - [usage](#usage)
+  - [standard](#standard)
 - [mapping](#mapping)
   - [map](#map)
-  - [mapOrFail](#maporfail)
 - [models](#models)
   - [Command (interface)](#command-interface)
-- [parsing](#parsing)
-  - [parse](#parse)
 - [symbols](#symbols)
   - [CommandTypeId](#commandtypeid)
   - [CommandTypeId (type alias)](#commandtypeid-type-alias)
@@ -41,7 +33,9 @@ Added in v1.0.0
     - [Variance (interface)](#variance-interface)
     - [ComputeParsedType (type alias)](#computeparsedtype-type-alias)
     - [GetParsedType (type alias)](#getparsedtype-type-alias)
-    - [Parsed (type alias)](#parsed-type-alias)
+    - [ParsedStandardCommand (type alias)](#parsedstandardcommand-type-alias)
+    - [ParsedSubcommand (type alias)](#parsedsubcommand-type-alias)
+    - [ParsedUserInputCommand (type alias)](#parseduserinputcommand-type-alias)
     - [Subcommands (type alias)](#subcommands-type-alias)
 
 ---
@@ -80,7 +74,9 @@ Added in v1.0.0
 
 ```ts
 export declare const subcommands: {
-  <Subcommands extends readonly [Command<any>, ...Command<any>[]]>(subcommands: [...Subcommands]): <A>(
+  <Subcommands extends readonly [Command<any>, ...Command<any>[]]>(
+    subcommands: [...Subcommands]
+  ): <A>(
     self: Command<A>
   ) => Command<
     Command.ComputeParsedType<A & Readonly<{ subcommand: Option<Command.GetParsedType<Subcommands[number]>> }>>
@@ -111,19 +107,6 @@ Added in v1.0.0
 
 # constructors
 
-## make
-
-**Signature**
-
-```ts
-export declare const make: <Name extends string, OptionsType = void, ArgsType = void>(
-  name: Name,
-  config?: Command.ConstructorConfig<OptionsType, ArgsType> | undefined
-) => Command<{ readonly name: Name; readonly options: OptionsType; readonly args: ArgsType }>
-```
-
-Added in v1.0.0
-
 ## prompt
 
 **Signature**
@@ -137,44 +120,15 @@ export declare const prompt: <Name extends string, A>(
 
 Added in v1.0.0
 
-# getters
-
-## getSubcommands
+## standard
 
 **Signature**
 
 ```ts
-export declare const getSubcommands: <A>(self: Command<A>) => HashMap<string, Command<unknown>>
-```
-
-Added in v1.0.0
-
-## helpDoc
-
-**Signature**
-
-```ts
-export declare const helpDoc: <A>(self: Command<A>) => HelpDoc
-```
-
-Added in v1.0.0
-
-## names
-
-**Signature**
-
-```ts
-export declare const names: <A>(self: Command<A>) => HashSet<string>
-```
-
-Added in v1.0.0
-
-## usage
-
-**Signature**
-
-```ts
-export declare const usage: <A>(self: Command<A>) => Usage
+export declare const standard: <Name extends string, OptionsType = void, ArgsType = void>(
+  name: Name,
+  config?: Command.ConstructorConfig<OptionsType, ArgsType> | undefined
+) => Command<{ readonly name: Name; readonly options: OptionsType; readonly args: ArgsType }>
 ```
 
 Added in v1.0.0
@@ -194,19 +148,6 @@ export declare const map: {
 
 Added in v1.0.0
 
-## mapOrFail
-
-**Signature**
-
-```ts
-export declare const mapOrFail: {
-  <A, B>(f: (a: A) => Either<ValidationError, B>): (self: Command<A>) => Command<B>
-  <A, B>(self: Command<A>, f: (a: A) => Either<ValidationError, B>): Command<B>
-}
-```
-
-Added in v1.0.0
-
 # models
 
 ## Command (interface)
@@ -220,27 +161,10 @@ commands.
 **Signature**
 
 ```ts
-export interface Command<A> extends Command.Variance<A>, Pipeable {}
-```
-
-Added in v1.0.0
-
-# parsing
-
-## parse
-
-**Signature**
-
-```ts
-export declare const parse: {
-  (args: ReadonlyArray<string>, config: CliConfig): <A>(
-    self: Command<A>
-  ) => Effect<Terminal, ValidationError, CommandDirective<A>>
-  <A>(self: Command<A>, args: ReadonlyArray<string>, config: CliConfig): Effect<
-    Terminal,
-    ValidationError,
-    CommandDirective<A>
-  >
+export interface Command<A> extends Command.Variance<A>, Named, Pipeable {
+  get usage(): Usage
+  get subcommands(): HashMap<string, Command<unknown>>
+  parse(args: ReadonlyArray<string>, config: CliConfig): Effect<Terminal, ValidationError, CommandDirective<A>>
 }
 ```
 
@@ -321,15 +245,40 @@ export type GetParsedType<C> = C extends Command<infer P> ? P : never
 
 Added in v1.0.0
 
-### Parsed (type alias)
+### ParsedStandardCommand (type alias)
 
 **Signature**
 
 ```ts
-export type Parsed<Name extends string, OptionsType, ArgsType> = Command.ComputeParsedType<{
+export type ParsedStandardCommand<Name extends string, OptionsType, ArgsType> = Command.ComputeParsedType<{
   readonly name: Name
   readonly options: OptionsType
   readonly args: ArgsType
+}>
+```
+
+Added in v1.0.0
+
+### ParsedSubcommand (type alias)
+
+**Signature**
+
+```ts
+export type ParsedSubcommand<A extends NonEmptyReadonlyArray<any>> = A[number] extends Command<any>
+  ? GetParsedType<A[number]>
+  : never
+```
+
+Added in v1.0.0
+
+### ParsedUserInputCommand (type alias)
+
+**Signature**
+
+```ts
+export type ParsedUserInputCommand<Name extends string, ValueType> = Command.ComputeParsedType<{
+  readonly name: Name
+  readonly value: ValueType
 }>
 ```
 

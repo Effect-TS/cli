@@ -47,14 +47,15 @@ Added in v1.0.0
 
 ```ts
 export declare const run: {
-  <R, E, A>(args: ReadonlyArray<string>, f: (a: A) => Effect<R, E, void>): (
-    self: CliApp<A>
-  ) => Effect<R, ValidationError | E, void>
-  <R, E, A>(self: CliApp<A>, args: ReadonlyArray<string>, f: (a: A) => Effect<R, E, void>): Effect<
-    R,
-    ValidationError | E,
-    void
-  >
+  <R, E, A>(
+    args: ReadonlyArray<string>,
+    f: (a: A) => Effect<R, E, void>
+  ): (self: CliApp<A>) => Effect<R, ValidationError | E, void>
+  <R, E, A>(
+    self: CliApp<A>,
+    args: ReadonlyArray<string>,
+    f: (a: A) => Effect<R, E, void>
+  ): Effect<R, ValidationError | E, void>
 }
 ```
 

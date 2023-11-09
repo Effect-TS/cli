@@ -188,7 +188,7 @@ Added in v1.0.0
 
 ```ts
 export interface DescriptionList {
-  readonly _tag: 'DescriptionList'
+  readonly _tag: "DescriptionList"
   readonly definitions: NonEmptyReadonlyArray<readonly [Span, HelpDoc]>
 }
 ```
@@ -201,7 +201,7 @@ Added in v1.0.0
 
 ```ts
 export interface Empty {
-  readonly _tag: 'Empty'
+  readonly _tag: "Empty"
 }
 ```
 
@@ -213,7 +213,7 @@ Added in v1.0.0
 
 ```ts
 export interface Enumeration {
-  readonly _tag: 'Enumeration'
+  readonly _tag: "Enumeration"
   readonly elements: NonEmptyReadonlyArray<HelpDoc>
 }
 ```
@@ -226,7 +226,7 @@ Added in v1.0.0
 
 ```ts
 export interface Header {
-  readonly _tag: 'Header'
+  readonly _tag: "Header"
   readonly value: Span
   readonly level: number
 }
@@ -260,7 +260,7 @@ Added in v1.0.0
 
 ```ts
 export interface Paragraph {
-  readonly _tag: 'Paragraph'
+  readonly _tag: "Paragraph"
   readonly value: Span
 }
 ```
@@ -273,7 +273,7 @@ Added in v1.0.0
 
 ```ts
 export interface Sequence {
-  readonly _tag: 'Sequence'
+  readonly _tag: "Sequence"
   readonly left: HelpDoc
   readonly right: HelpDoc
 }
