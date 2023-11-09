@@ -27,6 +27,7 @@ runs:
         direnvVersion: 2.32.2
     - name: Get pnpm store directory
       id: pnpm-cache
+      shell: bash
       run: |
         echo "::set-output name=pnpm_cache_dir::$(pnpm store path)"
     - uses: actions/cache@v3
