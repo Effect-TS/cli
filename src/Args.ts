@@ -78,8 +78,8 @@ export declare namespace All {
   /**
    * @since 1.0.0
    */
-  export type ReturnIterable<T extends Iterable<ArgsAny>> = [T] extends [Iterable<Args.Variance<infer A>>]
-    ? Args<Array<A>>
+  export type ReturnIterable<T extends Iterable<ArgsAny>> = [T] extends
+    [Iterable<Args.Variance<infer A>>] ? Args<Array<A>>
     : never
 
   /**
@@ -123,8 +123,9 @@ export const isArgs: (u: unknown) => u is Args<unknown> = InternalArgs.isArgs
  * @since 1.0.0
  * @category constructors
  */
-export const all: <const Arg extends Iterable<Args<any>> | Record<string, Args<any>>>(arg: Arg) => All.Return<Arg> =
-  InternalArgs.all
+export const all: <const Arg extends Iterable<Args<any>> | Record<string, Args<any>>>(
+  arg: Arg
+) => All.Return<Arg> = InternalArgs.all
 
 /**
  * @since 1.0.0
@@ -175,8 +176,10 @@ export const boolean: (options?: Args.ArgsConfig) => Args<boolean> = InternalArg
  * @since 1.0.0
  * @category constructors
  */
-export const choice: <A>(choices: NonEmptyReadonlyArray<[string, A]>, config?: Args.ArgsConfig) => Args<A> =
-  InternalArgs.choice
+export const choice: <A>(
+  choices: NonEmptyReadonlyArray<[string, A]>,
+  config?: Args.ArgsConfig
+) => Args<A> = InternalArgs.choice
 
 /**
  * Creates a date argument.

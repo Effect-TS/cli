@@ -22,11 +22,15 @@ export const defaultConfig: CliConfig.CliConfig = {
 }
 
 /** @internal */
-export const defaultLayer: Layer.Layer<never, never, CliConfig.CliConfig> = Layer.succeed(Tag, defaultConfig)
+export const defaultLayer: Layer.Layer<never, never, CliConfig.CliConfig> = Layer.succeed(
+  Tag,
+  defaultConfig
+)
 
 /** @internal */
-export const layer = (config: Partial<CliConfig.CliConfig> = {}): Layer.Layer<never, never, CliConfig.CliConfig> =>
-  Layer.succeed(Tag, make(config))
+export const layer = (
+  config: Partial<CliConfig.CliConfig> = {}
+): Layer.Layer<never, never, CliConfig.CliConfig> => Layer.succeed(Tag, make(config))
 
 /** @internal */
 export const normalizeCase = dual<

@@ -77,7 +77,10 @@ export const getHelp = (self: Usage.Usage): HelpDoc.HelpDoc => {
     if (ReadonlyArray.isNonEmptyReadonlyArray(tail)) {
       return pipe(
         ReadonlyArray.map(spans, (span) => InternalHelpDoc.p(span)),
-        ReadonlyArray.reduceRight(InternalHelpDoc.empty, (left, right) => InternalHelpDoc.sequence(left, right))
+        ReadonlyArray.reduceRight(
+          InternalHelpDoc.empty,
+          (left, right) => InternalHelpDoc.sequence(left, right)
+        )
       )
     }
     return InternalHelpDoc.p(head)
@@ -214,13 +217,14 @@ const render = (self: Usage.Usage, config: CliConfig.CliConfig): ReadonlyArray<S
     case "Concat": {
       const leftSpan = render(self.left, config)
       const rightSpan = render(self.right, config)
-      const separator =
-        ReadonlyArray.isNonEmptyReadonlyArray(leftSpan) && ReadonlyArray.isNonEmptyReadonlyArray(rightSpan)
-          ? InternalSpan.space
-          : InternalSpan.empty
+      const separator = ReadonlyArray.isNonEmptyReadonlyArray(leftSpan) &&
+          ReadonlyArray.isNonEmptyReadonlyArray(rightSpan)
+        ? InternalSpan.space
+        : InternalSpan.empty
       return ReadonlyArray.flatMap(
         leftSpan,
-        (left) => ReadonlyArray.map(rightSpan, (right) => InternalSpan.spans([left, separator, right]))
+        (left) =>
+          ReadonlyArray.map(rightSpan, (right) => InternalSpan.spans([left, separator, right]))
       )
     }
   }

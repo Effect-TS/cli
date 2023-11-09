@@ -16,7 +16,11 @@ interface State {
 
 const renderBeep = AnsiRender.prettyDefault(ansiUtils.beep)
 
-const renderChoices = (state: State, choices: Prompt.Prompt.SelectOptions["choices"], pointer: Doc.Doc<never>) => {
+const renderChoices = (
+  state: State,
+  choices: Prompt.Prompt.SelectOptions["choices"],
+  pointer: Doc.Doc<never>
+) => {
   const { endIndex, startIndex } = utils.displayRange(state.cursor, choices.length)
   const choicesToRender = choices.slice(startIndex, endIndex)
   const selectedStyle = AnsiStyle.combine(AnsiStyle.underlined, AnsiStyle.color(Color.green))
@@ -48,7 +52,11 @@ const renderChoices = (state: State, choices: Prompt.Prompt.SelectOptions["choic
   return Doc.vsep(docs)
 }
 
-const renderNextFrame = (promptMsg: string, state: State, choices: Prompt.Prompt.SelectOptions["choices"]) =>
+const renderNextFrame = (
+  promptMsg: string,
+  state: State,
+  choices: Prompt.Prompt.SelectOptions["choices"]
+) =>
   Effect.map(ansiUtils.figures, ({ pointer, pointerSmall }) => {
     const renderedChoices = renderChoices(state, choices, pointer)
     const doc = pipe(
@@ -66,7 +74,11 @@ const renderNextFrame = (promptMsg: string, state: State, choices: Prompt.Prompt
     return AnsiRender.prettyDefault(Optimize.optimize(doc, Optimize.Deep))
   })
 
-const renderSubmission = (promptMsg: string, state: State, choices: Prompt.Prompt.SelectOptions["choices"]) =>
+const renderSubmission = (
+  promptMsg: string,
+  state: State,
+  choices: Prompt.Prompt.SelectOptions["choices"]
+) =>
   Effect.map(ansiUtils.figures, ({ ellipsis, tick }) => {
     const selected = Doc.text(choices[state.cursor].title)
     const doc = pipe(

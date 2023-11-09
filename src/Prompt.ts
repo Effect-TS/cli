@@ -113,8 +113,8 @@ export declare namespace All {
   /**
    * @since 1.0.0
    */
-  export type ReturnIterable<T extends Iterable<PromptAny>> = [T] extends [Iterable<Prompt.Variance<infer A>>] ?
-    Prompt<Array<A>>
+  export type ReturnIterable<T extends Iterable<PromptAny>> = [T] extends
+    [Iterable<Prompt.Variance<infer A>>] ? Prompt<Array<A>>
     : never
 
   /**
@@ -128,7 +128,8 @@ export declare namespace All {
   /**
    * @since 1.0.0
    */
-  export type Return<Arg extends Iterable<PromptAny>> = [Arg] extends [ReadonlyArray<PromptAny>] ? ReturnTuple<Arg>
+  export type Return<Arg extends Iterable<PromptAny>> = [Arg] extends [ReadonlyArray<PromptAny>] ?
+    ReturnTuple<Arg>
     : [Arg] extends [Iterable<PromptAny>] ? ReturnIterable<Arg>
     : never
 }
@@ -175,7 +176,9 @@ export const custom: <State, Output>(
  * @category combinators
  */
 export const flatMap: {
-  <Output, Output2>(f: (output: Output) => Prompt<Output2>): (self: Prompt<Output>) => Prompt<Output2>
+  <Output, Output2>(
+    f: (output: Output) => Prompt<Output2>
+  ): (self: Prompt<Output>) => Prompt<Output2>
   <Output, Output2>(self: Prompt<Output>, f: (output: Output) => Prompt<Output2>): Prompt<Output2>
 } = internal.flatMap
 
@@ -206,7 +209,8 @@ export const map: {
  * @since 1.0.0
  * @category execution
  */
-export const run: <Output>(self: Prompt<Output>) => Effect.Effect<Terminal, never, Output> = internal.run
+export const run: <Output>(self: Prompt<Output>) => Effect.Effect<Terminal, never, Output> =
+  internal.run
 
 /**
  * @since 1.0.0

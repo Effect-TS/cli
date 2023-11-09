@@ -34,7 +34,10 @@ export interface Options<A> extends Options.Variance<A>, Parameter, Pipeable {
   get identifier(): Option<string>
   get usage(): Usage
   get flattened(): ReadonlyArray<Input>
-  validate(args: HashMap<string, ReadonlyArray<string>>, config: CliConfig): Effect<never, ValidationError, A>
+  validate(
+    args: HashMap<string, ReadonlyArray<string>>,
+    config: CliConfig
+  ): Effect<never, ValidationError, A>
   /** @internal */
   modifySingle(f: <_>(single: InternalOptions.Single<_>) => InternalOptions.Single<_>): Options<A>
 }
@@ -76,8 +79,8 @@ export declare namespace All {
   /**
    * @since 1.0.0
    */
-  export type ReturnIterable<T extends Iterable<OptionsAny>> = [T] extends [Iterable<Options.Variance<infer A>>]
-    ? Options<Array<A>>
+  export type ReturnIterable<T extends Iterable<OptionsAny>> = [T] extends
+    [Iterable<Options.Variance<infer A>>] ? Options<Array<A>>
     : never
 
   /**
@@ -217,7 +220,8 @@ export const integer: (name: string) => Options<number> = InternalOptions.intege
  * @since 1.0.0
  * @category constructors
  */
-export const keyValueMap: (name: string) => Options<HashMap<string, string>> = InternalOptions.keyValueMap
+export const keyValueMap: (name: string) => Options<HashMap<string, string>> =
+  InternalOptions.keyValueMap
 
 /**
  * @since 1.0.0

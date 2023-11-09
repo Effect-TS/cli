@@ -107,8 +107,13 @@ const handleBuiltInOption = <A>(
         InternalHelpDoc.h1("USAGE"),
         pipe(
           InternalUsage.enumerate(builtIn.usage, config),
-          ReadonlyArray.map((span) => InternalHelpDoc.p(InternalSpan.concat(InternalSpan.text("$ "), span))),
-          ReadonlyArray.reduceRight(InternalHelpDoc.empty, (left, right) => InternalHelpDoc.sequence(left, right))
+          ReadonlyArray.map((span) =>
+            InternalHelpDoc.p(InternalSpan.concat(InternalSpan.text("$ "), span))
+          ),
+          ReadonlyArray.reduceRight(
+            InternalHelpDoc.empty,
+            (left, right) => InternalHelpDoc.sequence(left, right)
+          )
         )
       )
       const helpDoc = pipe(

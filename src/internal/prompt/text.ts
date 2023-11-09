@@ -53,7 +53,9 @@ const renderNextFrame = (promptMsg: string, input: AnsiDoc.AnsiDoc, offset: numb
       Doc.cat(Doc.space),
       Doc.cat(Doc.annotate(pointerSmall, AnsiStyle.color(Color.black))),
       Doc.cat(Doc.space),
-      Doc.cat(Doc.annotate(input, AnsiStyle.combine(AnsiStyle.underlined, AnsiStyle.color(Color.green)))),
+      Doc.cat(
+        Doc.annotate(input, AnsiStyle.combine(AnsiStyle.underlined, AnsiStyle.color(Color.green)))
+      ),
       Doc.cat(ansiUtils.moveCursor(offset))
     )
     return AnsiRender.prettyDefault(Optimize.optimize(doc, Optimize.Deep))
@@ -75,7 +77,10 @@ const renderSubmission = (promptMsg: string, input: AnsiDoc.AnsiDoc) =>
     return AnsiRender.prettyDefault(Optimize.optimize(doc, Optimize.Deep))
   })
 
-const renderInput = (value: string, type: NonNullable<Prompt.Prompt.TextOptions["type"]>): AnsiDoc.AnsiDoc => {
+const renderInput = (
+  value: string,
+  type: NonNullable<Prompt.Prompt.TextOptions["type"]>
+): AnsiDoc.AnsiDoc => {
   switch (type) {
     case "hidden": {
       return Doc.empty
