@@ -32,7 +32,6 @@ jobs:
         run: git add docs && git diff-index --cached HEAD --exit-code docs
       - name: Create Release Pull Request or Publish
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        id: changesets
         uses: changesets/action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
