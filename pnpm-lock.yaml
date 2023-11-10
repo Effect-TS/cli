@@ -27,8 +27,8 @@ devDependencies:
     specifier: ^0.4.0
     version: 0.4.0
   '@effect/docgen':
-    specifier: ^0.3.1
-    version: 0.3.1(fast-check@3.13.2)(tsx@4.1.0)(typescript@5.2.2)
+    specifier: ^0.3.2
+    version: 0.3.2(fast-check@3.13.2)(tsx@4.1.0)(typescript@5.2.2)
   '@effect/eslint-plugin':
     specifier: ^0.1.2
     version: 0.1.2
@@ -260,7 +260,7 @@ packages:
     resolution: {integrity: sha512-0pYVBnDKZO2fnSPCrgM/6WMc7eS20Fbok+0r88fp+YtWVLZrp4CkafFGIp+W0VKw4a22sgebPT99y+FDNMdP4w==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/types': 7.23.0
+      '@babel/types': 7.23.3
     dev: true
 
   /@babel/helper-module-transforms@7.23.3(@babel/core@7.23.3):
@@ -705,15 +705,15 @@ packages:
     hasBin: true
     dev: true
 
-  /@effect/docgen@0.3.1(fast-check@3.13.2)(tsx@4.1.0)(typescript@5.2.2):
-    resolution: {integrity: sha512-4Lc+fKBkxz9rC+XjI3buB3bSNkiBaYT4cxynxt+G4n0pP+BDsztn75Bl+tKlGCTJUROhD2bhadmn3R2ydRslqA==}
+  /@effect/docgen@0.3.2(fast-check@3.13.2)(tsx@4.1.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-2Iq0p+Qp+hzHi9BGKZ7dbZ35c+RZwDQJN5YHk85AyHUM8bdj+9ZS2zMthCFJqciW8i4NcugjQ+QYYmWGqBeFYA==}
     engines: {node: '>=16.17.1'}
     hasBin: true
     peerDependencies:
-      tsx: ^3.14.0
+      tsx: ^4.1.0
       typescript: ^5.2.2
     dependencies:
-      '@effect/platform-node': 0.28.4(@effect/schema@0.47.3)(effect@2.0.0-next.54)
+      '@effect/platform-node': 0.29.0(@effect/schema@0.47.3)(effect@2.0.0-next.54)
       '@effect/schema': 0.47.3(effect@2.0.0-next.54)(fast-check@3.13.2)
       chalk: 5.3.0
       doctrine: 3.0.0
@@ -741,19 +741,6 @@ packages:
     resolution: {integrity: sha512-e8vfKbjnbYiyneBincEFS0tzXluopGK77OkVFbPRtUbNDS5tJfb+jiwOQEiqASDsadcZmd+9J9+Q6v/z7GuN2g==}
     dev: true
 
-  /@effect/platform-node@0.28.4(@effect/schema@0.47.3)(effect@2.0.0-next.54):
-    resolution: {integrity: sha512-0AK4PPfKf2z1pZHMbdWth58A54rfn8C7QSBToDooQ0jft/Ssj1Ys0RIuwb49ZUKGGY+XNLzkBEeJYzdMRdKNIQ==}
-    peerDependencies:
-      effect: 2.0.0-next.54
-    dependencies:
-      '@effect/platform': 0.27.4(@effect/schema@0.47.3)(effect@2.0.0-next.54)
-      busboy: 1.6.0
-      effect: 2.0.0-next.54
-      mime: 3.0.0
-    transitivePeerDependencies:
-      - '@effect/schema'
-    dev: true
-
   /@effect/platform-node@0.29.0(@effect/schema@0.47.3)(effect@2.0.0-next.54):
     resolution: {integrity: sha512-P5kA72swAni4D38eI5eovGIve0fhMLpWJf/IfMwMbfhGbNRo8cZ+/Q0KYbmMn9ilp2fxdEw6MEX9hu/cqYw56A==}
     peerDependencies:
@@ -765,18 +752,6 @@ packages:
       mime: 3.0.0
     transitivePeerDependencies:
       - '@effect/schema'
-    dev: true
-
-  /@effect/platform@0.27.4(@effect/schema@0.47.3)(effect@2.0.0-next.54):
-    resolution: {integrity: sha512-SpxQMN4WqV+alpKmjj9Hq8UP15V4GsksADvmxmbKk4Yu2ocrxYlcIUlgIGM0u9WxF34dEjl0skbQoAMo2gewbQ==}
-    peerDependencies:
-      '@effect/schema': ^0.47.1
-      effect: 2.0.0-next.54
-    dependencies:
-      '@effect/schema': 0.47.3(effect@2.0.0-next.54)(fast-check@3.13.2)
-      effect: 2.0.0-next.54
-      find-my-way: 7.7.0
-      path-browserify: 1.0.1
     dev: true
 
   /@effect/platform@0.28.0(@effect/schema@0.47.3)(effect@2.0.0-next.54):
@@ -1403,8 +1378,8 @@ packages:
     resolution: {integrity: sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw==}
     dev: true
 
-  /@types/estree@1.0.4:
-    resolution: {integrity: sha512-2JwWnHK9H+wUZNorf2Zr6ves96WHoWDJIftkcxPKsS7Djta6Zu519LarhRNljPXkpsZR2ZMwNCPeW7omW07BJw==}
+  /@types/estree@1.0.5:
+    resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
     dev: true
 
   /@types/is-ci@3.0.2:
@@ -1449,8 +1424,8 @@ packages:
     resolution: {integrity: sha512-ZYFzrvyWUNhaPomn80dsMNgMeXxNWZBdkuG/hWlUvXvbdUH8ZERNBGXnU87McuGcWDsyzX2aChCv/SVN348k3A==}
     dev: true
 
-  /@types/minimist@1.2.4:
-    resolution: {integrity: sha512-Kfe/D3hxHTusnPNRbycJE1N77WHDsdS4AjUYIzlDzhDrS47NrwuL3YW4VITxwR7KCVpzwgy4Rbj829KSSQmwXQ==}
+  /@types/minimist@1.2.5:
+    resolution: {integrity: sha512-hov8bUuiLiyFPGyFPE1lwWhmzYbirOXQNNo40+y3zow8aFVTeyn3VWL0VFFfdNddA8S4Vf0Tc062rzyNr7Paag==}
     dev: true
 
   /@types/node@12.20.55:
@@ -4047,7 +4022,7 @@ packages:
   /is-reference@1.2.1:
     resolution: {integrity: sha512-U82MsXXiFIrjCK4otLT+o2NA2Cd2g5MLoOVXUZjIOhLurrRxpEXzI8O0KZHr3IjLvlAH1kTPYSuqer5T9ZVBKQ==}
     dependencies:
-      '@types/estree': 1.0.4
+      '@types/estree': 1.0.5
     dev: true
 
   /is-regex@1.1.4:
@@ -4447,9 +4422,11 @@ packages:
       get-func-name: 2.0.2
     dev: true
 
-  /lru-cache@10.0.1:
-    resolution: {integrity: sha512-IJ4uwUTi2qCccrioU6g9g/5rvvVl13bsdczUUcqbciD9iLr095yj8DQKdObriEvuNSx325N1rV1O0sJFszx75g==}
+  /lru-cache@10.0.2:
+    resolution: {integrity: sha512-Yj9mA8fPiVgOUpByoTZO5pNrcl5Yk37FcSHsUINpAsaBIEZIuqcCclDZJCVxqQShDsmYX8QG63svJiTbOATZwg==}
     engines: {node: 14 || >=16.14}
+    dependencies:
+      semver: 7.5.4
     dev: true
 
   /lru-cache@4.1.5:
@@ -4584,7 +4561,7 @@ packages:
     resolution: {integrity: sha512-GWHvA5QOcS412WCo8vwKDlTelGLsCGBVevQB5Kva961rmNfun0PCbv5+xta2kUMFJyR8/oWnn7ddeKdosbAPbA==}
     engines: {node: '>=10'}
     dependencies:
-      '@types/minimist': 1.2.4
+      '@types/minimist': 1.2.5
       camelcase-keys: 6.2.2
       decamelize-keys: 1.1.1
       hard-rejection: 2.1.0
@@ -5032,7 +5009,7 @@ packages:
     resolution: {integrity: sha512-MkhCqzzBEpPvxxQ71Md0b1Kk51W01lrYvlMzSUaIzNsODdd7mqhiimSZlr+VegAz5Z6Vzt9Xg2ttE//XBhH3EQ==}
     engines: {node: '>=16 || 14 >=14.17'}
     dependencies:
-      lru-cache: 10.0.1
+      lru-cache: 10.0.2
       minipass: 7.0.4
     dev: true
 
