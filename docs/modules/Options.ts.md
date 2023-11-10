@@ -1,6 +1,6 @@
 ---
 title: Options.ts
-nav_order: 12
+nav_order: 13
 parent: Modules
 ---
 
@@ -21,6 +21,7 @@ Added in v1.0.0
   - [optional](#optional)
   - [orElse](#orelse)
   - [orElseEither](#orelseeither)
+  - [toRegularLanguage](#toregularlanguage)
   - [validate](#validate)
   - [withAlias](#withalias)
   - [withDefault](#withdefault)
@@ -32,6 +33,8 @@ Added in v1.0.0
   - [choice](#choice)
   - [choiceWithValue](#choicewithvalue)
   - [date](#date)
+  - [directory](#directory)
+  - [file](#file)
   - [float](#float)
   - [integer](#integer)
   - [keyValueMap](#keyvaluemap)
@@ -52,7 +55,8 @@ Added in v1.0.0
     - [ReturnObject (type alias)](#returnobject-type-alias)
     - [ReturnTuple (type alias)](#returntuple-type-alias)
   - [Options (namespace)](#options-namespace)
-    - [BooleanOptionConfig (interface)](#booleanoptionconfig-interface)
+    - [BooleanOptionsConfig (interface)](#booleanoptionsconfig-interface)
+    - [PathOptionsConfig (interface)](#pathoptionsconfig-interface)
     - [Variance (interface)](#variance-interface)
 
 ---
@@ -160,6 +164,19 @@ export declare const orElseEither: {
 
 Added in v1.0.0
 
+## toRegularLanguage
+
+Returns a `RegularLanguage` whose accepted language is equivalent to the language accepted by the provided
+`Options`.
+
+**Signature**
+
+```ts
+export declare const toRegularLanguage: <A>(self: Options<A>) => RegularLanguage
+```
+
+Added in v1.0.0
+
 ## validate
 
 **Signature**
@@ -169,12 +186,14 @@ export declare const validate: {
   (
     args: ReadonlyArray<string>,
     config: CliConfig
-  ): <A>(self: Options<A>) => Effect<never, ValidationError, readonly [Option<ValidationError>, readonly string[], A]>
+  ): <A>(
+    self: Options<A>
+  ) => Effect<FileSystem, ValidationError, readonly [Option<ValidationError>, readonly string[], A]>
   <A>(
     self: Options<A>,
     args: ReadonlyArray<string>,
     config: CliConfig
-  ): Effect<never, ValidationError, readonly [Option<ValidationError>, readonly string[], A]>
+  ): Effect<FileSystem, ValidationError, readonly [Option<ValidationError>, readonly string[], A]>
 }
 ```
 
@@ -251,7 +270,7 @@ Added in v1.0.0
 **Signature**
 
 ```ts
-export declare const boolean: (name: string, options?: Options.BooleanOptionConfig) => Options<boolean>
+export declare const boolean: (name: string, options?: Options.BooleanOptionsConfig) => Options<boolean>
 ```
 
 Added in v1.0.0
@@ -332,6 +351,30 @@ export declare const date: (name: string) => Options<globalThis.Date>
 
 Added in v1.0.0
 
+## directory
+
+Creates a parameter expecting path to a directory.
+
+**Signature**
+
+```ts
+export declare const directory: (name: string, config: Options.PathOptionsConfig) => Options<string>
+```
+
+Added in v1.0.0
+
+## file
+
+Creates a parameter expecting path to a file.
+
+**Signature**
+
+```ts
+export declare const file: (name: string, config: Options.PathOptionsConfig) => Options<string>
+```
+
+Added in v1.0.0
+
 ## float
 
 **Signature**
@@ -393,7 +436,7 @@ export interface Options<A> extends Options.Variance<A>, Parameter, Pipeable {
   get identifier(): Option<string>
   get usage(): Usage
   get flattened(): ReadonlyArray<Input>
-  validate(args: HashMap<string, ReadonlyArray<string>>, config: CliConfig): Effect<never, ValidationError, A>
+  validate(args: HashMap<string, ReadonlyArray<string>>, config: CliConfig): Effect<FileSystem, ValidationError, A>
   /** @internal */
   modifySingle(f: <_>(single: InternalOptions.Single<_>) => InternalOptions.Single<_>): Options<A>
 }
@@ -517,15 +560,27 @@ Added in v1.0.0
 
 Added in v1.0.0
 
-### BooleanOptionConfig (interface)
+### BooleanOptionsConfig (interface)
 
 **Signature**
 
 ```ts
-export interface BooleanOptionConfig {
+export interface BooleanOptionsConfig {
   readonly ifPresent?: boolean
   readonly negationNames?: NonEmptyReadonlyArray<string>
   readonly aliases?: NonEmptyReadonlyArray<string>
+}
+```
+
+Added in v1.0.0
+
+### PathOptionsConfig (interface)
+
+**Signature**
+
+```ts
+export interface PathOptionsConfig {
+  readonly exists?: Primitive.PathExists
 }
 ```
 

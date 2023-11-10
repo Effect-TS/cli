@@ -1,6 +1,6 @@
 ---
 title: Primitive.ts
-nav_order: 14
+nav_order: 15
 parent: Modules
 ---
 
@@ -29,6 +29,8 @@ Added in v1.0.0
 - [utils](#utils)
   - [Primitive (namespace)](#primitive-namespace)
     - [Variance (interface)](#variance-interface)
+    - [PathExists (type alias)](#pathexists-type-alias)
+    - [PathType (type alias)](#pathtype-type-alias)
     - [ValueType (type alias)](#valuetype-type-alias)
 
 ---
@@ -122,7 +124,7 @@ export interface Primitive<A> extends Primitive.Variance<A> {
   get typeName(): string
   get help(): Span
   get choices(): Option<string>
-  validate(value: Option<string>, config: CliConfig): Effect<never, string, A>
+  validate(value: Option<string>, config: CliConfig): Effect<FileSystem, string, A>
 }
 ```
 
@@ -166,6 +168,26 @@ export interface Variance<A> extends Pipeable {
     readonly _A: (_: never) => A
   }
 }
+```
+
+Added in v1.0.0
+
+### PathExists (type alias)
+
+**Signature**
+
+```ts
+export type PathExists = "yes" | "no" | "either"
+```
+
+Added in v1.0.0
+
+### PathType (type alias)
+
+**Signature**
+
+```ts
+export type PathType = "file" | "directory" | "either"
 ```
 
 Added in v1.0.0

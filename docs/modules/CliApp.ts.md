@@ -18,6 +18,9 @@ Added in v1.0.0
   - [run](#run)
 - [models](#models)
   - [CliApp (interface)](#cliapp-interface)
+- [utils](#utils)
+  - [CliApp (namespace)](#cliapp-namespace)
+    - [Environment (type alias)](#environment-type-alias)
 
 ---
 
@@ -49,13 +52,13 @@ Added in v1.0.0
 export declare const run: {
   <R, E, A>(
     args: ReadonlyArray<string>,
-    f: (a: A) => Effect<R, E, void>
-  ): (self: CliApp<A>) => Effect<R, ValidationError | E, void>
+    execute: (a: A) => Effect<R, E, void>
+  ): (self: CliApp<A>) => Effect<R | CliApp.Environment, ValidationError | E, void>
   <R, E, A>(
     self: CliApp<A>,
     args: ReadonlyArray<string>,
-    f: (a: A) => Effect<R, E, void>
-  ): Effect<R, ValidationError | E, void>
+    execute: (a: A) => Effect<R, E, void>
+  ): Effect<R | CliApp.Environment, ValidationError | E, void>
 }
 ```
 
@@ -77,6 +80,22 @@ export interface CliApp<A> {
   readonly summary: Span
   readonly footer: HelpDoc
 }
+```
+
+Added in v1.0.0
+
+# utils
+
+## CliApp (namespace)
+
+Added in v1.0.0
+
+### Environment (type alias)
+
+**Signature**
+
+```ts
+export type Environment = CommandExecutor | FileSystem | Path
 ```
 
 Added in v1.0.0

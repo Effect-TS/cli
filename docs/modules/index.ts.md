@@ -1,6 +1,6 @@
 ---
 title: index.ts
-nav_order: 11
+nav_order: 12
 parent: Modules
 ---
 
@@ -20,12 +20,14 @@ Added in v1.0.0
   - [From "./CliConfig.js"](#from-cliconfigjs)
   - [From "./Command.js"](#from-commandjs)
   - [From "./CommandDirective.js"](#from-commanddirectivejs)
-  - [From "./Exists.js"](#from-existsjs)
+  - [From "./Compgen.js"](#from-compgenjs)
+  - [From "./Completion.js"](#from-completionjs)
   - [From "./HelpDoc.js"](#from-helpdocjs)
   - [From "./Options.js"](#from-optionsjs)
   - [From "./Parameter.js"](#from-parameterjs)
   - [From "./Primitive.js"](#from-primitivejs)
   - [From "./Prompt.js"](#from-promptjs)
+  - [From "./RegularLanguage.js"](#from-regularlanguagejs)
   - [From "./ShellType.js"](#from-shelltypejs)
   - [From "./Terminal.js"](#from-terminaljs)
   - [From "./Usage.js"](#from-usagejs)
@@ -119,14 +121,26 @@ export * as CommandDirective from "./CommandDirective.js"
 
 Added in v1.0.0
 
-## From "./Exists.js"
+## From "./Compgen.js"
 
-Re-exports all named exports from the "./Exists.js" module as `Exists`.
+Re-exports all named exports from the "./Compgen.js" module as `Compgen`.
 
 **Signature**
 
 ```ts
-export * as Exists from "./Exists.js"
+export * as Compgen from "./Compgen.js"
+```
+
+Added in v1.0.0
+
+## From "./Completion.js"
+
+Re-exports all named exports from the "./Completion.js" module as `Completion`.
+
+**Signature**
+
+```ts
+export * as Completion from "./Completion.js"
 ```
 
 Added in v1.0.0
@@ -187,6 +201,18 @@ Re-exports all named exports from the "./Prompt.js" module as `Prompt`.
 
 ```ts
 export * as Prompt from "./Prompt.js"
+```
+
+Added in v1.0.0
+
+## From "./RegularLanguage.js"
+
+Re-exports all named exports from the "./RegularLanguage.js" module as `RegularLanguage`.
+
+**Signature**
+
+```ts
+export * as RegularLanguage from "./RegularLanguage.js"
 ```
 
 Added in v1.0.0

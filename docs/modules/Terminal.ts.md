@@ -1,6 +1,6 @@
 ---
 title: Terminal.ts
-nav_order: 18
+nav_order: 20
 parent: Modules
 ---
 
@@ -13,8 +13,8 @@ Added in v1.0.0
 <h2 class="text-delta">Table of contents</h2>
 
 - [context](#context)
+  - [LiveTerminal](#liveterminal)
   - [Terminal](#terminal)
-  - [layer](#layer)
 - [models](#models)
   - [Terminal (interface)](#terminal-interface)
 - [utils](#utils)
@@ -26,22 +26,22 @@ Added in v1.0.0
 
 # context
 
+## LiveTerminal
+
+**Signature**
+
+```ts
+export declare const LiveTerminal: Layer.Layer<never, never, Terminal>
+```
+
+Added in v1.0.0
+
 ## Terminal
 
 **Signature**
 
 ```ts
 export declare const Terminal: Context.Tag<Terminal, Terminal>
-```
-
-Added in v1.0.0
-
-## layer
-
-**Signature**
-
-```ts
-export declare const layer: Layer.Layer<never, never, Terminal>
 ```
 
 Added in v1.0.0
