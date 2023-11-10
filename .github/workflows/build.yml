@@ -28,15 +28,15 @@ jobs:
         run: git add src && git diff-index --cached HEAD --exit-code src
       - run: pnpm circular
       - run: pnpm docgen
-      - name: Upload pages artifact
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-pages-artifact@v2
       - name: Build pages Jekyll
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./docs
           destination: ./_site
+      - name: Upload pages artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v2
       - name: Create Release Pull Request or Publish
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: changesets/action@v1
