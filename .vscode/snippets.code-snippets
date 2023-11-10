@@ -1,5 +1,5 @@
 {
-  "Gen Function $": {
+  "Gen Function _": {
     "prefix": "gg",
     "body": [
       "Effect.gen(function*(_) {",
@@ -8,7 +8,7 @@
     ],
     "description": "Generator Function with a _ parameter"
   },
-  "Gen Yield $": {
+  "Gen Yield _": {
     "prefix": "yy",
     "body": [
       "yield* _($0)"
