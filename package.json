@@ -29,6 +29,13 @@
     "functional-programming"
   ],
   "sideEffects": false,
+  "effect": {
+    "generateExports": {
+      "include": [
+        "**/*.ts"
+      ]
+    }
+  },
   "scripts": {
     "build": "pnpm build-prepare && pnpm build-esm && pnpm build-cjs && pnpm build-annotate && build-utils pack-v2",
     "build-prepare": "build-utils prepare-v2",
