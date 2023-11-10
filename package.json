@@ -48,7 +48,7 @@
     "@effect/platform": "^0.27.3",
     "@effect/printer": "^0.22.1",
     "@effect/printer-ansi": "^0.22.1",
-    "@effect/schema": "^0.47.2",
+    "@effect/schema": "^0.47.3",
     "effect": "2.0.0-next.54"
   },
   "devDependencies": {
