@@ -67,8 +67,6 @@
     "@effect/printer": "^0.22.1",
     "@effect/printer-ansi": "^0.22.1",
     "@effect/schema": "^0.47.3",
-    "@preconstruct/cli": "^2.8.1",
-    "@types/chai": "^4.3.10",
     "@types/node": "^20.9.0",
     "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.10.0",
