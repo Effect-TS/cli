@@ -15,7 +15,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
@@ -28,8 +28,10 @@ jobs:
         run: git add src && git diff-index --cached HEAD --exit-code src
       - run: pnpm circular
       - run: pnpm docgen
-      - name: Check docs state
-        run: git add docs && git diff-index --cached HEAD --exit-code docs
+      - name: Test Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: docs/
       - name: Create Release Pull Request or Publish
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: changesets/action@v1
