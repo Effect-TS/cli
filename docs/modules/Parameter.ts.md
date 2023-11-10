@@ -1,6 +1,6 @@
 ---
 title: Parameter.ts
-nav_order: 13
+nav_order: 14
 parent: Modules
 ---
 
@@ -29,7 +29,7 @@ Input is used to obtain a parameter from user.
 
 ```ts
 export interface Input extends Parameter {
-  isValid(input: string, config: CliConfig): Effect<never, ValidationError, ReadonlyArray<string>>
+  isValid(input: string, config: CliConfig): Effect<FileSystem, ValidationError, ReadonlyArray<string>>
   parse(
     args: ReadonlyArray<string>,
     config: CliConfig

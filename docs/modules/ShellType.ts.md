@@ -1,6 +1,6 @@
 ---
 title: ShellType.ts
-nav_order: 17
+nav_order: 19
 parent: Modules
 ---
 
@@ -14,11 +14,13 @@ Added in v1.0.0
 
 - [constructors](#constructors)
   - [bash](#bash)
-  - [zShell](#zshell)
+  - [fish](#fish)
+  - [zsh](#zsh)
 - [models](#models)
   - [Bash (interface)](#bash-interface)
+  - [Fish (interface)](#fish-interface)
   - [ShellType (type alias)](#shelltype-type-alias)
-  - [ZShell (interface)](#zshell-interface)
+  - [Zsh (interface)](#zsh-interface)
 - [options](#options)
   - [shellOption](#shelloption)
 
@@ -36,12 +38,22 @@ export declare const bash: ShellType
 
 Added in v1.0.0
 
-## zShell
+## fish
 
 **Signature**
 
 ```ts
-export declare const zShell: ShellType
+export declare const fish: ShellType
+```
+
+Added in v1.0.0
+
+## zsh
+
+**Signature**
+
+```ts
+export declare const zsh: ShellType
 ```
 
 Added in v1.0.0
@@ -60,23 +72,35 @@ export interface Bash {
 
 Added in v1.0.0
 
+## Fish (interface)
+
+**Signature**
+
+```ts
+export interface Fish {
+  readonly _tag: "Fish"
+}
+```
+
+Added in v1.0.0
+
 ## ShellType (type alias)
 
 **Signature**
 
 ```ts
-export type ShellType = Bash | ZShell
+export type ShellType = Bash | Fish | Zsh
 ```
 
 Added in v1.0.0
 
-## ZShell (interface)
+## Zsh (interface)
 
 **Signature**
 
 ```ts
-export interface ZShell {
-  readonly _tag: "ZShell"
+export interface Zsh {
+  readonly _tag: "Zsh"
 }
 ```
 

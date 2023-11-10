@@ -16,6 +16,7 @@ Added in v1.0.0
   - [orElse](#orelse)
   - [orElseEither](#orelseeither)
   - [subcommands](#subcommands)
+  - [toRegularLanguage](#toregularlanguage)
   - [withHelp](#withhelp)
 - [constructors](#constructors)
   - [prompt](#prompt)
@@ -87,6 +88,22 @@ export declare const subcommands: {
   ): Command<
     Command.ComputeParsedType<A & Readonly<{ subcommand: Option<Command.GetParsedType<Subcommands[number]>> }>>
   >
+}
+```
+
+Added in v1.0.0
+
+## toRegularLanguage
+
+Returns a `RegularLanguage` whose accepted language is equivalent to the
+language accepted by the provided `Command`.
+
+**Signature**
+
+```ts
+export declare const toRegularLanguage: {
+  (allowAlias: boolean): <A>(self: Command<A>) => RegularLanguage
+  <A>(self: Command<A>, allowAlias: boolean): RegularLanguage
 }
 ```
 
@@ -164,7 +181,10 @@ commands.
 export interface Command<A> extends Command.Variance<A>, Named, Pipeable {
   get usage(): Usage
   get subcommands(): HashMap<string, Command<unknown>>
-  parse(args: ReadonlyArray<string>, config: CliConfig): Effect<Terminal, ValidationError, CommandDirective<A>>
+  parse(
+    args: ReadonlyArray<string>,
+    config: CliConfig
+  ): Effect<FileSystem | Terminal, ValidationError, CommandDirective<A>>
 }
 ```
 

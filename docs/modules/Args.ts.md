@@ -18,14 +18,18 @@ Added in v1.0.0
   - [between](#between)
   - [repeated](#repeated)
   - [repeatedAtLeastOnce](#repeatedatleastonce)
+  - [toRegularLanguage](#toregularlanguage)
 - [constructors](#constructors)
   - [all](#all)
   - [boolean](#boolean)
   - [choice](#choice)
   - [date](#date)
+  - [directory](#directory)
+  - [file](#file)
   - [float](#float)
   - [integer](#integer)
   - [none](#none)
+  - [path](#path)
   - [text](#text)
 - [mapping](#mapping)
   - [map](#map)
@@ -46,7 +50,8 @@ Added in v1.0.0
     - [ReturnObject (type alias)](#returnobject-type-alias)
     - [ReturnTuple (type alias)](#returntuple-type-alias)
   - [Args (namespace)](#args-namespace)
-    - [ArgsConfig (interface)](#argsconfig-interface)
+    - [BaseArgsConfig (interface)](#baseargsconfig-interface)
+    - [PathArgsConfig (interface)](#pathargsconfig-interface)
     - [Variance (interface)](#variance-interface)
 
 ---
@@ -116,6 +121,18 @@ export declare const repeatedAtLeastOnce: <A>(self: Args<A>) => Args<readonly [A
 
 Added in v1.0.0
 
+## toRegularLanguage
+
+Returns a `RegularLanguage` whose accepted language is equivalent to the language accepted by the provided `Args`.
+
+**Signature**
+
+```ts
+export declare const toRegularLanguage: <A>(self: Args<A>) => RegularLanguage
+```
+
+Added in v1.0.0
+
 # constructors
 
 ## all
@@ -139,7 +156,7 @@ Can optionally provide a custom argument name (defaults to `"boolean"`).
 **Signature**
 
 ```ts
-export declare const boolean: (options?: Args.ArgsConfig) => Args<boolean>
+export declare const boolean: (options?: Args.BaseArgsConfig) => Args<boolean>
 ```
 
 Added in v1.0.0
@@ -153,7 +170,10 @@ Can optionally provide a custom argument name (defaults to `"choice"`).
 **Signature**
 
 ```ts
-export declare const choice: <A>(choices: readonly [[string, A], ...[string, A][]], config?: Args.ArgsConfig) => Args<A>
+export declare const choice: <A>(
+  choices: readonly [[string, A], ...[string, A][]],
+  config?: Args.BaseArgsConfig
+) => Args<A>
 ```
 
 Added in v1.0.0
@@ -167,7 +187,35 @@ Can optionally provide a custom argument name (defaults to `"date"`).
 **Signature**
 
 ```ts
-export declare const date: (config?: Args.ArgsConfig) => Args<globalThis.Date>
+export declare const date: (config?: Args.BaseArgsConfig) => Args<globalThis.Date>
+```
+
+Added in v1.0.0
+
+## directory
+
+Creates a directory argument.
+
+Can optionally provide a custom argument name (defaults to `"directory"`).
+
+**Signature**
+
+```ts
+export declare const directory: (config?: Args.PathArgsConfig) => Args<string>
+```
+
+Added in v1.0.0
+
+## file
+
+Creates a file argument.
+
+Can optionally provide a custom argument name (defaults to `"file"`).
+
+**Signature**
+
+```ts
+export declare const file: (config?: Args.PathArgsConfig) => Args<string>
 ```
 
 Added in v1.0.0
@@ -181,7 +229,7 @@ Can optionally provide a custom argument name (defaults to `"float"`).
 **Signature**
 
 ```ts
-export declare const float: (config?: Args.ArgsConfig) => Args<number>
+export declare const float: (config?: Args.BaseArgsConfig) => Args<number>
 ```
 
 Added in v1.0.0
@@ -195,7 +243,7 @@ Can optionally provide a custom argument name (defaults to `"integer"`).
 **Signature**
 
 ```ts
-export declare const integer: (config?: Args.ArgsConfig) => Args<number>
+export declare const integer: (config?: Args.BaseArgsConfig) => Args<number>
 ```
 
 Added in v1.0.0
@@ -212,6 +260,20 @@ export declare const none: Args<void>
 
 Added in v1.0.0
 
+## path
+
+Creates a path argument.
+
+Can optionally provide a custom argument name (defaults to `"path"`).
+
+**Signature**
+
+```ts
+export declare const path: (config?: Args.PathArgsConfig) => Args<string>
+```
+
+Added in v1.0.0
+
 ## text
 
 Creates a text argument.
@@ -221,7 +283,7 @@ Can optionally provide a custom argument name (defaults to `"text"`).
 **Signature**
 
 ```ts
-export declare const text: (config?: Args.ArgsConfig) => Args<string>
+export declare const text: (config?: Args.BaseArgsConfig) => Args<string>
 ```
 
 Added in v1.0.0
@@ -284,7 +346,7 @@ export interface Args<A> extends Args.Variance<A>, Parameter, Pipeable {
   validate(
     args: ReadonlyArray<string>,
     config: CliConfig
-  ): Effect<never, ValidationError, readonly [ReadonlyArray<string>, A]>
+  ): Effect<FileSystem, ValidationError, readonly [ReadonlyArray<string>, A]>
   addDescription(description: string): Args<A>
 }
 ```
@@ -405,13 +467,25 @@ Added in v1.0.0
 
 Added in v1.0.0
 
-### ArgsConfig (interface)
+### BaseArgsConfig (interface)
 
 **Signature**
 
 ```ts
-export interface ArgsConfig {
+export interface BaseArgsConfig {
   readonly name?: string
+}
+```
+
+Added in v1.0.0
+
+### PathArgsConfig (interface)
+
+**Signature**
+
+```ts
+export interface PathArgsConfig extends BaseArgsConfig {
+  readonly exists?: Primitive.PathExists
 }
 ```
 
