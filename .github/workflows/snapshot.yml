@@ -62,7 +62,9 @@ jobs:
         run: git checkout origin/main
 
       - name: Install dependencies
-        uses: ./.github/actions/install-dependencies
+        uses: ./.github/actions/setup
+        with:
+          cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Exit pre-release mode
         if: ${{ hashFiles('.changeset/pre.json') != '' }}
