@@ -72,7 +72,7 @@ export class Empty implements Args.Args<void> {
   validate(
     args: ReadonlyArray<string>,
     _config: CliConfig.CliConfig
-  ): Effect.Effect<never, ValidationError.ValidationError, readonly [ReadonlyArray<string>, void]> {
+  ): Effect.Effect<never, ValidationError.ValidationError, [ReadonlyArray<string>, void]> {
     return Effect.succeed([args, undefined])
   }
 
@@ -144,7 +144,7 @@ export class Single<A> implements Args.Args<A> {
   ): Effect.Effect<
     FileSystem.FileSystem,
     ValidationError.ValidationError,
-    readonly [ReadonlyArray<string>, A]
+    [ReadonlyArray<string>, A]
   > {
     return Effect.suspend(() => {
       if (ReadonlyArray.isNonEmptyReadonlyArray(args)) {
@@ -153,7 +153,7 @@ export class Single<A> implements Args.Args<A> {
         return this.primitiveType.validate(Option.some(head), config).pipe(
           Effect.mapBoth({
             onFailure: (text) => InternalHelpDoc.p(text),
-            onSuccess: (a) => [tail, a] as const
+            onSuccess: (a) => [tail, a] as [ReadonlyArray<string>, A]
           })
         )
       }
@@ -194,7 +194,7 @@ export class Single<A> implements Args.Args<A> {
   }
 }
 
-export class Both<A, B> implements Args.Args<readonly [A, B]> {
+export class Both<A, B> implements Args.Args<[A, B]> {
   readonly [ArgsTypeId] = proto
   readonly _tag = "Both"
 
@@ -245,18 +245,18 @@ export class Both<A, B> implements Args.Args<readonly [A, B]> {
   ): Effect.Effect<
     FileSystem.FileSystem,
     ValidationError.ValidationError,
-    readonly [ReadonlyArray<string>, readonly [A, B]]
+    [ReadonlyArray<string>, [A, B]]
   > {
     return this.left.validate(args, config).pipe(
       Effect.flatMap(([args, a]) =>
         this.right.validate(args, config).pipe(
-          Effect.map(([args, b]) => [args, [a, b]] as const)
+          Effect.map(([args, b]) => [args, [a, b]])
         )
       )
     )
   }
 
-  addDescription(description: string): Args.Args<readonly [A, B]> {
+  addDescription(description: string): Args.Args<[A, B]> {
     return new Both(
       this.left.addDescription(description),
       this.right.addDescription(description)
@@ -353,7 +353,7 @@ export class Variadic<A> implements Args.Args<ReadonlyArray<A>> {
   ): Effect.Effect<
     FileSystem.FileSystem,
     ValidationError.ValidationError,
-    readonly [ReadonlyArray<string>, ReadonlyArray<A>]
+    [ReadonlyArray<string>, ReadonlyArray<A>]
   > {
     const min1 = Option.getOrElse(this.min, () => 0)
     const max1 = Option.getOrElse(this.max, () => Number.MAX_SAFE_INTEGER)
@@ -363,7 +363,7 @@ export class Variadic<A> implements Args.Args<ReadonlyArray<A>> {
     ): Effect.Effect<
       FileSystem.FileSystem,
       ValidationError.ValidationError,
-      readonly [ReadonlyArray<string>, ReadonlyArray<A>]
+      [ReadonlyArray<string>, ReadonlyArray<A>]
     > => {
       if (acc.length >= max1) {
         return Effect.succeed([args, acc])
@@ -434,13 +434,13 @@ export class Map<A, B> implements Args.Args<B> {
   ): Effect.Effect<
     FileSystem.FileSystem,
     ValidationError.ValidationError,
-    readonly [ReadonlyArray<string>, B]
+    [ReadonlyArray<string>, B]
   > {
     return this.args.validate(args, config).pipe(
       Effect.flatMap(([leftover, a]) =>
         Either.match(this.f(a), {
           onLeft: (doc) => Effect.fail(InternalValidationError.invalidArgument(doc)),
-          onRight: (b) => Effect.succeed([leftover, b] as const)
+          onRight: (b) => Effect.succeed([leftover, b])
         })
       )
     )

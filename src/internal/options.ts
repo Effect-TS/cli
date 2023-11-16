@@ -120,7 +120,7 @@ export class Single<A> implements Options.Options.ParseableOptions<A> {
   }
 
   names(): ReadonlyArray.NonEmptyArray<string> {
-    const order = Order.mapInput(Order.boolean, (tuple: readonly [boolean, string]) => !tuple[0])
+    const order = Order.mapInput(Order.boolean, (tuple: [boolean, string]) => !tuple[0])
     return pipe(
       ReadonlyArray.prepend(this.aliases, this.name),
       ReadonlyArray.map((str) => this.makeFullName(str)),
@@ -156,7 +156,7 @@ export class Single<A> implements Options.Options.ParseableOptions<A> {
   ): Effect.Effect<
     never,
     ValidationError.ValidationError,
-    readonly [ReadonlyArray<string>, ReadonlyArray<string>]
+    [ReadonlyArray<string>, ReadonlyArray<string>]
   > {
     return processArgs(args).pipe(
       Effect.flatMap((args) => {
@@ -262,7 +262,7 @@ export class Single<A> implements Options.Options.ParseableOptions<A> {
     return this.makeFullName(this.name)[1]
   }
 
-  private makeFullName(str: string): readonly [boolean, string] {
+  private makeFullName(str: string): [boolean, string] {
     return str.length === 1 ? [true, `-${str}`] : [false, `--${str}`]
   }
 }
@@ -423,7 +423,7 @@ export class OrElse<A, B> implements Options.Options<Either.Either<A, B>> {
 }
 
 /** @internal */
-export class Both<A, B> implements Options.Options<readonly [A, B]> {
+export class Both<A, B> implements Options.Options<[A, B]> {
   readonly [OptionsTypeId] = proto
   readonly _tag = "Both"
 
@@ -452,7 +452,7 @@ export class Both<A, B> implements Options.Options<readonly [A, B]> {
     return InternalUsage.concat(this.left.usage(), this.right.usage())
   }
 
-  modifySingle(f: <_>(single: Single<_>) => Single<_>): Options.Options<readonly [A, B]> {
+  modifySingle(f: <_>(single: Single<_>) => Single<_>): Options.Options<[A, B]> {
     return new Both(this.left.modifySingle(f), this.right.modifySingle(f))
   }
 
@@ -471,7 +471,7 @@ export class Both<A, B> implements Options.Options<readonly [A, B]> {
   validate(
     args: HashMap.HashMap<string, ReadonlyArray<string>>,
     config: CliConfig.CliConfig
-  ): Effect.Effect<FileSystem.FileSystem, ValidationError.ValidationError, readonly [A, B]> {
+  ): Effect.Effect<FileSystem.FileSystem, ValidationError.ValidationError, [A, B]> {
     return this.left.validate(args, config).pipe(
       Effect.catchAll((err1) =>
         this.right.validate(args, config).pipe(Effect.matchEffect({
@@ -517,7 +517,7 @@ export class WithDefault<A> implements Options.Options.ParseableOptions<A> {
           onSome: () => InternalHelpDoc.p(`This setting is optional. Defaults to: ${this.fallback}`)
         })
         : InternalHelpDoc.p("This setting is optional.")
-      return [span, InternalHelpDoc.sequence(block, optionalDescription)] as const
+      return [span, InternalHelpDoc.sequence(block, optionalDescription)]
     })
   }
 
@@ -567,7 +567,7 @@ export class WithDefault<A> implements Options.Options.ParseableOptions<A> {
   ): Effect.Effect<
     never,
     ValidationError.ValidationError,
-    readonly [ReadonlyArray<string>, ReadonlyArray<string>]
+    [ReadonlyArray<string>, ReadonlyArray<string>]
   > {
     const error = InternalHelpDoc.p("Encountered an error in command design while parsing")
     return Effect.fail(InternalValidationError.commandMismatch(error))
@@ -620,7 +620,7 @@ export class KeyValueMap
         InternalHelpDoc.sequence(header),
         InternalHelpDoc.sequence(description)
       )
-      return [span, newBlock] as const
+      return [span, newBlock]
     })
   }
 
@@ -661,7 +661,7 @@ export class KeyValueMap
   ): Effect.Effect<
     never,
     ValidationError.ValidationError,
-    readonly [ReadonlyArray<string>, ReadonlyArray<string>]
+    [ReadonlyArray<string>, ReadonlyArray<string>]
   > {
     const names = ReadonlyArray.map(
       this.argumentOption.names(),
@@ -721,10 +721,10 @@ export class KeyValueMap
   > {
     const extractKeyValue = (
       keyValue: string
-    ): Effect.Effect<never, ValidationError.ValidationError, readonly [string, string]> => {
+    ): Effect.Effect<never, ValidationError.ValidationError, [string, string]> => {
       const split = keyValue.trim().split("=")
       if (ReadonlyArray.isNonEmptyReadonlyArray(split) && split.length === 2 && split[1] !== "") {
-        return Effect.succeed(split as unknown as readonly [string, string])
+        return Effect.succeed(split as unknown as [string, string])
       }
       const error = InternalHelpDoc.p(`Expected a key/value pair but received '${keyValue}'`)
       return Effect.fail(InternalValidationError.invalidArgument(error))
@@ -856,7 +856,7 @@ export const choice = <A extends string, C extends ReadonlyArray.NonEmptyReadonl
 }
 
 /** @internal */
-export const choiceWithValue = <C extends ReadonlyArray.NonEmptyReadonlyArray<[string, any]>>(
+export const choiceWithValue = <const C extends ReadonlyArray.NonEmptyReadonlyArray<[string, any]>>(
   name: string,
   choices: C
 ): Options.Options<C[number][1]> =>
@@ -1089,7 +1089,7 @@ export const validate = dual<
   ) => Effect.Effect<
     FileSystem.FileSystem,
     ValidationError.ValidationError,
-    readonly [Option.Option<ValidationError.ValidationError>, ReadonlyArray<string>, A]
+    [Option.Option<ValidationError.ValidationError>, ReadonlyArray<string>, A]
   >,
   <A>(
     self: Options.Options<A>,
@@ -1098,7 +1098,7 @@ export const validate = dual<
   ) => Effect.Effect<
     FileSystem.FileSystem,
     ValidationError.ValidationError,
-    readonly [Option.Option<ValidationError.ValidationError>, ReadonlyArray<string>, A]
+    [Option.Option<ValidationError.ValidationError>, ReadonlyArray<string>, A]
   >
 >(3, (self, args, config) =>
   matchOptions(args, self.flattened(), config).pipe(
@@ -1110,7 +1110,7 @@ export const validate = dual<
             onSome: (err) => Effect.fail(err)
           })
         ),
-        Effect.map((a) => [error, commandArgs, a] as const)
+        Effect.map((a) => [error, commandArgs, a])
       )
     )
   ))
@@ -1228,7 +1228,7 @@ const matchOptions = (
 ): Effect.Effect<
   never,
   never,
-  readonly [
+  [
     Option.Option<ValidationError.ValidationError>,
     ReadonlyArray<string>,
     HashMap.HashMap<string, ReadonlyArray<string>>
@@ -1240,20 +1240,42 @@ const matchOptions = (
     return findOptions(input, options, config).pipe(
       Effect.flatMap(([otherArgs, otherOptions, map1]) => {
         if (HashMap.isEmpty(map1)) {
-          return Effect.succeed([Option.none(), input, map1] as const)
+          return Effect.succeed([Option.none(), input, map1] as [
+            Option.Option<ValidationError.ValidationError>,
+            ReadonlyArray<string>,
+            HashMap.HashMap<string, ReadonlyArray<string>>
+          ])
         }
         return matchOptions(otherArgs, otherOptions, config).pipe(
           Effect.map(([error, otherArgs, map2]) =>
-            [error, otherArgs, merge(map1, ReadonlyArray.fromIterable(map2))] as const
+            [error, otherArgs, merge(map1, ReadonlyArray.fromIterable(map2))] as [
+              Option.Option<ValidationError.ValidationError>,
+              ReadonlyArray<string>,
+              HashMap.HashMap<string, ReadonlyArray<string>>
+            ]
           )
         )
       }),
-      Effect.catchAll((e) => Effect.succeed([Option.some(e), input, HashMap.empty()] as const))
+      Effect.catchAll((e) =>
+        Effect.succeed([Option.some(e), input, HashMap.empty()] as [
+          Option.Option<ValidationError.ValidationError>,
+          ReadonlyArray<string>,
+          HashMap.HashMap<string, ReadonlyArray<string>>
+        ])
+      )
     )
   }
   return ReadonlyArray.isEmptyReadonlyArray(input)
-    ? Effect.succeed([Option.none(), ReadonlyArray.empty(), HashMap.empty()])
-    : Effect.succeed([Option.none(), input, HashMap.empty()])
+    ? Effect.succeed([Option.none(), ReadonlyArray.empty(), HashMap.empty()] as [
+      Option.Option<ValidationError.ValidationError>,
+      ReadonlyArray<string>,
+      HashMap.HashMap<string, ReadonlyArray<string>>
+    ])
+    : Effect.succeed([Option.none(), input, HashMap.empty()] as [
+      Option.Option<ValidationError.ValidationError>,
+      ReadonlyArray<string>,
+      HashMap.HashMap<string, ReadonlyArray<string>>
+    ])
 }
 
 /**
@@ -1267,7 +1289,7 @@ const findOptions = (
 ): Effect.Effect<
   never,
   ValidationError.ValidationError,
-  readonly [
+  [
     ReadonlyArray<string>,
     ReadonlyArray<Options.Options.ParseableOptions<unknown>>,
     HashMap.HashMap<string, ReadonlyArray<string>>
@@ -1281,11 +1303,19 @@ const findOptions = (
         if (ReadonlyArray.isNonEmptyReadonlyArray(nameValues)) {
           const name = ReadonlyArray.headNonEmpty(nameValues)
           const values: ReadonlyArray<string> = ReadonlyArray.tailNonEmpty(nameValues)
-          return Effect.succeed([leftover, tail, HashMap.make([name, values])] as const)
+          return Effect.succeed([leftover, tail, HashMap.make([name, values])] as [
+            ReadonlyArray<string>,
+            ReadonlyArray<Options.Options.ParseableOptions<unknown>>,
+            HashMap.HashMap<string, ReadonlyArray<string>>
+          ])
         }
         return findOptions(leftover, tail, config).pipe(
           Effect.map(([otherArgs, otherOptions, map]) =>
-            [otherArgs, ReadonlyArray.prepend(otherOptions, head), map] as const
+            [otherArgs, ReadonlyArray.prepend(otherOptions, head), map] as [
+              ReadonlyArray<string>,
+              ReadonlyArray<Options.Options.ParseableOptions<unknown>>,
+              HashMap.HashMap<string, ReadonlyArray<string>>
+            ]
           )
         )
       }),
@@ -1296,14 +1326,22 @@ const findOptions = (
             Effect.flatMap(([otherArgs, otherOptions, map]) =>
               Effect.fail(e).pipe(
                 Effect.when(() => HashMap.isEmpty(map)),
-                Effect.as([otherArgs, ReadonlyArray.prepend(otherOptions, head), map] as const)
+                Effect.as([otherArgs, ReadonlyArray.prepend(otherOptions, head), map] as [
+                  ReadonlyArray<string>,
+                  ReadonlyArray<Options.Options.ParseableOptions<unknown>>,
+                  HashMap.HashMap<string, ReadonlyArray<string>>
+                ])
               )
             )
           ),
         MissingFlag: () =>
           findOptions(input, tail, config).pipe(
             Effect.map(([otherArgs, otherOptions, map]) =>
-              [otherArgs, ReadonlyArray.prepend(otherOptions, head), map] as const
+              [otherArgs, ReadonlyArray.prepend(otherOptions, head), map] as [
+                ReadonlyArray<string>,
+                ReadonlyArray<Options.Options.ParseableOptions<unknown>>,
+                HashMap.HashMap<string, ReadonlyArray<string>>
+              ]
             )
           ),
         UnclusteredFlag: (e) =>
@@ -1324,7 +1362,7 @@ const matchUnclustered = (
 ): Effect.Effect<
   never,
   ValidationError.ValidationError,
-  readonly [
+  [
     ReadonlyArray<string>,
     ReadonlyArray<Options.Options.ParseableOptions<unknown>>,
     HashMap.HashMap<string, ReadonlyArray<string>>
@@ -1360,7 +1398,7 @@ const matchUnclustered = (
  */
 const merge = (
   map1: HashMap.HashMap<string, ReadonlyArray<string>>,
-  map2: ReadonlyArray<readonly [string, ReadonlyArray<string>]>
+  map2: ReadonlyArray<[string, ReadonlyArray<string>]>
 ): HashMap.HashMap<string, ReadonlyArray<string>> => {
   if (ReadonlyArray.isNonEmptyReadonlyArray(map2)) {
     const head = ReadonlyArray.headNonEmpty(map2)

@@ -372,7 +372,7 @@ export const validate: {
   ) => Effect<
     FileSystem,
     ValidationError,
-    readonly [Option<ValidationError>, ReadonlyArray<string>, A]
+    [Option<ValidationError>, ReadonlyArray<string>, A]
   >
   <A>(
     self: Options<A>,
@@ -381,7 +381,7 @@ export const validate: {
   ): Effect<
     FileSystem,
     ValidationError,
-    readonly [Option<ValidationError>, ReadonlyArray<string>, A]
+    [Option<ValidationError>, ReadonlyArray<string>, A]
   >
 } = InternalOptions.validate
 

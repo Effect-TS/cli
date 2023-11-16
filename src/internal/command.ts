@@ -851,7 +851,7 @@ export const withHelp = dual<
 
 const splitForcedArgs = (
   args: ReadonlyArray<string>
-): readonly [ReadonlyArray<string>, ReadonlyArray<string>] => {
+): [ReadonlyArray<string>, ReadonlyArray<string>] => {
   const [remainingArgs, forcedArgs] = ReadonlyArray.span(args, (str) => str !== "--")
   return [remainingArgs, ReadonlyArray.drop(forcedArgs, 1)]
 }

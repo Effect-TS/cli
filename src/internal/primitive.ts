@@ -105,7 +105,7 @@ export class Choice<A> implements Primitive.Primitive<A> {
   readonly [PrimitiveTypeId] = proto
   readonly _tag = "Choice"
 
-  constructor(readonly alternatives: ReadonlyArray.NonEmptyReadonlyArray<readonly [string, A]>) {}
+  constructor(readonly alternatives: ReadonlyArray.NonEmptyReadonlyArray<[string, A]>) {}
 
   typeName(): string {
     return "choice"
