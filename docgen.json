@@ -1,3 +1,4 @@
 {
+  "outDir": "generated-docs",
   "exclude": ["src/internal/**/*.ts"]
 }
