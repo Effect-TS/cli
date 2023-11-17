@@ -11,10 +11,17 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  pages: write # To deploy to GitHub Pages
+  id-token: write # To verify the deployment originates from an appropriate source
+
 jobs:
-  build:
-    name: Build
+  pages:
+    name: Pages
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -33,19 +40,7 @@ jobs:
       - name: Upload pages artifact
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v2
-
-  deploy:
-    name: Deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      pages: write # To deploy to GitHub Pages
-      id-token: write # To verify the deployment originates from an appropriate source
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: deployment
         uses: actions/deploy-pages@v2
