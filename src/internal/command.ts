@@ -608,6 +608,9 @@ const parseInternal = (
         if (ReadonlyArray.contains(args, "--wizard")) {
           return parseBuiltInArgs(ReadonlyArray.make(self.name, "--wizard"))
         }
+        if (ReadonlyArray.contains(args, "--version")) {
+          return parseBuiltInArgs(ReadonlyArray.make(self.name, "--version"))
+        }
         const error = InternalHelpDoc.p(`Missing command name: '${self.name}'`)
         return Effect.fail(InternalValidationError.commandMismatch(error))
       }
