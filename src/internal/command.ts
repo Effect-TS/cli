@@ -877,7 +877,7 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
   switch (self._tag) {
     case "Standard": {
       const message = InternalHelpDoc.p(pipe(
-        InternalSpan.text("\n\n"),
+        InternalSpan.text("\n"),
         InternalSpan.concat(InternalSpan.strong(InternalSpan.code("COMMAND:"))),
         InternalSpan.concat(InternalSpan.space),
         InternalSpan.concat(InternalSpan.code(self.name))

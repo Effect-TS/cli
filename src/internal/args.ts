@@ -391,22 +391,6 @@ const allTupled = <const T extends ArrayLike<Args.Args<any>>>(arg: T): Args.Args
   return result as any
 }
 
-const isBoolInternal = (self: Instruction): boolean => {
-  switch (self._tag) {
-    case "Single": {
-      return InternalPrimitive.isBool(self.primitiveType)
-    }
-    case "Map":
-    case "Optional":
-    case "Variadic": {
-      return isBoolInternal(self.args as Instruction)
-    }
-    default: {
-      return false
-    }
-  }
-}
-
 const getHelpInternal = (self: Instruction): HelpDoc.HelpDoc => {
   switch (self._tag) {
     case "Empty": {
@@ -817,9 +801,6 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
       ).pipe(Effect.tap((args) => validateInternal(self, args, config)))
     }
     case "Optional": {
-      if (isBoolInternal(self.args as Instruction)) {
-        return wizardInternal(self.args as Instruction, config)
-      }
       const defaultHelp = InternalHelpDoc.p(`This argument is optional - specify a value?`)
       const message = pipe(
         wizardHeader,
@@ -837,8 +818,8 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
         ),
         Effect.flatMap((specifyValue) =>
           specifyValue
-            ? Effect.succeed(ReadonlyArray.empty())
-            : wizardInternal(self.args as Instruction, config)
+            ? wizardInternal(self.args as Instruction, config)
+            : Effect.succeed(ReadonlyArray.empty())
         )
       )
     }

@@ -1,5 +1,14 @@
 # Effect CLI
 
+- [Effect CLI](#effect-cli)
+  - [Installation](#installation)
+  - [Built-In Options](#built-in-options)
+  - [API Reference](#api-reference)
+  - [Quick Start Guide](#quick-start-guide)
+    - [Creating the Command-Line Application](#creating-the-command-line-application)
+    - [Running the Command-Line Application](#running-the-command-line-application)
+
+
 ## Installation
 
 You can install `@effect/cli` using your preferred package manager:
@@ -30,6 +39,15 @@ You can then provide the `NodeContext.layer` exported from `@effect/platform-nod
 
 For a more detailed walkthrough, take a read through the [Quick Start Guide](#quick-start-guide) below.
 
+## Built-In Options
+
+All Effect CLI programs ship with several built-in options:
+
+  - `[--version]` - automatically displays the version of the CLI application
+  - `[-h | --help]` - automatically generates and displays a help documentation for your CLI application
+  - `[--wizard]` - starts the Wizard Mode for your CLI application which guides a user through constructing a command for your the CLI application
+  - `[--shell-completion-script] [--shell-type]` - automatically generates and displays a shell completion script for your CLI application
+
 ## API Reference
 
 - https://effect-ts.github.io/cli/docs/modules
@@ -46,121 +64,306 @@ minigit add   [-v | --verbose] [--] [<pathspec>...]
 minigit clone [--depth <depth>] [--] <repository> [<directory>]
 ```
 
-A fully functioning version of the CLI application that will be built during this quick start is also available in the [examples](./examples/git.ts).
+**NOTE**: During this quick start guide, we will focus on building the components of the CLI application that will allow us to parse the above commands into structured data. However, implementing the *functionality* of these commands is out of the scope of this quick start guide.
 
-### Modeling the Parsed Command Line
+The CLI application that will be built during this quick start guide is also available in the [examples](./examples/git.ts).
 
-A good first step when building an CLI with `@effect/cli` is to consider what the data model should be for a parsed command. For our `minigit` CLI, we have three commands that we would like to model.
+### Creating the Command-Line Application
+
+When building an CLI application with `@effect/cli`, it is often good practice to specify each command individually is to consider what the data model should be for a parsed command.
+
+For our `minigit` CLI, we have three commands that we would like to model. Let's start by using `@effect/cli` to create a basic `Command` to represent our top-level `minigit` command:
 
 ```ts
-import * as HashMap from "effect/HashMap"
+import * as Command from "@effect/cli/Command"
+import * as Options from "@effect/cli/Options"
 
 // minigit [--version] [-h | --help] [-c <name>=<value>]
-interface MiniGit {
-  readonly config: HashMap.HashMap<string, string>
-}
+const minigitOptions = Options.keyValueMap("c").pipe(Options.optional)
+const minigit = Command.standard("minigit", { options: minigitOptions })
 ```
 
-Notice that we have omitted the version and help flags from the model above. This is because Effect CLI has several [Built-In Commands](#built-in-commands) which are available automatically for all CLI applications built with `@effect/cli`.
+Some things to note in the above example:
+  1. We've imported the `Command` and `Options` modules from `@effect/cli`
+  2. We've created an `Options` object which will allow us to parse `key=value` pairs with the `-c` flag
+  3. We've made our `-c` flag an optional option using the `Options.optional` combinator
+  4. We've created a `Command` named `minigit` and passed our previously created `Options` to the `minigit` command
 
-Some of the relevant built-in commands are:
+An astute observer may have also noticed that in the snippet above we did not specify `Options` for version and help.
 
-- The built-in `[--version]` flag will automatically display the version of the CLI application
-- The built-in `[-h | --help]` flag will automatically generate and display a description based upon the commands available for your CLI application
-- The built-in `[--wizard]` flag will automatically start Wizard Mode for your CLI application, which guides a user through the CLI application
+This is because Effect CLI has several built-in options (see [Built-In Options](#built-in-options) for more information) which are available automatically for all CLI applications built with `@effect/cli`.
 
-Let's finish modeling our other commands:
-
-```ts
-import * as Option from "effect/Option"
-
-// minigit add   [-v | --verbose] [--] [<pathspec>...]
-interface MiniGitAdd {
-  readonly verbose: boolean
-  readonly paths: ReadonlyArray<string>
-}
-
-// minigit clone [--depth <depth>] [--] <repository> [<directory>]
-interface MiniGitClone {
-  readonly depth: Option.Option<number>
-  readonly repository: string
-  readonly directory: Option.Option<string>
-}
-```
-
-### Modeling Commands
-
-In addition, a command-line application built with `@effect/cli` must be able to interact with platform-specific services such as the file system, terminal, and others. Therefore, you must also install the `@effect/platform` package specific to the environment where your command-line application will run.
-
-For example, if you intend to run your command-line application in a NodeJS environment, install `@effect/platform-node`:
-
-
-Then, you can run your command-line application using the `Context` and `Runtime` exported by the environment-specific `@effect/platform` package:
-
-```ts
-import * as CliApp from "@effect/cli/CliApp"
-import * as Command from "@effect/cli/Command"
-import * as NodeContext from "@effect/platform-node/NodeContext"
-import * as Runtime from "@effect/platform-node/Runtime"
-import * as Console from "effect/Console"
-import * as Effect from "effect/Effect"
-
-const app = CliApp.make({
-  name: "Hello App",
-  version: "1.0.0",
-  command: Command.standard("hello")
-})
-
-Effect.sync(() => process.argv.slice(2)).pipe(
-  Effect.flatMap((args) => CliApp.run(app, args, () => Console.log("Hello, World!"))),
-  Effect.provide(NodeContext.layer),
-  Runtime.runMain
-)
-```
-
-## Commands
-
-A command is a structured sequence of text tokens that represents a specific directive for a CLI application. Effect CLI represents a CLI command using the `Command<A>` data type.
-
-Effect CLI uses the data type `Command<A>` to represent a CLI command. When constructing a `CliApp`, at least one `Command<A>` must be provided. When run, the `CliApp` will then parse provided command-line arguments using the provided `Command<A>` into a structured format represented by the generic `A` type. Then you can implement the functionality of the CLI application using the parsed command-line input.
-
-### Subcommands
-
-A subcommand is a `Command` that belongs to a larger parent `Command`. Thus, it is possible for a `Command` to have several distinct subcommands.
-
-Subcommands can be used to better organize and design the functionality of a CLI application. Different subcommands can represent distinct directives to be carried out by the CLI application.
-
-For example, looking at the subset of the `git` CLI application provided below, `git` is the name of the parent `Command`, while `add` and `clone` are subcommands of `git`.
-
-```sh
-git clone # Creates a copy of a repository
-git add   # Adds modified or new files that will be committed after using git commit
-```
-
-# Basic Construction
-
-A standard `Command` can be constructed using the `Command.standard` constructor:
-
-```ts
-import * as Command from "@effect/cli/Command"
-
-const git = Command.standard("git")
-```
-
-You can also specify additional `Options` and `Args` that a `Command` may accept:
+Let's continue and create our other two commands:
 
 ```ts
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
 
-const args = Args.file()
-const options = Options.boolean("--version")
-const git = Command.standard("git", { args, options })
+// minigit [--version] [-h | --help] [-c <name>=<value>]
+const minigitOptions = Options.keyValueMap("c").pipe(Options.optional)
+const minigit = Command.standard("minigit", { options: minigitOptions })
+
+// minigit add   [-v | --verbose] [--] [<pathspec>...]
+const minigitAddOptions = Options.boolean("verbose").pipe(Options.withAlias("v"))
+const minigitAdd = Command.standard("add", { options: minigitAddOptions })
+
+// minigit clone [--depth <depth>] [--] <repository> [<directory>]
+const minigitCloneArgs = Args.all([
+  Args.text({ name: "repository" }),
+  Args.directory().pipe(Args.optional)
+])
+const minigitCloneOptions = Options.integer("depth").pipe(Options.optional)
+const minigitClone = Command.standard("clone", {
+  options: minigitCloneOptions,
+  args: minigitCloneArgs
+})
 ```
 
-See [Options](#options) and [Args](#args) for more information on each, respectively.
+Some things to note in the above example:
+  1. We've additionally imported the `Args` module from `@effect/cli`
+  2. We've used `Options.withAlias` to give the `--verbose` flag an alias of `-v`
+  3. We've used `Args.all` to compose two `Args` allowing us to return a tuple of their values
+  4. We've additionally passed the `Args` for `minigit clone` to the `Command`
 
-## Options
+Now that we've fully defined all the commands, we must indicate that the `add` and `clone` commands are subcommands of `minigit`. This can be accomplished using the `Command.withSubcommands` combinator:
 
-## Args
+```ts
+const finalCommand = minigit.pipe(Command.withSubcommands([minigitAdd, minigitClone]))
+```
+
+Inspecting the type of `finalCommand` above, we can see that `@effect/cli` tracks:
+  - the name of the `Command`
+  - the structured data that results from parsing the `Options` for the command
+  - the structured data that results from parsing the `Args` for the command
+
+```ts
+const finalCommand: Command.Command<{
+    readonly name: "minigit";
+    readonly options: Option<HashMap<string, string>>;
+    readonly args: void;
+    readonly subcommand: Option<{
+        readonly name: "add";
+        readonly options: boolean;
+        readonly args: void;
+    } | {
+        readonly name: "clone";
+        readonly options: Option<number>;
+        readonly args: [string, Option<string>];
+    }>;
+}>
+```
+
+To reduce the verbosity of the `Command` type, we can create data models for our subcommands:
+
+```ts
+import * as Data from "effect/Data"
+import * as Option from "effect/Option"
+
+type Subcommand = AddSubcommand | CloneSubcommand
+
+interface AddSubcommand extends Data.Case {
+  readonly _tag: "AddSubcommand"
+  readonly verbose: boolean
+}
+const AddSubcommand = Data.tagged<AddSubcommand>("AddSubcommand")
+
+interface CloneSubcommand extends Data.Case {
+  readonly _tag: "CloneSubcommand"
+  readonly depth: Option.Option<number>
+  readonly repository: string
+  readonly directory: Option.Option<string>
+}
+const CloneSubcommand = Data.tagged<CloneSubcommand>("CloneSubcommand")
+```
+
+And then use `Command.map` to map the values parsed by our subcommands to the data models we've created:
+
+```ts
+const minigitAdd = Command.standard("add", { options: minigitAddOptions }).pipe(
+  Command.map((parsed) => AddSubcommand({ verbose: parsed.options }))
+)
+
+const minigitClone = Command.standard("clone", {
+  options: minigitCloneOptions,
+  args: minigitCloneArgs
+const minigitClone = Command.standard("clone", {
+  options: minigitCloneOptions,
+  args: minigitCloneArgs
+}).pipe(Command.map((parsed) =>
+  CloneSubcommand({
+    depth: parsed.options,
+    repository: parsed.args[0],
+    directory: parsed.args[1]
+  })
+))
+```
+
+Now if we inspect the type of our top-level `finalCommand` we will see our data models instead of their properties:
+
+```ts
+const finalCommand: Command.Command<{
+    readonly name: "minigit";
+    readonly options: Option.Option<HashMap<string, string>>;
+    readonly args: void;
+    readonly subcommand: Option.Option<CloneSubcommand | AddSubcommand>;
+}>
+```
+
+The last thing left to do before we have a complete CLI application is to use our command to construct a `CliApp`:
+
+```ts
+import * as CliApp from "@effect/cli/CliApp"
+
+// ...
+
+const cliApp = CliApp.make({
+  name: "MiniGit Distributed Version Control",
+  version: "v2.42.1",
+  command: finalCommand
+})
+```
+
+Some things to note in the above example:
+  1. We've additionally imported the `CliApp` module from `@effect/cli`
+  2. We've constructed a new `CliApp` using `CliApp.make`
+  3. We've provided our application with a `name`, `version`, and our `finalCommand`
+
+At this point, we're ready to run our CLI application.
+
+### Running the Command-Line Application
+
+For the purposes of this example, we will assume that our CLI application is running in a NodeJS environment and that we have previously installed `@effect/platform-node` (see [Installation](#installation)).
+
+We can then run the CLI application using the `CliApp.run` method. This method takes three arguments: the `CliApp` to run, the command-line arguments, and an `execute` function which will be called with the parsed command-line arguments.
+
+```ts
+import * as NodeContext from "@effect/platform-node/NodeContext"
+import * as Runtime from "@effect/platform-node/Runtime"
+import * as Effect from "effect/Effect"
+
+const program = Effect.gen(function*(_) {
+  const args = yield* _(Effect.sync(() => globalThis.process.argv.slice(1)))
+  return yield* _(CliApp.run(cliApp, args, (parsed) => {
+    return Effect.unit // For now, do nothing
+  }))
+})
+
+program.pipe(
+  Effect.provide(NodeContext.layer),
+  Runtime.runMain
+)
+```
+
+Some things to note in the above example:
+  1. We've imported the `Effect` module from `effect`
+  2. We've imported the `NodeContext` and `Runtime` modules from `@effect/platform-node`
+  3. We've used `Effect.sync` to lazily evaluate the NodeJS `process.argv`
+  4. We've called `CliApp.run` to execute our CLI application (currently we're not using the parsed arguments)
+  5. We've provided our CLI `program` with the `NodeContext` `Layer`
+     - Ensure that the CLI can access platform-specific services (i.e. `FileSystem`, `Terminal`, etc.)
+  6. We've used the platform-specific `Runtime.runMain` to run the program
+
+At the moment, we're not using the parsed command-line arguments for anything, but we *can* run some of the built-in commands to see how they work. For simplicity, the example commands below run the `minigit` [example](./examples/minigit.ts) within this project. If you've been following along, feel free to replace with a command appropriate for your environment:
+
+  - Display the CLI application's version:
+
+    ```sh
+    pnpm tsx ./examples/minigit.ts --version
+    ```
+
+  - Display the help documentation for a command:
+
+    ```sh
+    pnpm tsx ./examples/minigit.ts --help
+    pnpm tsx ./examples/minigit.ts add --help
+    pnpm tsx ./examples/minigit.ts clone --help
+    ```
+
+  - Run the Wizard Mode for a command:
+
+    ```sh
+    pnpm tsx ./examples/minigit.ts --wizard
+    pnpm tsx ./examples/minigit.ts add --wizard
+    ```
+
+Let's go ahead and adjust our `CliApp.run` to make use of the parsed command-line arguments.
+
+```ts
+import { pipe } from "effect/Function"
+import * as ReadonlyArray from "effect/ReadonlyArray"
+
+const handleRootCommand = (configs: Option.Option<HashMap.HashMap<string, string>>) =>
+  Option.match(configs, {
+    onNone: () => Console.log("Running 'minigit'"),
+    onSome: (configs) => {
+      const keyValuePairs = Array.from(configs).map(([key, value]) => `${key}=${value}`).join(", ")
+      return Console.log(`Running 'minigit' with the following configs: ${keyValuePairs}`)
+    }
+  })
+
+const handleSubcommand = (subcommand: Subcommand) => {
+  switch (subcommand._tag) {
+    case "AddSubcommand": {
+      return Console.log(`Running 'minigit add' with '--verbose ${subcommand.verbose}'`)
+    }
+    case "CloneSubcommand": {
+      const optionsAndArgs = pipe(
+        ReadonlyArray.compact([
+          Option.map(subcommand.depth, (depth) => `--depth ${depth}`),
+          Option.some(subcommand.repository),
+          subcommand.directory
+        ]),
+        ReadonlyArray.join(", ")
+      )
+      return Console.log(
+        `Running 'minigit clone' with the following options and arguments: '${optionsAndArgs}'`
+      )
+    }
+  }
+}
+
+const program = Effect.gen(function*(_) {
+  const args = yield* _(Effect.sync(() => globalThis.process.argv.slice(1)))
+  return yield* _(CliApp.run(cliApp, args, (parsed) =>
+    Option.match(parsed.subcommand, {
+      onNone: () => handleRootCommand(parsed.options),
+      onSome: (subcommand) => handleSubcommand(subcommand)
+    })))
+})
+
+program.pipe(
+  Effect.provide(NodeContext.layer),
+  Runtime.runMain
+)
+```
+
+Some things to note in the above example:
+  1. We've created functions to handle both cases where:
+    - We receive parsed command-line arguments that does contain a subcommand
+    - We receive parsed command-line arguments that does not contain a subcommand
+  2. Within each of our handlers, we are simply loggging the command and the provided options / arguments to the console
+
+We can now run some commands to observe the output. Again, we will assume you are running the [example](./examples//minigit.ts), so make sure to adjust the commands below if you've been following along:
+
+```sh
+pnpm tsx ./examples/minigit.ts
+pnpm tsx ./examples/minigit.ts -c key1=value1 -c key2=value2
+
+pnpm tsx ./examples/minigit.ts add
+pnpm tsx ./examples/minigit.ts add --verbose
+
+pnpm tsx ./examples/minigit.ts clone https://github.com/Effect-TS/cli.git
+pnpm tsx ./examples/minigit.ts clone --depth 1 https://github.com/Effect-TS/cli.git
+pnpm tsx ./examples/minigit.ts clone --depth 1 https://github.com/Effect-TS/cli.git ./output-directory
+```
+
+You should also try running some invalid commands and observe the error output from your Effect CLI application.
+
+<hr/>
+
+At this point, we've completed our quick-start guide!
+
+We hope that you enjoyed learning a little bit about Effect CLI, but this guide only scratched surface! We encourage you to continue exploring Effect CLI and all the features it provides!
+
+Happy Hacking!
