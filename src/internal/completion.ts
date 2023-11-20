@@ -64,7 +64,9 @@ export const getCompletionScript = (
     case "Bash": {
       return createBashCompletionScript(pathToExecutable, programNames)
     }
-    case "Fish":
+    case "Fish": {
+      return createFishCompletionScript(pathToExecutable, programNames)
+    }
     case "Zsh": {
       throw new Error("Not implemented")
     }
@@ -83,13 +85,13 @@ const createBashCompletionScript = (
   const completions = pipe(
     programNames,
     ReadonlyArray.map((programName) =>
-      `complete -F _${rootCommand}_effect_cli_completions ${programName}`
+      `complete -F _${rootCommand}_bash_completions ${programName}`
     ),
     ReadonlyArray.join("\n")
   )
   return String.stripMargin(
-    `|###-begin-${rootCommand}-completions-###
-     |_${rootCommand}_effect_cli_completions() {
+    `|###-begin-${rootCommand}-bash-completions-###
+     |function _${rootCommand}_bash_completions() {
      |  local CMDLINE
      |  local IFS=$'\\n'
      |  CMDLINE=(--shell-type bash --shell-completion-index "\${COMP_CWORD}")
@@ -106,6 +108,50 @@ const createBashCompletionScript = (
      |  unset $(compgen -v | grep "^COMP_WORD_")
      |}
      |${completions}
-     |###-end-${rootCommand}-completions-###`
+     |###-end-${rootCommand}-bash-completions-###`
+  )
+}
+
+/**
+ * We tokenize so that the call to count (and hence --bash-completion-index)
+ * gets the right number use cut-at-curstor to not bother sending anything
+ * after the cursor position, which allows for completion of the middle of
+ * words.
+ *
+ * Tab characters separate items from descriptions.
+ *
+ * ```
+ * commandline
+ *   -c, --cut-at-cursor   Only print selection up until the current cursor position
+ *   -o, --tokenize        Tokenize the selection and print one string-type token per line
+ * ```
+ */
+const createFishCompletionScript = (
+  pathToExecutable: string,
+  programNames: ReadonlyArray.NonEmptyReadonlyArray<string>
+) => {
+  const rootCommand = ReadonlyArray.headNonEmpty(programNames)
+  return String.stripMargin(
+    `|###-begin-${rootCommand}-fish-completions-###
+     |function _${rootCommand}_fish_completions
+     |    set -l cl (commandline --tokenize --current-process)
+     |    # Hack around fish issue #3934
+     |    set -l cn (commandline --tokenize --cut-at-cursor --current-process)
+     |    set -l cn (count $cn)
+     |    set -l tmpline --shell-type fish --bash-completion-index $cn
+     |    set -l i 0
+     |    for arg in $cl
+     |        set -gx COMP_WORD_$i $arg
+     |    end
+     |    for opt in (${pathToExecutable} $tmpline)
+     |        if test -d $opt
+     |            echo -E "$opt/"
+     |        else
+     |            echo -E "$opt"
+     |        end
+     |    end
+     |end
+     |complete --no-files --command ${rootCommand} --arguments '(_${rootCommand}_fish_completions)'"
+     |###-end-${rootCommand}-fish-completions-###`
   )
 }
