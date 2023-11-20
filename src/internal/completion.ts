@@ -138,11 +138,11 @@ const createFishCompletionScript = (
      |    # Hack around fish issue #3934
      |    set -l cn (commandline --tokenize --cut-at-cursor --current-process)
      |    set -l cn (count $cn)
-     |    set -l tmpline --shell-type fish --bash-completion-index $cn
-     |    set -l i 0
+     |    set -l tmpline --shell-type fish --shell-completion-index $cn
+     |    set -l index 0
      |    for arg in $cl
-     |        set -gx COMP_WORD_$i $arg
-     |        set -l i (math $i + 1)
+     |        set -gx COMP_WORD_$index $arg
+     |        set -l index (math $index + 1)
      |    end
      |    for opt in (${pathToExecutable} $tmpline)
      |        if test -d $opt
