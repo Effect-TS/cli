@@ -28,12 +28,12 @@ export const make = (workingDirectory: Option.Option<string>): Effect.Effect<
       const cmd = Option.match(workingDirectory, {
         onNone: () =>
           Command.make(command).pipe(
-            Command.runInShell("/bin/sh")
+            Command.runInShell("/bin/bash")
           ),
         onSome: (cwd) =>
           Command.make(command).pipe(
             Command.workingDirectory(cwd),
-            Command.runInShell("/bin/sh")
+            Command.runInShell("/bin/bash")
           )
       })
       return executor.lines(cmd)
