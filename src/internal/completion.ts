@@ -151,7 +151,7 @@ const createFishCompletionScript = (
      |        end
      |    end
      |end
-     |complete --no-files --command ${rootCommand} --arguments '(_${rootCommand}_fish_completions)'"
+     |complete --no-files --command ${rootCommand} --arguments '(_${rootCommand}_fish_completions)'
      |###-end-${rootCommand}-fish-completions-###`
   )
 }
