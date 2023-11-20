@@ -92,11 +92,11 @@ const createBashCompletionScript = (
      |_${rootCommand}_effect_cli_completions() {
      |  local CMDLINE
      |  local IFS=$'\\n'
-     |  CMDLINE=(--shell-type bash --shell-completion-index $COMP_CWORD)
+     |  CMDLINE=(--shell-type bash --shell-completion-index "\${COMP_CWORD}")
      |
      |  INDEX=0
-     |  for arg in \${COMP_WORDS[@]}; do
-     |    export COMP_WORD_$INDEX=\${arg}
+     |  for arg in "\${COMP_WORDS[@]}"; do
+     |    export COMP_WORD_$INDEX="\${arg}"
      |    (( INDEX++ ))
      |  done
      |

@@ -197,11 +197,7 @@ const handleBuiltInOption = <A>(
           self.command,
           config,
           compgen
-        ).pipe(
-          Effect.flatMap((completions) =>
-            Effect.forEach(completions, (word) => Console.log(word), { discard: true })
-          )
-        )
+        ).pipe(Effect.flatMap(Effect.forEach((word) => Console.log(word), { discard: true })))
       }))
     }
     case "ShowWizard": {
