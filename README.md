@@ -187,9 +187,6 @@ const minigitAdd = Command.standard("add", { options: minigitAddOptions }).pipe(
 const minigitClone = Command.standard("clone", {
   options: minigitCloneOptions,
   args: minigitCloneArgs
-const minigitClone = Command.standard("clone", {
-  options: minigitCloneOptions,
-  args: minigitCloneArgs
 }).pipe(Command.map((parsed) =>
   CloneSubcommand({
     depth: parsed.options,

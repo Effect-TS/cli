@@ -79,16 +79,17 @@ const createBashCompletionScript = (
   pathToExecutable: string,
   programNames: ReadonlyArray.NonEmptyReadonlyArray<string>
 ): string => {
+  const rootCommand = ReadonlyArray.headNonEmpty(programNames)
   const completions = pipe(
     programNames,
     ReadonlyArray.map((programName) =>
-      `complete -F _${ReadonlyArray.headNonEmpty(programNames)} ${programName}`
+      `complete -F _${rootCommand}_effect_cli_completions ${programName}`
     ),
     ReadonlyArray.join("\n")
   )
   return String.stripMargin(
-    `|#!/usr/bin/env bash
-     |_${ReadonlyArray.headNonEmpty(programNames)}() {
+    `|###-begin-${rootCommand}-completions-###
+     |_${rootCommand}_effect_cli_completions() {
      |  local CMDLINE
      |  local IFS=$'\\n'
      |  CMDLINE=(--shell-type bash --shell-completion-index $COMP_CWORD)
@@ -104,6 +105,7 @@ const createBashCompletionScript = (
      |  # Unset the environment variables.
      |  unset $(compgen -v | grep "^COMP_WORD_")
      |}
-     |${completions}`
+     |${completions}
+     |###-end-${rootCommand}-completions-###`
   )
 }
