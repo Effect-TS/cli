@@ -142,6 +142,7 @@ const createFishCompletionScript = (
      |    set -l i 0
      |    for arg in $cl
      |        set -gx COMP_WORD_$i $arg
+     |        set -l i (math $i + 1)
      |    end
      |    for opt in (${pathToExecutable} $tmpline)
      |        if test -d $opt
