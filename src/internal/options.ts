@@ -14,7 +14,6 @@ import type * as CliConfig from "../CliConfig.js"
 import type * as HelpDoc from "../HelpDoc.js"
 import type * as Options from "../Options.js"
 import type * as Primitive from "../Primitive.js"
-import type * as RegularLanguage from "../RegularLanguage.js"
 import type * as Usage from "../Usage.js"
 import type * as ValidationError from "../ValidationError.js"
 import * as InternalAutoCorrect from "./autoCorrect.js"
@@ -25,7 +24,6 @@ import * as InternalPrimitive from "./primitive.js"
 import * as InternalListPrompt from "./prompt/list.js"
 import * as InternalNumberPrompt from "./prompt/number.js"
 import * as InternalSelectPrompt from "./prompt/select.js"
-import * as InternalRegularLanguage from "./regularLanguage.js"
 import * as InternalUsage from "./usage.js"
 import * as InternalValidationError from "./validationError.js"
 
@@ -459,10 +457,6 @@ export const parse = dual<
 /** @internal */
 export const repeated = <A>(self: Options.Options<A>): Options.Options<ReadonlyArray<A>> =>
   makeVariadic(self, Option.none(), Option.none())
-
-/** @internal */
-export const toRegularLanguage = <A>(self: Options.Options<A>): RegularLanguage.RegularLanguage =>
-  toRegularLanguageInternal(self as Instruction)
 
 /** @internal */
 export const validate = dual<
@@ -1161,77 +1155,6 @@ const toParseableInstruction = (self: Instruction): ReadonlyArray<ParseableInstr
       return ReadonlyArray.appendAll(
         toParseableInstruction(self.left as Instruction),
         toParseableInstruction(self.right as Instruction)
-      )
-    }
-  }
-}
-
-const toRegularLanguageInternal = (self: Instruction): RegularLanguage.RegularLanguage => {
-  switch (self._tag) {
-    case "Empty": {
-      return InternalRegularLanguage.epsilon
-    }
-    case "Single": {
-      const singleNames = ReadonlyArray.reduce(
-        names(self),
-        InternalRegularLanguage.empty,
-        (lang, name) => InternalRegularLanguage.orElse(lang, InternalRegularLanguage.string(name))
-      )
-      if (InternalPrimitive.isBoolType(self.primitiveType as InternalPrimitive.Instruction)) {
-        return singleNames
-      }
-      return InternalRegularLanguage.concat(
-        singleNames,
-        InternalRegularLanguage.primitive(self.primitiveType)
-      )
-    }
-    case "KeyValueMap": {
-      const optionGrammar = toRegularLanguageInternal(self.argumentOption)
-      return InternalRegularLanguage.permutation([optionGrammar])
-    }
-    case "Map": {
-      return toRegularLanguageInternal(self.options as Instruction)
-    }
-    case "Both": {
-      const leftLanguage = toRegularLanguageInternal(self.left as Instruction)
-      const rightLanguage = toRegularLanguageInternal(self.right as Instruction)
-      // Deforestation
-      if (
-        InternalRegularLanguage.isPermutation(leftLanguage) &&
-        InternalRegularLanguage.isPermutation(rightLanguage)
-      ) {
-        return InternalRegularLanguage.permutation(
-          ReadonlyArray.appendAll(leftLanguage.values, rightLanguage.values)
-        )
-      }
-      if (InternalRegularLanguage.isPermutation(leftLanguage)) {
-        return InternalRegularLanguage.permutation(
-          ReadonlyArray.append(leftLanguage.values, rightLanguage)
-        )
-      }
-      if (InternalRegularLanguage.isPermutation(rightLanguage)) {
-        return InternalRegularLanguage.permutation(
-          ReadonlyArray.append(rightLanguage.values, leftLanguage)
-        )
-      }
-      return InternalRegularLanguage.permutation([leftLanguage, rightLanguage])
-    }
-    case "OrElse": {
-      return InternalRegularLanguage.orElse(
-        toRegularLanguageInternal(self.left as Instruction),
-        toRegularLanguageInternal(self.right as Instruction)
-      )
-    }
-    case "Variadic": {
-      const language = toRegularLanguageInternal(self.argumentOption as Instruction)
-      return InternalRegularLanguage.repeated(language, {
-        min: Option.getOrUndefined(self.min),
-        max: Option.getOrUndefined(self.max)
-      })
-    }
-    case "WithDefault": {
-      return InternalRegularLanguage.optional(
-        toRegularLanguageInternal(self.options as Instruction)
       )
     }
   }

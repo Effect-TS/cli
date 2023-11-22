@@ -320,13 +320,7 @@ describe("Command", () => {
     const params1 = ReadonlyArray.make("command", "--help")
     const params2 = ReadonlyArray.make("command", "-h")
     const params3 = ReadonlyArray.make("command", "--wizard")
-    const params4 = ReadonlyArray.make(
-      "command",
-      "--shell-completion-index",
-      "1",
-      "--shell-type",
-      "sh"
-    )
+    const params4 = ReadonlyArray.make("command", "--completions", "sh")
     const params5 = ReadonlyArray.make("command", "-a", "--help")
     const params6 = ReadonlyArray.make("command", "--help", "--wizard", "-b")
     const params7 = ReadonlyArray.make("command", "-hdf", "--help")
@@ -342,9 +336,6 @@ describe("Command", () => {
         }
         if (BuiltInOptions.isShowCompletions(directive.option)) {
           return "completions"
-        }
-        if (BuiltInOptions.isShowCompletionScript(directive.option)) {
-          return "script"
         }
       }
       return "user"

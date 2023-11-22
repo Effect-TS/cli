@@ -17,7 +17,6 @@ import * as HelpDoc from "../HelpDoc.js"
 import type * as Span from "../HelpDoc/Span.js"
 import type * as Options from "../Options.js"
 import type * as Prompt from "../Prompt.js"
-import type * as RegularLanguage from "../RegularLanguage.js"
 import type * as Usage from "../Usage.js"
 import type * as ValidationError from "../ValidationError.js"
 import * as InternalArgs from "./args.js"
@@ -29,7 +28,6 @@ import * as InternalSpan from "./helpDoc/span.js"
 import * as InternalOptions from "./options.js"
 import * as InternalPrompt from "./prompt.js"
 import * as InternalSelectPrompt from "./prompt/select.js"
-import * as InternalRegularLanguage from "./regularLanguage.js"
 import * as InternalUsage from "./usage.js"
 import * as InternalValidationError from "./validationError.js"
 
@@ -265,12 +263,6 @@ export const parse = dual<
     CommandDirective.CommandDirective<A>
   >
 >(3, (self, args, config) => parseInternal(self as Instruction, args, config))
-
-/** @internal */
-export const toRegularLanguage = dual<
-  (allowAlias: boolean) => <A>(self: Command.Command<A>) => RegularLanguage.RegularLanguage,
-  <A>(self: Command.Command<A>, allowAlias: boolean) => RegularLanguage.RegularLanguage
->(2, (self, allowAlias) => toRegularLanguageInternal(self as Instruction, allowAlias))
 
 /** @internal */
 export const withDescription = dual<
@@ -797,44 +789,6 @@ const parseInternal = (
   }
 }
 
-const toRegularLanguageInternal = (
-  self: Instruction,
-  allowAlias: boolean
-): RegularLanguage.RegularLanguage => {
-  switch (self._tag) {
-    case "Standard": {
-      const commandNameToken = allowAlias
-        ? InternalRegularLanguage.anyString :
-        InternalRegularLanguage.string(self.name)
-      return InternalRegularLanguage.concat(
-        commandNameToken,
-        InternalRegularLanguage.concat(
-          InternalOptions.toRegularLanguage(self.options),
-          InternalArgs.toRegularLanguage(self.args)
-        )
-      )
-    }
-    case "GetUserInput": {
-      return InternalRegularLanguage.string(self.name)
-    }
-    case "Map": {
-      return toRegularLanguageInternal(self.command as Instruction, allowAlias)
-    }
-    case "OrElse": {
-      return InternalRegularLanguage.orElse(
-        toRegularLanguageInternal(self.left as Instruction, allowAlias),
-        toRegularLanguageInternal(self.right as Instruction, allowAlias)
-      )
-    }
-    case "Subcommands": {
-      return InternalRegularLanguage.concat(
-        toRegularLanguageInternal(self.parent as Instruction, allowAlias),
-        toRegularLanguageInternal(self.child as Instruction, false)
-      )
-    }
-  }
-}
-
 const splitForcedArgs = (
   args: ReadonlyArray<string>
 ): [ReadonlyArray<string>, ReadonlyArray<string>] => {
@@ -1009,6 +963,7 @@ interface FishCompletionState {
 }
 
 const makeFishCompletions = (
+  command: Standard | GetUserInput,
   baseTemplate: ReadonlyArray<string>,
   state: FishCompletionState,
   optionsCompletions: ReadonlyArray<string>,
@@ -1056,7 +1011,7 @@ const makeFishCompletions = (
     )
   }
   const parentConditionals = ReadonlyArray.map(
-    ReadonlyArray.append(state.parentCommands, self.name),
+    ReadonlyArray.append(state.parentCommands, command.name),
     (command) => `__fish_seen_subcommand_from ${command}`
   )
   const subcommandConditionals = ReadonlyArray.map(
@@ -1074,7 +1029,7 @@ const makeFishCompletions = (
   )
 }
 
-export const getFishCompletionsInternal = (
+const getFishCompletionsInternal = (
   self: Instruction,
   rootCommand: string,
   state: FishCompletionState
@@ -1093,7 +1048,7 @@ export const getFishCompletionsInternal = (
       const optionsCompletions = InternalOptions.getFishCompletions(
         InternalOptions.all([builtInOptions, self.options]) as InternalOptions.Instruction
       )
-      return makeFishCompletions(baseTemplate, state, optionsCompletions, argsCompletions)
+      return makeFishCompletions(self, baseTemplate, state, optionsCompletions, argsCompletions)
     }
     case "GetUserInput": {
       const builtInOptions = InternalBuiltInOptions.builtInOptions(
@@ -1105,7 +1060,7 @@ export const getFishCompletionsInternal = (
       const optionsCompletions = InternalOptions.getFishCompletions(
         builtInOptions as InternalOptions.Instruction
       )
-      return makeFishCompletions(baseTemplate, state, optionsCompletions)
+      return makeFishCompletions(self, baseTemplate, state, optionsCompletions)
     }
     case "Map": {
       return getFishCompletionsInternal(

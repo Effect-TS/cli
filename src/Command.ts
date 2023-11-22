@@ -17,7 +17,6 @@ import type { HelpDoc } from "./HelpDoc.js"
 import * as InternalCommand from "./internal/command.js"
 import type { Options } from "./Options.js"
 import type { Prompt } from "./Prompt.js"
-import type { RegularLanguage } from "./RegularLanguage.js"
 import type { Usage } from "./Usage.js"
 import type { ValidationError } from "./ValidationError.js"
 
@@ -221,18 +220,6 @@ export const make: <Name extends string, OptionsType = void, ArgsType = void>(
   config?: Command.ConstructorConfig<OptionsType, ArgsType>
 ) => Command<{ readonly name: Name; readonly options: OptionsType; readonly args: ArgsType }> =
   InternalCommand.make
-
-/**
- * Returns a `RegularLanguage` whose accepted language is equivalent to the
- * language accepted by the provided `Command`.
- *
- * @since 1.0.0
- * @category combinators
- */
-export const toRegularLanguage: {
-  (allowAlias: boolean): <A>(self: Command<A>) => RegularLanguage
-  <A>(self: Command<A>, allowAlias: boolean): RegularLanguage
-} = InternalCommand.toRegularLanguage
 
 /**
  * @since 1.0.0
