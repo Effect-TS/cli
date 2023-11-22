@@ -861,3 +861,59 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
     }
   }
 }
+
+// =============================================================================
+// Completion Internals
+// =============================================================================
+
+const getShortDescription = (self: Instruction): string => {
+  switch (self._tag) {
+    case "Empty":
+    case "Both": {
+      return ""
+    }
+    case "Single": {
+      return InternalSpan.getText(InternalHelpDoc.getSpan(self.description))
+    }
+    case "Map":
+    case "Variadic":
+    case "WithDefault": {
+      return getShortDescription(self.args as Instruction)
+    }
+  }
+}
+
+/** @internal */
+export const getFishCompletions = (self: Instruction): ReadonlyArray<string> => {
+  switch (self._tag) {
+    case "Empty": {
+      return ReadonlyArray.empty()
+    }
+    case "Single": {
+      const description = getShortDescription(self)
+      return pipe(
+        InternalPrimitive.getFishCompletions(
+          self.primitiveType as InternalPrimitive.Instruction
+        ),
+        ReadonlyArray.appendAll(
+          description.length === 0
+            ? ReadonlyArray.empty()
+            : ReadonlyArray.of(`-d '${description}'`)
+        ),
+        ReadonlyArray.join(" "),
+        ReadonlyArray.of
+      )
+    }
+    case "Both": {
+      return pipe(
+        getFishCompletions(self.left as Instruction),
+        ReadonlyArray.appendAll(getFishCompletions(self.right as Instruction))
+      )
+    }
+    case "Map":
+    case "Variadic":
+    case "WithDefault": {
+      return getFishCompletions(self.args as Instruction)
+    }
+  }
+}

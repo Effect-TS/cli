@@ -76,6 +76,7 @@ export interface Standard extends
 export interface GetUserInput extends
   Op<"GetUserInput", {
     readonly name: string
+    readonly description: HelpDoc.HelpDoc
     readonly prompt: Prompt.Prompt<unknown>
   }>
 {}
@@ -138,7 +139,7 @@ const defaultConstructorConfig = {
 }
 
 /** @internal */
-export const standard = <Name extends string, OptionsType = void, ArgsType = void>(
+export const make = <Name extends string, OptionsType = void, ArgsType = void>(
   name: Name,
   config: Command.Command.ConstructorConfig<OptionsType, ArgsType> = defaultConstructorConfig as any
 ): Command.Command<Command.Command.ParsedStandardCommand<Name, OptionsType, ArgsType>> => {
@@ -160,6 +161,7 @@ export const prompt = <Name extends string, A>(
   const op = Object.create(proto)
   op._tag = "GetUserInput"
   op.name = name
+  op.description = InternalHelpDoc.empty
   op.prompt = prompt
   return op
 }
@@ -175,6 +177,21 @@ export const getHelp = <A>(self: Command.Command<A>): HelpDoc.HelpDoc =>
 /** @internal */
 export const getNames = <A>(self: Command.Command<A>): HashSet.HashSet<string> =>
   getNamesInternal(self as Instruction)
+
+/** @internal */
+export const getFishCompletions = <A>(
+  self: Command.Command<A>,
+  programName: string
+): ReadonlyArray<string> =>
+  getFishCompletionsInternal(
+    self as Instruction,
+    programName,
+    {
+      isRootCommand: true,
+      parentCommands: ReadonlyArray.empty(),
+      subcommands: ReadonlyArray.empty()
+    }
+  )
 
 /** @internal */
 export const getSubcommands = <A>(
@@ -337,9 +354,9 @@ const getHelpInternal = (self: Instruction): HelpDoc.HelpDoc => {
       return InternalHelpDoc.sequence(header, InternalHelpDoc.sequence(argsSection, optionsSection))
     }
     case "GetUserInput": {
-      const header = InternalHelpDoc.h1("DESCRIPTION")
-      const content = InternalHelpDoc.p("This command will prompt the user for information")
-      return InternalHelpDoc.sequence(header, content)
+      return InternalHelpDoc.isEmpty(self.description)
+        ? InternalHelpDoc.empty
+        : InternalHelpDoc.sequence(InternalHelpDoc.h1("DESCRIPTION"), self.description)
     }
     case "Map": {
       return getHelpInternal(self.command as Instruction)
@@ -846,6 +863,7 @@ const withDescriptionInternal = (
       op._tag = "GetUserInput"
       op.name = self.name
       op.description = helpDoc
+      op.prompt = self.prompt
       return op
     }
     case "Map": {
@@ -936,6 +954,194 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
         Effect.zipRight(InternalSelectPrompt.select({ message, choices })),
         Effect.flatMap((command) => wizardInternal(command, config))
       )
+    }
+  }
+}
+
+// =============================================================================
+// Completion Internals
+// =============================================================================
+
+const getShortDescription = (self: Instruction): string => {
+  switch (self._tag) {
+    case "Standard": {
+      return InternalSpan.getText(InternalHelpDoc.getSpan(self.description))
+    }
+    case "GetUserInput": {
+      return InternalSpan.getText(InternalHelpDoc.getSpan(self.description))
+    }
+    case "Map": {
+      return getShortDescription(self.command as Instruction)
+    }
+    case "OrElse":
+    case "Subcommands": {
+      return ""
+    }
+  }
+}
+
+const getImmediateSubcommands = (
+  self: Instruction
+): ReadonlyArray<[string, Instruction]> => {
+  switch (self._tag) {
+    case "Standard":
+    case "GetUserInput": {
+      return ReadonlyArray.of([self.name, self])
+    }
+    case "Map": {
+      return getImmediateSubcommands(self.command as Instruction)
+    }
+    case "OrElse": {
+      const leftNames = getImmediateSubcommands(self.left as Instruction)
+      const rightNames = getImmediateSubcommands(self.right as Instruction)
+      return ReadonlyArray.appendAll(leftNames, rightNames)
+    }
+    case "Subcommands": {
+      return getImmediateSubcommands(self.parent as Instruction)
+    }
+  }
+}
+
+interface FishCompletionState {
+  readonly isRootCommand: boolean
+  readonly parentCommands: ReadonlyArray<string>
+  readonly subcommands: ReadonlyArray<[string, Instruction]>
+}
+
+const makeFishCompletions = (
+  baseTemplate: ReadonlyArray<string>,
+  state: FishCompletionState,
+  optionsCompletions: ReadonlyArray<string>,
+  argsCompletions: ReadonlyArray<string> = ReadonlyArray.empty()
+): ReadonlyArray<string> => {
+  const rootCompletions = (conditionals: ReadonlyArray<string>) =>
+    pipe(
+      ReadonlyArray.map(optionsCompletions, (option) =>
+        pipe(
+          baseTemplate,
+          ReadonlyArray.appendAll(conditionals),
+          ReadonlyArray.append(option),
+          ReadonlyArray.join(" ")
+        )),
+      ReadonlyArray.appendAll(
+        ReadonlyArray.map(argsCompletions, (option) =>
+          pipe(
+            baseTemplate,
+            ReadonlyArray.appendAll(conditionals),
+            ReadonlyArray.append(option),
+            ReadonlyArray.join(" ")
+          ))
+      )
+    )
+  const subcommandCompletions = (conditionals: ReadonlyArray<string>) =>
+    ReadonlyArray.map(state.subcommands, ([name, subcommand]) => {
+      const description = getShortDescription(subcommand)
+      return pipe(
+        baseTemplate,
+        ReadonlyArray.appendAll(conditionals),
+        ReadonlyArray.appendAll(ReadonlyArray.make("-f", "-a", `"${name}"`)),
+        ReadonlyArray.appendAll(
+          description.length === 0
+            ? ReadonlyArray.empty()
+            : ReadonlyArray.make("-d", `'${description}'`)
+        ),
+        ReadonlyArray.join(" ")
+      )
+    })
+  if (state.isRootCommand) {
+    const conditionals = ReadonlyArray.make("-n", "\"__fish_use_subcommand\"")
+    return ReadonlyArray.appendAll(
+      rootCompletions(conditionals),
+      subcommandCompletions(conditionals)
+    )
+  }
+  const parentConditionals = ReadonlyArray.map(
+    ReadonlyArray.append(state.parentCommands, self.name),
+    (command) => `__fish_seen_subcommand_from ${command}`
+  )
+  const subcommandConditionals = ReadonlyArray.map(
+    state.subcommands,
+    ([command]) => `not __fish_seen_subcommand_from ${command}`
+  )
+  const baseConditionals = pipe(
+    ReadonlyArray.appendAll(parentConditionals, subcommandConditionals),
+    ReadonlyArray.join("; and ")
+  )
+  const conditionals = ReadonlyArray.make("-n", `"${baseConditionals}"`)
+  return ReadonlyArray.appendAll(
+    rootCompletions(conditionals),
+    subcommandCompletions(conditionals)
+  )
+}
+
+export const getFishCompletionsInternal = (
+  self: Instruction,
+  rootCommand: string,
+  state: FishCompletionState
+): ReadonlyArray<string> => {
+  switch (self._tag) {
+    case "Standard": {
+      const builtInOptions = InternalBuiltInOptions.builtInOptions(
+        self,
+        InternalUsage.empty,
+        InternalHelpDoc.empty
+      )
+      const baseTemplate = ReadonlyArray.make("complete", "-c", rootCommand)
+      const argsCompletions = InternalArgs.getFishCompletions(
+        self.args as InternalArgs.Instruction
+      )
+      const optionsCompletions = InternalOptions.getFishCompletions(
+        InternalOptions.all([builtInOptions, self.options]) as InternalOptions.Instruction
+      )
+      return makeFishCompletions(baseTemplate, state, optionsCompletions, argsCompletions)
+    }
+    case "GetUserInput": {
+      const builtInOptions = InternalBuiltInOptions.builtInOptions(
+        self,
+        InternalUsage.empty,
+        InternalHelpDoc.empty
+      )
+      const baseTemplate = ReadonlyArray.make("complete", "-c", rootCommand)
+      const optionsCompletions = InternalOptions.getFishCompletions(
+        builtInOptions as InternalOptions.Instruction
+      )
+      return makeFishCompletions(baseTemplate, state, optionsCompletions)
+    }
+    case "Map": {
+      return getFishCompletionsInternal(
+        self.command as Instruction,
+        rootCommand,
+        state
+      )
+    }
+    case "OrElse": {
+      const left = getFishCompletionsInternal(
+        self.left as Instruction,
+        rootCommand,
+        state
+      )
+      const right = getFishCompletionsInternal(
+        self.right as Instruction,
+        rootCommand,
+        state
+      )
+      return ReadonlyArray.appendAll(left, right)
+    }
+    case "Subcommands": {
+      const names = ReadonlyArray.fromIterable(getNamesInternal(self.parent as Instruction))
+      const subcommands = getImmediateSubcommands(self.child as Instruction)
+      const parent = getFishCompletionsInternal(self.parent as Instruction, rootCommand, {
+        ...state,
+        subcommands: ReadonlyArray.appendAll(state.subcommands, subcommands)
+      })
+      const child = getFishCompletionsInternal(self.child as Instruction, rootCommand, {
+        ...state,
+        isRootCommand: false,
+        parentCommands: state.isRootCommand
+          ? ReadonlyArray.empty()
+          : ReadonlyArray.appendAll(state.parentCommands, names)
+      })
+      return ReadonlyArray.appendAll(parent, child)
     }
   }
 }

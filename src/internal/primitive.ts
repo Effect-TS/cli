@@ -557,3 +557,53 @@ const wizardInternal = (self: Instruction, help: HelpDoc.HelpDoc): Prompt.Prompt
     }
   }
 }
+
+// =============================================================================
+// Completion Internals
+// =============================================================================
+
+/** @internal */
+export const getFishCompletions = (self: Instruction): ReadonlyArray<string> => {
+  switch (self._tag) {
+    case "Bool": {
+      return ReadonlyArray.empty()
+    }
+    case "DateTime":
+    case "Float":
+    case "Integer":
+    case "Text": {
+      return ReadonlyArray.make("-r", "-f")
+    }
+    case "Path": {
+      switch (self.pathType) {
+        case "file": {
+          return self.pathExists === "yes" || self.pathExists === "either"
+            ? ReadonlyArray.make("-r", "-F")
+            : ReadonlyArray.make("-r")
+        }
+        case "directory": {
+          return self.pathExists === "yes" || self.pathExists === "either"
+            ? ReadonlyArray.make(
+              "-r",
+              "-f",
+              "-a",
+              `"(__fish_complete_directories (commandline -ct))"`
+            )
+            : ReadonlyArray.make("-r")
+        }
+        case "either": {
+          return self.pathExists === "yes" || self.pathExists === "either"
+            ? ReadonlyArray.make("-r", "-F")
+            : ReadonlyArray.make("-r")
+        }
+      }
+    }
+    case "Choice": {
+      const choices = pipe(
+        ReadonlyArray.map(self.alternatives, ([choice]) => `${choice}''`),
+        ReadonlyArray.join(",")
+      )
+      return ReadonlyArray.make("-r", "-f", "-a", `"{${choices}}"`)
+    }
+  }
+}

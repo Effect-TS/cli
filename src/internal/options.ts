@@ -1753,3 +1753,72 @@ const merge = (
   }
   return map1
 }
+
+// =============================================================================
+// Completion Internals
+// =============================================================================
+
+const getShortDescription = (self: Instruction): string => {
+  switch (self._tag) {
+    case "Empty":
+    case "Both":
+    case "OrElse": {
+      return ""
+    }
+    case "Single": {
+      return InternalSpan.getText(InternalHelpDoc.getSpan(self.description))
+    }
+    case "KeyValueMap":
+    case "Variadic": {
+      return getShortDescription(self.argumentOption as Instruction)
+    }
+    case "Map":
+    case "WithDefault": {
+      return getShortDescription(self.options as Instruction)
+    }
+  }
+}
+
+/** @internal */
+export const getFishCompletions = (self: Instruction): ReadonlyArray<string> => {
+  switch (self._tag) {
+    case "Empty": {
+      return ReadonlyArray.empty()
+    }
+    case "Single": {
+      const description = getShortDescription(self)
+      const order = Order.mapInput(Order.boolean, (tuple: readonly [boolean, string]) => !tuple[0])
+      return pipe(
+        ReadonlyArray.prepend(self.aliases, self.name),
+        ReadonlyArray.map((name) => [name.length === 1, name] as const),
+        ReadonlyArray.sort(order),
+        ReadonlyArray.flatMap(([isShort, name]) => ReadonlyArray.make(isShort ? "-s" : "-l", name)),
+        ReadonlyArray.appendAll(InternalPrimitive.getFishCompletions(
+          self.primitiveType as InternalPrimitive.Instruction
+        )),
+        ReadonlyArray.appendAll(
+          description.length === 0
+            ? ReadonlyArray.empty()
+            : ReadonlyArray.of(`-d '${description}'`)
+        ),
+        ReadonlyArray.join(" "),
+        ReadonlyArray.of
+      )
+    }
+    case "KeyValueMap":
+    case "Variadic": {
+      return getFishCompletions(self.argumentOption as Instruction)
+    }
+    case "Map":
+    case "WithDefault": {
+      return getFishCompletions(self.options as Instruction)
+    }
+    case "Both":
+    case "OrElse": {
+      return pipe(
+        getFishCompletions(self.left as Instruction),
+        ReadonlyArray.appendAll(getFishCompletions(self.right as Instruction))
+      )
+    }
+  }
+}

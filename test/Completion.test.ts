@@ -26,7 +26,7 @@ describe("Completion", () => {
     Effect.gen(function*(_) {
       const words = ReadonlyArray.make("foo-alias")
       const index = 1
-      const command = Command.standard("foo", {
+      const command = Command.make("foo", {
         args: Args.choice([["bar", 1], ["baz", 2], ["qux", 3]])
       })
       const config = CliConfig.defaultConfig
@@ -41,7 +41,7 @@ describe("Completion", () => {
       Effect.gen(function*(_) {
         const words = ReadonlyArray.of("true")
         const index = 1
-        const command = Command.standard("true")
+        const command = Command.make("true")
         const config = CliConfig.defaultConfig
         const compgen = yield* _(Compgen.Compgen)
         const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -55,7 +55,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo")
           const index = 1
-          const command = Command.standard("foo", { args: Args.boolean() })
+          const command = Command.make("foo", { args: Args.boolean() })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -67,7 +67,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "f")
           const index = 1
-          const command = Command.standard("foo", { args: Args.boolean() })
+          const command = Command.make("foo", { args: Args.boolean() })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -79,7 +79,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "t")
           const index = 1
-          const command = Command.standard("foo", { args: Args.boolean() })
+          const command = Command.make("foo", { args: Args.boolean() })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -91,7 +91,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "true")
           const index = 1
-          const command = Command.standard("foo", { args: Args.boolean() })
+          const command = Command.make("foo", { args: Args.boolean() })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -103,7 +103,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "false")
           const index = 1
-          const command = Command.standard("foo", { args: Args.boolean() })
+          const command = Command.make("foo", { args: Args.boolean() })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -115,7 +115,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "x")
           const index = 1
-          const command = Command.standard("foo", { args: Args.boolean() })
+          const command = Command.make("foo", { args: Args.boolean() })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -129,7 +129,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo")
           const index = 1
-          const command = Command.standard("foo", {
+          const command = Command.make("foo", {
             args: Args.choice([["bar", 1], ["baz", 2], ["bippy", 3]])
           })
           const config = CliConfig.defaultConfig
@@ -143,7 +143,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "b")
           const index = 1
-          const command = Command.standard("foo", {
+          const command = Command.make("foo", {
             args: Args.choice([["bar", 1], ["baz", 2], ["bippy", 3]])
           })
           const config = CliConfig.defaultConfig
@@ -157,7 +157,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "ba")
           const index = 1
-          const command = Command.standard("foo", {
+          const command = Command.make("foo", {
             args: Args.choice([["bar", 1], ["baz", 2], ["bippy", 3]])
           })
           const config = CliConfig.defaultConfig
@@ -171,7 +171,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "baz")
           const index = 1
-          const command = Command.standard("foo", {
+          const command = Command.make("foo", {
             args: Args.choice([["bar", 1], ["baz", 2], ["bippy", 3]])
           })
           const config = CliConfig.defaultConfig
@@ -187,7 +187,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo")
           const index = 1
-          const command = Command.standard("foo", { args: Args.float() })
+          const command = Command.make("foo", { args: Args.float() })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -199,7 +199,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "32.6")
           const index = 1
-          const command = Command.standard("foo", { args: Args.float() })
+          const command = Command.make("foo", { args: Args.float() })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -211,7 +211,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "x")
           const index = 1
-          const command = Command.standard("foo", { args: Args.float() })
+          const command = Command.make("foo", { args: Args.float() })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(Completion.getCompletions(words, index, command, config, compgen))
@@ -238,7 +238,7 @@ describe("Completion", () => {
             Effect.gen(function*(_) {
               const words = ReadonlyArray.make("program")
               const index = 1
-              const command = Command.standard("foo", { args: Args.file() })
+              const command = Command.make("foo", { args: Args.file() })
               const config = CliConfig.defaultConfig
               const compgen = yield* _(Compgen.Compgen)
               const result = yield* _(
@@ -275,7 +275,7 @@ describe("Completion", () => {
             Effect.gen(function*(_) {
               const words = ReadonlyArray.make("program", "f")
               const index = 1
-              const command = Command.standard("foo", { args: Args.file() })
+              const command = Command.make("foo", { args: Args.file() })
               const config = CliConfig.defaultConfig
               const compgen = yield* _(Compgen.Compgen)
               const result = yield* _(
@@ -305,7 +305,7 @@ describe("Completion", () => {
             Effect.gen(function*(_) {
               const words = ReadonlyArray.make("program", "foo.txt")
               const index = 1
-              const command = Command.standard("foo", { args: Args.file() })
+              const command = Command.make("foo", { args: Args.file() })
               const config = CliConfig.defaultConfig
               const compgen = yield* _(Compgen.Compgen)
               const result = yield* _(
@@ -335,7 +335,7 @@ describe("Completion", () => {
             Effect.gen(function*(_) {
               const words = ReadonlyArray.make("program", "does-not-exist")
               const index = 1
-              const command = Command.standard("foo", { args: Args.file() })
+              const command = Command.make("foo", { args: Args.file() })
               const config = CliConfig.defaultConfig
               const compgen = yield* _(Compgen.Compgen)
               const result = yield* _(
@@ -365,7 +365,7 @@ describe("Completion", () => {
             Effect.gen(function*(_) {
               const words = ReadonlyArray.make("program")
               const index = 1
-              const command = Command.standard("foo", { args: Args.directory() })
+              const command = Command.make("foo", { args: Args.directory() })
               const config = CliConfig.defaultConfig
               const compgen = yield* _(Compgen.Compgen)
               const result = yield* _(
@@ -395,7 +395,7 @@ describe("Completion", () => {
             Effect.gen(function*(_) {
               const words = ReadonlyArray.make("program", "f")
               const index = 1
-              const command = Command.standard("foo", { args: Args.directory() })
+              const command = Command.make("foo", { args: Args.directory() })
               const config = CliConfig.defaultConfig
               const compgen = yield* _(Compgen.Compgen)
               const result = yield* _(
@@ -425,7 +425,7 @@ describe("Completion", () => {
             Effect.gen(function*(_) {
               const words = ReadonlyArray.make("program", "fooDir")
               const index = 1
-              const command = Command.standard("foo", { args: Args.directory() })
+              const command = Command.make("foo", { args: Args.directory() })
               const config = CliConfig.defaultConfig
               const compgen = yield* _(Compgen.Compgen)
               const result = yield* _(
@@ -445,7 +445,7 @@ describe("Completion", () => {
       Effect.gen(function*(_) {
         const words = ReadonlyArray.make("foo", "baz")
         const index = 1
-        const command = Command.standard("foo", {
+        const command = Command.make("foo", {
           args: Args.all([
             Args.choice([["bar", 1], ["baz", 2], ["bazinga", 3]]),
             Args.boolean()
@@ -462,7 +462,7 @@ describe("Completion", () => {
       Effect.gen(function*(_) {
         const words = ReadonlyArray.make("foo", "baz", "tru")
         const index = 2
-        const command = Command.standard("foo", {
+        const command = Command.make("foo", {
           args: Args.all([
             Args.choice([["bar", 1], ["baz", 2], ["bazinga", 3]]),
             Args.boolean()
@@ -479,7 +479,7 @@ describe("Completion", () => {
       Effect.gen(function*(_) {
         const words = ReadonlyArray.make("foo", "baz", "tru")
         const index = 1
-        const command = Command.standard("foo", {
+        const command = Command.make("foo", {
           args: Args.all([
             Args.choice([["bar", 1], ["baz", 2], ["bazinga", 3]]),
             Args.boolean()
@@ -496,7 +496,7 @@ describe("Completion", () => {
       Effect.gen(function*(_) {
         const words = ReadonlyArray.make("foo", "x", "tru")
         const index = 2
-        const command = Command.standard("foo", {
+        const command = Command.make("foo", {
           args: Args.all([
             Args.choice([["bar", 1], ["baz", 2], ["bazinga", 3]]),
             Args.boolean()
@@ -523,7 +523,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo")
           const index = 1
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -537,7 +537,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-")
           const index = 1
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -551,7 +551,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-a")
           const index = 2
-          const command = Command.standard("foo", {
+          const command = Command.make("foo", {
             options: Options.all([
               Options.boolean("a"),
               Options.boolean("b")
@@ -570,7 +570,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-b")
           const index = 2
-          const command = Command.standard("foo", {
+          const command = Command.make("foo", {
             options: Options.all([
               Options.boolean("a"),
               Options.boolean("b")
@@ -589,7 +589,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-a")
           const index = 2
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -603,7 +603,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-d", "-a")
           const index = 3
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -617,7 +617,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-d", "-c", "-b", "-")
           const index = 4
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -631,7 +631,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-x")
           const index = 2
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -654,7 +654,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo")
           const index = 1
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -668,7 +668,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-c")
           const index = 2
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -682,7 +682,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-c", "1")
           const index = 3
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -696,7 +696,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-c", "1", "-b", "2")
           const index = 5
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -710,7 +710,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "-c", "1", "-b")
           const index = 5
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -732,7 +732,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "--q")
           const index = 1
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -746,7 +746,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "--qux")
           const index = 2
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -760,7 +760,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "--qux", "b")
           const index = 2
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -774,7 +774,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "--qux", "ba")
           const index = 2
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(
@@ -788,7 +788,7 @@ describe("Completion", () => {
         Effect.gen(function*(_) {
           const words = ReadonlyArray.make("foo", "--qux", "baz")
           const index = 2
-          const command = Command.standard("foo", { options })
+          const command = Command.make("foo", { options })
           const config = CliConfig.defaultConfig
           const compgen = yield* _(Compgen.Compgen)
           const result = yield* _(

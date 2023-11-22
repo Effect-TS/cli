@@ -125,6 +125,15 @@ export const getHelp: <A>(self: Command<A>) => HelpDoc = InternalCommand.getHelp
  * @since 1.0.0
  * @category combinators
  */
+export const getFishCompletions: <A>(
+  self: Command<A>,
+  programName: string
+) => ReadonlyArray<string> = InternalCommand.getFishCompletions
+
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
 export const getNames: <A>(self: Command<A>) => HashSet<string> = InternalCommand.getNames
 
 /**
@@ -207,11 +216,11 @@ export const prompt: <Name extends string, A>(
  * @since 1.0.0
  * @category constructors
  */
-export const standard: <Name extends string, OptionsType = void, ArgsType = void>(
+export const make: <Name extends string, OptionsType = void, ArgsType = void>(
   name: Name,
   config?: Command.ConstructorConfig<OptionsType, ArgsType>
 ) => Command<{ readonly name: Name; readonly options: OptionsType; readonly args: ArgsType }> =
-  InternalCommand.standard
+  InternalCommand.make
 
 /**
  * Returns a `RegularLanguage` whose accepted language is equivalent to the
