@@ -157,12 +157,16 @@ const handleBuiltInOption = <A>(
       if (ReadonlyArray.isNonEmptyReadonlyArray(commandNames)) {
         switch (builtIn.shellType) {
           case "bash": {
-            throw new Error("Bash completions not implemented ... yet")
+            const programName = ReadonlyArray.headNonEmpty(commandNames)
+            return InternalCommand.getBashCompletions(self.command, programName).pipe(
+              Effect.flatMap((completions) => Console.log(ReadonlyArray.join(completions, "\n")))
+            )
           }
           case "fish": {
             const programName = ReadonlyArray.headNonEmpty(commandNames)
-            const completions = InternalCommand.getFishCompletions(self.command, programName)
-            return Console.log(completions.join("\n"))
+            return InternalCommand.getFishCompletions(self.command, programName).pipe(
+              Effect.flatMap((completions) => Console.log(ReadonlyArray.join(completions, "\n")))
+            )
           }
           case "zsh":
             throw new Error("Zsh completions not implemented ... yet")

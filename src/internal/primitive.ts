@@ -563,6 +563,47 @@ const wizardInternal = (self: Instruction, help: HelpDoc.HelpDoc): Prompt.Prompt
 // =============================================================================
 
 /** @internal */
+export const getBashCompletions = (self: Instruction): string => {
+  switch (self._tag) {
+    case "Bool": {
+      return "\"${cur}\""
+    }
+    case "DateTime":
+    case "Float":
+    case "Integer":
+    case "Text": {
+      return "$(compgen -f \"${cur}\")"
+    }
+    case "Path": {
+      switch (self.pathType) {
+        case "file": {
+          return self.pathExists === "yes" || self.pathExists === "either"
+            ? "$(compgen -f \"${cur}\")"
+            : ""
+        }
+        case "directory": {
+          return self.pathExists === "yes" || self.pathExists === "either"
+            ? "$(compgen -d \"${cur}\")"
+            : ""
+        }
+        case "either": {
+          return self.pathExists === "yes" || self.pathExists === "either"
+            ? "$(compgen -f \"${cur}\")"
+            : ""
+        }
+      }
+    }
+    case "Choice": {
+      const choices = pipe(
+        ReadonlyArray.map(self.alternatives, ([choice]) => choice),
+        ReadonlyArray.join(",")
+      )
+      return `$(compgen -W "${choices}" -- "\${cur}")`
+    }
+  }
+}
+
+/** @internal */
 export const getFishCompletions = (self: Instruction): ReadonlyArray<string> => {
   switch (self._tag) {
     case "Bool": {

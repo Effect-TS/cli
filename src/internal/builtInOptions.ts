@@ -81,18 +81,20 @@ export const wizardOptions: Options.Options<boolean> = InternalOptions.boolean("
 )
 
 /** @internal */
+export const builtIns = InternalOptions.all({
+  completions: completionsOptions,
+  help: helpOptions,
+  wizard: wizardOptions,
+  version: versionOptions
+})
+
+/** @internal */
 export const builtInOptions = <A>(
   command: Command.Command<A>,
   usage: Usage.Usage,
   helpDoc: HelpDoc.HelpDoc
-): Options.Options<Option.Option<BuiltInOptions.BuiltInOptions>> => {
-  const option = InternalOptions.all({
-    completions: completionsOptions,
-    help: helpOptions,
-    wizard: wizardOptions,
-    version: versionOptions
-  })
-  return InternalOptions.map(option, (builtIn) => {
+): Options.Options<Option.Option<BuiltInOptions.BuiltInOptions>> =>
+  InternalOptions.map(builtIns, (builtIn) => {
     if (Option.isSome(builtIn.completions)) {
       return Option.some(showCompletions(builtIn.completions.value))
     }
@@ -107,4 +109,3 @@ export const builtInOptions = <A>(
     }
     return Option.none()
   })
-}

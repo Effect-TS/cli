@@ -435,4 +435,142 @@ describe("Command", () => {
         expect(result3).toEqual(CommandDirective.userDefined(ReadonlyArray.empty(), expected3))
       }).pipe(runEffect))
   })
+
+  describe("Completions", () => {
+    const command = Command.make("forge").pipe(Command.withSubcommands([
+      Command.make("cache", {
+        options: Options.boolean("verbose").pipe(
+          Options.withDescription("Output in verbose mode")
+        )
+      }).pipe(
+        Command.withDescription("The cache command does cache things"),
+        Command.withSubcommands([
+          Command.make("clean"),
+          Command.make("ls")
+        ])
+      )
+    ]))
+    it("should create completions for the bash shell", () =>
+      Effect.gen(function*(_) {
+        const result = yield* _(Command.getBashCompletions(command, "forge"))
+        expect(result).toEqual([
+          "function _forge_bash_completions() {",
+          "    local i cur prev opts cmd",
+          "    COMPREPLY=()",
+          "    cur=\"${COMP_WORDS[COMP_CWORD]}\"",
+          "    prev=\"${COMP_WORDS[COMP_CWORD-1]}\"",
+          "    cmd=\"\"",
+          "    opts=\"\"",
+          "    for i in \"${COMP_WORDS[@]}\"; do",
+          "        case \"${cmd},${i}\" in",
+          "            \",$1\")",
+          "                cmd=\"forge\"",
+          "                ;;",
+          "            forge,cache)",
+          "                cmd=\"forge__cache\"",
+          "                ;;",
+          "            forge,cache,clean)",
+          "                cmd=\"forge__cache__clean\"",
+          "                ;;",
+          "            forge,cache,ls)",
+          "                cmd=\"forge__cache__ls\"",
+          "                ;;",
+          "            *)",
+          "                ;;",
+          "        esac",
+          "    done",
+          "    case \"${cmd}\" in",
+          "        forge)",
+          "            opts=\"-h --completions --help --wizard --version cache\"",
+          "            if [[ ${cur} == -* || ${COMP_CWORD} -eq 1 ]] ; then",
+          "                COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+          "                return 0",
+          "            fi",
+          "            case \"${prev}\" in",
+          "            *)",
+          "                COMPREPLY=()",
+          "                ;;",
+          "            esac",
+          "            COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+          "            return 0",
+          "            ;;",
+          "        forge__cache)",
+          "            opts=\"-h --verbose --completions --help --wizard --version clean ls\"",
+          "            if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then",
+          "                COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+          "                return 0",
+          "            fi",
+          "            case \"${prev}\" in",
+          "                --verbose)",
+          "                    COMPREPLY=( \"${cur}\" )",
+          "                    return 0",
+          "                    ;;",
+          "            *)",
+          "                COMPREPLY=()",
+          "                ;;",
+          "            esac",
+          "            COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+          "            return 0",
+          "            ;;",
+          "        forge__cache__clean)",
+          "            opts=\"-h --completions --help --wizard --version\"",
+          "            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then",
+          "                COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+          "                return 0",
+          "            fi",
+          "            case \"${prev}\" in",
+          "            *)",
+          "                COMPREPLY=()",
+          "                ;;",
+          "            esac",
+          "            COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+          "            return 0",
+          "            ;;",
+          "        forge__cache__ls)",
+          "            opts=\"-h --completions --help --wizard --version\"",
+          "            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then",
+          "                COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+          "                return 0",
+          "            fi",
+          "            case \"${prev}\" in",
+          "            *)",
+          "                COMPREPLY=()",
+          "                ;;",
+          "            esac",
+          "            COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+          "            return 0",
+          "            ;;",
+          "    esac",
+          "}",
+          "complete -F _forge_bash_completions -o nosort -o bashdefault -o default forge"
+        ])
+      }).pipe(runEffect))
+
+    it("should create completions for the fish shell", () =>
+      Effect.gen(function*(_) {
+        const result = yield* _(Command.getFishCompletions(command, "forge"))
+        expect(result).toEqual([
+          "complete -c forge -n \"__fish_use_subcommand\" -l completions -r -f -a \"{sh'',bash'',fish'',zsh''}\"",
+          "complete -c forge -n \"__fish_use_subcommand\" -s h -l help -d 'Show the help documentation for a command'",
+          "complete -c forge -n \"__fish_use_subcommand\" -l wizard -d 'Start wizard mode for a command'",
+          "complete -c forge -n \"__fish_use_subcommand\" -l version -d 'Show the version of the application'",
+          "complete -c forge -n \"__fish_use_subcommand\" -f -a \"cache\" -d 'The cache command does cache things'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from clean; and not __fish_seen_subcommand_from ls\" -l completions -r -f -a \"{sh'',bash'',fish'',zsh''}\"",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from clean; and not __fish_seen_subcommand_from ls\" -s h -l help -d 'Show the help documentation for a command'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from clean; and not __fish_seen_subcommand_from ls\" -l wizard -d 'Start wizard mode for a command'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from clean; and not __fish_seen_subcommand_from ls\" -l version -d 'Show the version of the application'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from clean; and not __fish_seen_subcommand_from ls\" -l verbose -d 'Output in verbose mode'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from clean; and not __fish_seen_subcommand_from ls\" -f -a \"clean\"",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and not __fish_seen_subcommand_from clean; and not __fish_seen_subcommand_from ls\" -f -a \"ls\"",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from clean\" -l completions -r -f -a \"{sh'',bash'',fish'',zsh''}\"",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from clean\" -s h -l help -d 'Show the help documentation for a command'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from clean\" -l wizard -d 'Start wizard mode for a command'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from clean\" -l version -d 'Show the version of the application'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from ls\" -l completions -r -f -a \"{sh'',bash'',fish'',zsh''}\"",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from ls\" -s h -l help -d 'Show the help documentation for a command'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from ls\" -l wizard -d 'Start wizard mode for a command'",
+          "complete -c forge -n \"__fish_seen_subcommand_from cache; and __fish_seen_subcommand_from ls\" -l version -d 'Show the version of the application'"
+        ])
+      }).pipe(runEffect))
+  })
 })

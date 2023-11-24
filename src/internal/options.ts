@@ -609,8 +609,8 @@ const getHelpInternal = (self: Instruction): HelpDoc.HelpDoc => {
         getHelpInternal(self.argumentOption as Instruction),
         (span, oldBlock) => {
           const header = InternalHelpDoc.p("This setting is a property argument which:")
-          const single = `${identifier} key1=value key2=value2'`
-          const multiple = `${identifier} key1=value ${identifier} key2=value2'`
+          const single = `${identifier} key1=value key2=value2`
+          const multiple = `${identifier} key1=value ${identifier} key2=value2`
           const description = InternalHelpDoc.enumeration([
             InternalHelpDoc.p(`May be specified a single time:  '${single}'`),
             InternalHelpDoc.p(`May be specified multiple times: '${multiple}'`)
@@ -778,7 +778,7 @@ const getUsageInternal = (self: Instruction): Usage.Usage => {
           InternalPrimitive.getChoices(self.primitiveType),
           () => Option.some(self.placeholder)
         )
-      return InternalUsage.named(names(self), acceptedValues)
+      return InternalUsage.named(getNames(self), acceptedValues)
     }
     case "KeyValueMap": {
       return getUsageInternal(self.argumentOption as Instruction)
@@ -949,12 +949,40 @@ const modifySingle = (self: Instruction, f: (single: Single) => Single): Options
   }
 }
 
-const names = (self: Single): ReadonlyArray<string> => {
-  const order = Order.mapInput(Order.boolean, (tuple: [boolean, string]) => !tuple[0])
+/** @internal */
+export const getNames = (self: Instruction): ReadonlyArray<string> => {
+  const loop = (self: Instruction): ReadonlyArray<string> => {
+    switch (self._tag) {
+      case "Empty": {
+        return ReadonlyArray.empty()
+      }
+      case "Single": {
+        return ReadonlyArray.prepend(self.aliases, self.name)
+      }
+      case "KeyValueMap":
+      case "Variadic": {
+        return loop(self.argumentOption as Instruction)
+      }
+      case "Map":
+      case "WithDefault": {
+        return loop(self.options as Instruction)
+      }
+      case "Both":
+      case "OrElse": {
+        const left = loop(self.left as Instruction)
+        const right = loop(self.right as Instruction)
+        return ReadonlyArray.appendAll(left, right)
+      }
+    }
+  }
+  const order = Order.mapInput(
+    Order.boolean,
+    (tuple: [boolean, string]) => !tuple[0]
+  )
   return pipe(
-    ReadonlyArray.prepend(self.aliases, self.name),
+    loop(self),
     ReadonlyArray.map((str) => makeFullName(str)),
-    ReadonlyArray.sortNonEmpty(order),
+    ReadonlyArray.sort(order),
     ReadonlyArray.map((tuple) => tuple[1])
   )
 }
@@ -977,7 +1005,7 @@ const parseOptions = (
             const tail = ReadonlyArray.tailNonEmpty(args)
             const normalizedArgv0 = InternalCliConfig.normalizeCase(config, head)
             const normalizedNames = ReadonlyArray.map(
-              names(self),
+              getNames(self),
               (name) => InternalCliConfig.normalizeCase(config, name)
             )
             if (ReadonlyArray.contains(normalizedNames, normalizedArgv0)) {
@@ -1027,7 +1055,7 @@ const parseOptions = (
     }
     case "KeyValueMap": {
       const singleNames = ReadonlyArray.map(
-        names(self.argumentOption),
+        getNames(self.argumentOption),
         (name) => InternalCliConfig.normalizeCase(config, name)
       )
       if (ReadonlyArray.isNonEmptyReadonlyArray(args)) {
@@ -1092,7 +1120,7 @@ const parseOptions = (
     }
     case "Variadic": {
       const singleNames = ReadonlyArray.map(
-        names(self.argumentOption),
+        getNames(self.argumentOption),
         (name) => InternalCliConfig.normalizeCase(config, name)
       )
       if (ReadonlyArray.isNonEmptyReadonlyArray(args)) {
@@ -1170,7 +1198,7 @@ const parseInternal = (
       return Effect.unit
     }
     case "Single": {
-      const singleNames = ReadonlyArray.filterMap(names(self), (name) => HashMap.get(args, name))
+      const singleNames = ReadonlyArray.filterMap(getNames(self), (name) => HashMap.get(args, name))
       if (ReadonlyArray.isNonEmptyReadonlyArray(singleNames)) {
         const head = ReadonlyArray.headNonEmpty(singleNames)
         const tail = ReadonlyArray.tailNonEmpty(singleNames)
@@ -1339,7 +1367,7 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
         Effect.zipRight(
           InternalPrimitive.wizard(self.primitiveType, help).pipe(Effect.flatMap((input) => {
             // There will always be at least one name in names
-            const args = ReadonlyArray.make(names(self)[0]!, input as string)
+            const args = ReadonlyArray.make(getNames(self)[0]!, input as string)
             return parseOptions(self, args, config).pipe(Effect.as(args))
           }))
         )
@@ -1698,6 +1726,42 @@ const getShortDescription = (self: Instruction): string => {
     case "Map":
     case "WithDefault": {
       return getShortDescription(self.options as Instruction)
+    }
+  }
+}
+
+/** @internal */
+export const getBashCompletions = (self: Instruction): ReadonlyArray<string> => {
+  switch (self._tag) {
+    case "Empty": {
+      return ReadonlyArray.empty()
+    }
+    case "Single": {
+      const names = getNames(self)
+      const cases = ReadonlyArray.join(names, "|")
+      const compgen = InternalPrimitive.getBashCompletions(
+        self.primitiveType as InternalPrimitive.Instruction
+      )
+      return ReadonlyArray.make(
+        `${cases})`,
+        `    COMPREPLY=( ${compgen} )`,
+        `    return 0`,
+        `    ;;`
+      )
+    }
+    case "KeyValueMap":
+    case "Variadic": {
+      return getBashCompletions(self.argumentOption as Instruction)
+    }
+    case "Map":
+    case "WithDefault": {
+      return getBashCompletions(self.options as Instruction)
+    }
+    case "Both":
+    case "OrElse": {
+      const left = getBashCompletions(self.left as Instruction)
+      const right = getBashCompletions(self.right as Instruction)
+      return ReadonlyArray.appendAll(left, right)
     }
   }
 }

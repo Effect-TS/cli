@@ -124,10 +124,19 @@ export const getHelp: <A>(self: Command<A>) => HelpDoc = InternalCommand.getHelp
  * @since 1.0.0
  * @category combinators
  */
+export const getBashCompletions: <A>(
+  self: Command<A>,
+  programName: string
+) => Effect<never, never, ReadonlyArray<string>> = InternalCommand.getBashCompletions
+
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
 export const getFishCompletions: <A>(
   self: Command<A>,
   programName: string
-) => ReadonlyArray<string> = InternalCommand.getFishCompletions
+) => Effect<never, never, ReadonlyArray<string>> = InternalCommand.getFishCompletions
 
 /**
  * @since 1.0.0

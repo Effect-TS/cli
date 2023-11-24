@@ -7,15 +7,17 @@ import { dual, pipe } from "effect/Function"
 import * as HashMap from "effect/HashMap"
 import * as HashSet from "effect/HashSet"
 import * as Option from "effect/Option"
+import * as Order from "effect/Order"
 import { pipeArguments } from "effect/Pipeable"
 import * as ReadonlyArray from "effect/ReadonlyArray"
+import * as SynchronizedRef from "effect/SynchronizedRef"
 import type * as Args from "../Args.js"
 import type * as CliConfig from "../CliConfig.js"
 import type * as Command from "../Command.js"
 import type * as CommandDirective from "../CommandDirective.js"
 import * as HelpDoc from "../HelpDoc.js"
 import type * as Span from "../HelpDoc/Span.js"
-import type * as Options from "../Options.js"
+import * as Options from "../Options.js"
 import type * as Prompt from "../Prompt.js"
 import type * as Usage from "../Usage.js"
 import type * as ValidationError from "../ValidationError.js"
@@ -177,19 +179,18 @@ export const getNames = <A>(self: Command.Command<A>): HashSet.HashSet<string> =
   getNamesInternal(self as Instruction)
 
 /** @internal */
+export const getBashCompletions = <A>(
+  self: Command.Command<A>,
+  programName: string
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  getBashCompletionsInternal(self as Instruction, programName)
+
+/** @internal */
 export const getFishCompletions = <A>(
   self: Command.Command<A>,
   programName: string
-): ReadonlyArray<string> =>
-  getFishCompletionsInternal(
-    self as Instruction,
-    programName,
-    {
-      isRootCommand: true,
-      parentCommands: ReadonlyArray.empty(),
-      subcommands: ReadonlyArray.empty()
-    }
-  )
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  getFishCompletionsInternal(self as Instruction, programName)
 
 /** @internal */
 export const getSubcommands = <A>(
@@ -936,7 +937,7 @@ const getShortDescription = (self: Instruction): string => {
 
 const getImmediateSubcommands = (
   self: Instruction
-): ReadonlyArray<[string, Instruction]> => {
+): ReadonlyArray<[string, Standard | GetUserInput]> => {
   switch (self._tag) {
     case "Standard":
     case "GetUserInput": {
@@ -956,147 +957,251 @@ const getImmediateSubcommands = (
   }
 }
 
-interface FishCompletionState {
-  readonly isRootCommand: boolean
+interface CommandInfo {
+  readonly command: Standard | GetUserInput
   readonly parentCommands: ReadonlyArray<string>
-  readonly subcommands: ReadonlyArray<[string, Instruction]>
+  readonly subcommands: ReadonlyArray<[string, Standard | GetUserInput]>
+  readonly level: number
 }
 
-const makeFishCompletions = (
-  command: Standard | GetUserInput,
-  baseTemplate: ReadonlyArray<string>,
-  state: FishCompletionState,
-  optionsCompletions: ReadonlyArray<string>,
-  argsCompletions: ReadonlyArray<string> = ReadonlyArray.empty()
-): ReadonlyArray<string> => {
-  const rootCompletions = (conditionals: ReadonlyArray<string>) =>
-    pipe(
-      ReadonlyArray.map(optionsCompletions, (option) =>
-        pipe(
-          baseTemplate,
-          ReadonlyArray.appendAll(conditionals),
-          ReadonlyArray.append(option),
-          ReadonlyArray.join(" ")
-        )),
-      ReadonlyArray.appendAll(
-        ReadonlyArray.map(argsCompletions, (option) =>
+/**
+ * Allows for linear traversal of a `Command` data structure, accumulating state
+ * based on information acquired from the command.
+ */
+const traverseCommand = <S>(
+  self: Instruction,
+  initialState: S,
+  f: (state: S, info: CommandInfo) => Effect.Effect<never, never, S>
+): Effect.Effect<never, never, S> =>
+  SynchronizedRef.make(initialState).pipe(Effect.flatMap((ref) => {
+    const loop = (
+      self: Instruction,
+      parentCommands: ReadonlyArray<string>,
+      subcommands: ReadonlyArray<[string, Standard | GetUserInput]>,
+      level: number
+    ): Effect.Effect<never, never, void> => {
+      switch (self._tag) {
+        case "Standard": {
+          const info: CommandInfo = {
+            command: self,
+            parentCommands,
+            subcommands,
+            level
+          }
+          return SynchronizedRef.updateEffect(ref, (state) => f(state, info))
+        }
+        case "GetUserInput": {
+          const info: CommandInfo = {
+            command: self,
+            parentCommands,
+            subcommands,
+            level
+          }
+          return SynchronizedRef.updateEffect(ref, (state) => f(state, info))
+        }
+        case "Map": {
+          return loop(self.command as Instruction, parentCommands, subcommands, level)
+        }
+        case "OrElse": {
+          const left = loop(self.left as Instruction, parentCommands, subcommands, level)
+          const right = loop(self.right as Instruction, parentCommands, subcommands, level)
+          return Effect.zipRight(left, right)
+        }
+        case "Subcommands": {
+          const parentNames = Array.from(getNamesInternal(self.parent as Instruction))
+          const nextSubcommands = getImmediateSubcommands(self.child as Instruction)
+          const nextParentCommands = ReadonlyArray.appendAll(parentCommands, parentNames)
+          // Traverse the parent command using old parent names and next subcommands
+          return loop(self.parent as Instruction, parentCommands, nextSubcommands, level).pipe(
+            Effect.zipRight(
+              // Traverse the child command using next parent names and old subcommands
+              loop(self.child as Instruction, nextParentCommands, subcommands, level + 1)
+            )
+          )
+        }
+      }
+    }
+    return Effect.suspend(() => loop(self, ReadonlyArray.empty(), ReadonlyArray.empty(), 0)).pipe(
+      Effect.zipRight(SynchronizedRef.get(ref))
+    )
+  }))
+
+const indentAll = dual<
+  (indent: number) => (self: ReadonlyArray<string>) => ReadonlyArray<string>,
+  (self: ReadonlyArray<string>, indent: number) => ReadonlyArray<string>
+>(2, (self: ReadonlyArray<string>, indent: number): ReadonlyArray<string> => {
+  const indentation = new Array(indent + 1).join(" ")
+  return ReadonlyArray.map(self, (line) => `${indentation}${line}`)
+})
+
+const getBashCompletionsInternal = (
+  self: Instruction,
+  rootCommand: string
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  traverseCommand(
+    self,
+    ReadonlyArray.empty<[ReadonlyArray<string>, ReadonlyArray<string>]>(),
+    (state, info) => {
+      const options = isStandard(info.command)
+        ? Options.all([info.command.options, InternalBuiltInOptions.builtIns])
+        : InternalBuiltInOptions.builtIns
+      const optionNames = InternalOptions.getNames(options as InternalOptions.Instruction)
+      const optionCases = isStandard(info.command)
+        ? InternalOptions.getBashCompletions(info.command.options as InternalOptions.Instruction)
+        : ReadonlyArray.empty()
+      const subcommandNames = pipe(
+        info.subcommands,
+        ReadonlyArray.map(([name]) => name),
+        ReadonlyArray.sort(Order.string)
+      )
+      const wordList = ReadonlyArray.appendAll(optionNames, subcommandNames)
+      const preformatted = ReadonlyArray.isEmptyReadonlyArray(info.parentCommands)
+        ? ReadonlyArray.of(info.command.name)
+        : pipe(
+          info.parentCommands,
+          ReadonlyArray.append(info.command.name),
+          ReadonlyArray.map((command) => command.replace("-", "__"))
+        )
+      const caseName = ReadonlyArray.join(preformatted, ",")
+      const funcName = ReadonlyArray.join(preformatted, "__")
+      const funcLines = ReadonlyArray.isEmptyReadonlyArray(info.parentCommands)
+        ? ReadonlyArray.empty()
+        : [
+          `${caseName})`,
+          `    cmd="${funcName}"`,
+          "    ;;"
+        ]
+      const cmdLines = [
+        `${funcName})`,
+        `    opts="${ReadonlyArray.join(wordList, " ")}"`,
+        `    if [[ \${cur} == -* || \${COMP_CWORD} -eq ${info.level + 1} ]] ; then`,
+        "        COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+        "        return 0",
+        "    fi",
+        "    case \"${prev}\" in",
+        ...indentAll(optionCases, 8),
+        "    *)",
+        "        COMPREPLY=()",
+        "        ;;",
+        "    esac",
+        "    COMPREPLY=( $(compgen -W \"${opts}\" -- \"${cur}\") )",
+        "    return 0",
+        "    ;;"
+      ]
+      const lines = ReadonlyArray.append(
+        state,
+        [funcLines, cmdLines] as [ReadonlyArray<string>, ReadonlyArray<string>]
+      )
+      return Effect.succeed(lines)
+    }
+  ).pipe(Effect.map((lines) => {
+    const scriptName = `_${rootCommand}_bash_completions`
+    const funcCases = ReadonlyArray.flatMap(lines, ([funcLines]) => funcLines)
+    const cmdCases = ReadonlyArray.flatMap(lines, ([, cmdLines]) => cmdLines)
+    return [
+      `function ${scriptName}() {`,
+      "    local i cur prev opts cmd",
+      "    COMPREPLY=()",
+      "    cur=\"${COMP_WORDS[COMP_CWORD]}\"",
+      "    prev=\"${COMP_WORDS[COMP_CWORD-1]}\"",
+      "    cmd=\"\"",
+      "    opts=\"\"",
+      "    for i in \"${COMP_WORDS[@]}\"; do",
+      "        case \"${cmd},${i}\" in",
+      "            \",$1\")",
+      `                cmd="${rootCommand}"`,
+      "                ;;",
+      ...indentAll(funcCases, 12),
+      "            *)",
+      "                ;;",
+      "        esac",
+      "    done",
+      "    case \"${cmd}\" in",
+      ...indentAll(cmdCases, 8),
+      "    esac",
+      "}",
+      `complete -F ${scriptName} -o nosort -o bashdefault -o default ${rootCommand}`
+    ]
+  }))
+
+const getFishCompletionsInternal = (
+  self: Instruction,
+  rootCommand: string
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  traverseCommand(self, ReadonlyArray.empty(), (state, info) => {
+    const baseTemplate = ReadonlyArray.make("complete", "-c", rootCommand)
+    const options = isStandard(info.command)
+      ? InternalOptions.all([InternalBuiltInOptions.builtIns, info.command.options])
+      : InternalBuiltInOptions.builtIns
+    const optionsCompletions = InternalOptions.getFishCompletions(
+      options as InternalOptions.Instruction
+    )
+    const argsCompletions = isStandard(info.command)
+      ? InternalArgs.getFishCompletions(info.command.args as InternalArgs.Instruction)
+      : ReadonlyArray.empty()
+    const rootCompletions = (conditionals: ReadonlyArray<string>) =>
+      pipe(
+        ReadonlyArray.map(optionsCompletions, (option) =>
           pipe(
             baseTemplate,
             ReadonlyArray.appendAll(conditionals),
             ReadonlyArray.append(option),
             ReadonlyArray.join(" ")
-          ))
-      )
-    )
-  const subcommandCompletions = (conditionals: ReadonlyArray<string>) =>
-    ReadonlyArray.map(state.subcommands, ([name, subcommand]) => {
-      const description = getShortDescription(subcommand)
-      return pipe(
-        baseTemplate,
-        ReadonlyArray.appendAll(conditionals),
-        ReadonlyArray.appendAll(ReadonlyArray.make("-f", "-a", `"${name}"`)),
+          )),
         ReadonlyArray.appendAll(
-          description.length === 0
-            ? ReadonlyArray.empty()
-            : ReadonlyArray.make("-d", `'${description}'`)
-        ),
-        ReadonlyArray.join(" ")
+          ReadonlyArray.map(argsCompletions, (option) =>
+            pipe(
+              baseTemplate,
+              ReadonlyArray.appendAll(conditionals),
+              ReadonlyArray.append(option),
+              ReadonlyArray.join(" ")
+            ))
+        )
       )
-    })
-  if (state.isRootCommand) {
-    const conditionals = ReadonlyArray.make("-n", "\"__fish_use_subcommand\"")
-    return ReadonlyArray.appendAll(
-      rootCompletions(conditionals),
-      subcommandCompletions(conditionals)
+    const subcommandCompletions = (conditionals: ReadonlyArray<string>) =>
+      ReadonlyArray.map(info.subcommands, ([name, subcommand]) => {
+        const description = getShortDescription(subcommand)
+        return pipe(
+          baseTemplate,
+          ReadonlyArray.appendAll(conditionals),
+          ReadonlyArray.appendAll(ReadonlyArray.make("-f", "-a", `"${name}"`)),
+          ReadonlyArray.appendAll(
+            description.length === 0
+              ? ReadonlyArray.empty()
+              : ReadonlyArray.make("-d", `'${description}'`)
+          ),
+          ReadonlyArray.join(" ")
+        )
+      })
+    // If parent commands are empty, then the info is for the root command
+    if (ReadonlyArray.isEmptyReadonlyArray(info.parentCommands)) {
+      const conditionals = ReadonlyArray.make("-n", "\"__fish_use_subcommand\"")
+      return Effect.succeed(pipe(
+        state,
+        ReadonlyArray.appendAll(rootCompletions(conditionals)),
+        ReadonlyArray.appendAll(subcommandCompletions(conditionals))
+      ))
+    }
+    // Otherwise the info is for a subcommand
+    const parentConditionals = pipe(
+      info.parentCommands,
+      // Drop the root command name from the subcommand conditionals
+      ReadonlyArray.drop(1),
+      ReadonlyArray.append(info.command.name),
+      ReadonlyArray.map((command) => `__fish_seen_subcommand_from ${command}`)
     )
-  }
-  const parentConditionals = ReadonlyArray.map(
-    ReadonlyArray.append(state.parentCommands, command.name),
-    (command) => `__fish_seen_subcommand_from ${command}`
-  )
-  const subcommandConditionals = ReadonlyArray.map(
-    state.subcommands,
-    ([command]) => `not __fish_seen_subcommand_from ${command}`
-  )
-  const baseConditionals = pipe(
-    ReadonlyArray.appendAll(parentConditionals, subcommandConditionals),
-    ReadonlyArray.join("; and ")
-  )
-  const conditionals = ReadonlyArray.make("-n", `"${baseConditionals}"`)
-  return ReadonlyArray.appendAll(
-    rootCompletions(conditionals),
-    subcommandCompletions(conditionals)
-  )
-}
-
-const getFishCompletionsInternal = (
-  self: Instruction,
-  rootCommand: string,
-  state: FishCompletionState
-): ReadonlyArray<string> => {
-  switch (self._tag) {
-    case "Standard": {
-      const builtInOptions = InternalBuiltInOptions.builtInOptions(
-        self,
-        InternalUsage.empty,
-        InternalHelpDoc.empty
-      )
-      const baseTemplate = ReadonlyArray.make("complete", "-c", rootCommand)
-      const argsCompletions = InternalArgs.getFishCompletions(
-        self.args as InternalArgs.Instruction
-      )
-      const optionsCompletions = InternalOptions.getFishCompletions(
-        InternalOptions.all([builtInOptions, self.options]) as InternalOptions.Instruction
-      )
-      return makeFishCompletions(self, baseTemplate, state, optionsCompletions, argsCompletions)
-    }
-    case "GetUserInput": {
-      const builtInOptions = InternalBuiltInOptions.builtInOptions(
-        self,
-        InternalUsage.empty,
-        InternalHelpDoc.empty
-      )
-      const baseTemplate = ReadonlyArray.make("complete", "-c", rootCommand)
-      const optionsCompletions = InternalOptions.getFishCompletions(
-        builtInOptions as InternalOptions.Instruction
-      )
-      return makeFishCompletions(self, baseTemplate, state, optionsCompletions)
-    }
-    case "Map": {
-      return getFishCompletionsInternal(
-        self.command as Instruction,
-        rootCommand,
-        state
-      )
-    }
-    case "OrElse": {
-      const left = getFishCompletionsInternal(
-        self.left as Instruction,
-        rootCommand,
-        state
-      )
-      const right = getFishCompletionsInternal(
-        self.right as Instruction,
-        rootCommand,
-        state
-      )
-      return ReadonlyArray.appendAll(left, right)
-    }
-    case "Subcommands": {
-      const names = ReadonlyArray.fromIterable(getNamesInternal(self.parent as Instruction))
-      const subcommands = getImmediateSubcommands(self.child as Instruction)
-      const parent = getFishCompletionsInternal(self.parent as Instruction, rootCommand, {
-        ...state,
-        subcommands: ReadonlyArray.appendAll(state.subcommands, subcommands)
-      })
-      const child = getFishCompletionsInternal(self.child as Instruction, rootCommand, {
-        ...state,
-        isRootCommand: false,
-        parentCommands: state.isRootCommand
-          ? ReadonlyArray.empty()
-          : ReadonlyArray.appendAll(state.parentCommands, names)
-      })
-      return ReadonlyArray.appendAll(parent, child)
-    }
-  }
-}
+    const subcommandConditionals = ReadonlyArray.map(
+      info.subcommands,
+      ([name]) => `not __fish_seen_subcommand_from ${name}`
+    )
+    const baseConditionals = pipe(
+      ReadonlyArray.appendAll(parentConditionals, subcommandConditionals),
+      ReadonlyArray.join("; and ")
+    )
+    const conditionals = ReadonlyArray.make("-n", `"${baseConditionals}"`)
+    return Effect.succeed(pipe(
+      state,
+      ReadonlyArray.appendAll(rootCompletions(conditionals)),
+      ReadonlyArray.appendAll(subcommandCompletions(conditionals))
+    ))
+  })
