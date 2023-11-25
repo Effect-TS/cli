@@ -193,6 +193,13 @@ export const getFishCompletions = <A>(
   getFishCompletionsInternal(self as Instruction, programName)
 
 /** @internal */
+export const getZshCompletions = <A>(
+  self: Command.Command<A>,
+  programName: string
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  getZshCompletionsInternal(self as Instruction, programName)
+
+/** @internal */
 export const getSubcommands = <A>(
   self: Command.Command<A>
 ): HashMap.HashMap<string, Command.Command<unknown>> => getSubcommandsInternal(self as Instruction)
@@ -1205,3 +1212,159 @@ const getFishCompletionsInternal = (
       ReadonlyArray.appendAll(subcommandCompletions(conditionals))
     ))
   })
+
+const getZshCompletionsInternal = (
+  self: Instruction,
+  rootCommand: string
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  traverseCommand(self, ReadonlyArray.empty<string>(), (state, info) => {
+    const preformatted = ReadonlyArray.isEmptyReadonlyArray(info.parentCommands)
+      ? ReadonlyArray.of(info.command.name)
+      : pipe(
+        info.parentCommands,
+        ReadonlyArray.append(info.command.name),
+        ReadonlyArray.map((command) => command.replace("-", "__"))
+      )
+    const underscoreName = ReadonlyArray.join(preformatted, "__")
+    const spaceName = ReadonlyArray.join(preformatted, " ")
+    const subcommands = pipe(
+      info.subcommands,
+      ReadonlyArray.map(([name, subcommand]) => {
+        const desc = getShortDescription(subcommand)
+        return `'${name}:${desc}' \\`
+      })
+    )
+    const commands = ReadonlyArray.isEmptyReadonlyArray(subcommands)
+      ? `commands=()`
+      : `commands=(\n${ReadonlyArray.join(indentAll(subcommands, 8), "\n")}\n    )`
+    const handlerLines = [
+      `(( $+functions[_${underscoreName}_commands] )) ||`,
+      `_${underscoreName}_commands() {`,
+      `    local commands; ${commands}`,
+      `    _describe -t commands '${spaceName} commands' commands "$@"`,
+      "}"
+    ]
+    return Effect.succeed(ReadonlyArray.appendAll(state, handlerLines))
+  }).pipe(Effect.map((handlers) => {
+    const cases = getZshSubcommandCases(self, ReadonlyArray.empty(), ReadonlyArray.empty())
+    const scriptName = `_${rootCommand}_zsh_completions`
+    return [
+      `#compdef ${rootCommand}`,
+      "",
+      "autoload -U is-at-least",
+      "",
+      `function ${scriptName}() {`,
+      "    typeset -A opt_args",
+      "    typeset -a _arguments_options",
+      "    local ret=1",
+      "",
+      "    if is-at-least 5.2; then",
+      "        _arguments_options=(-s -S -C)",
+      "    else",
+      "        _arguments_options=(-s -C)",
+      "    fi",
+      "",
+      "    local context curcontext=\"$curcontext\" state line",
+      ...indentAll(cases, 4),
+      "}",
+      "",
+      ...handlers,
+      "",
+      `if [ "$funcstack[1]" = "${scriptName}" ]; then`,
+      `    ${scriptName} "$@"`,
+      "else",
+      `    compdef ${scriptName} ${rootCommand}`,
+      "fi"
+    ]
+  }))
+
+const getZshSubcommandCases = (
+  self: Instruction,
+  parentCommands: ReadonlyArray<string>,
+  subcommands: ReadonlyArray<[string, Standard | GetUserInput]>
+): ReadonlyArray<string> => {
+  switch (self._tag) {
+    case "Standard":
+    case "GetUserInput": {
+      const options = isStandard(self)
+        ? InternalOptions.all([InternalBuiltInOptions.builtIns, self.options])
+        : InternalBuiltInOptions.builtIns
+      const optionCompletions = pipe(
+        InternalOptions.getZshCompletions(options as InternalOptions.Instruction),
+        ReadonlyArray.map((completion) => `'${completion}' \\`)
+      )
+      if (ReadonlyArray.isEmptyReadonlyArray(parentCommands)) {
+        return [
+          "_arguments \"${_arguments_options[@]}\" \\",
+          ...indentAll(optionCompletions, 4),
+          `    ":: :_${self.name}_commands" \\`,
+          `    "*::: :->${self.name}" \\`,
+          "    && ret=0"
+        ]
+      }
+      if (ReadonlyArray.isEmptyReadonlyArray(subcommands)) {
+        return [
+          `(${self.name})`,
+          "_arguments \"${_arguments_options[@]}\" \\",
+          ...indentAll(optionCompletions, 4),
+          "    && ret=0",
+          ";;"
+        ]
+      }
+      return [
+        `(${self.name})`,
+        "_arguments \"${_arguments_options[@]}\" \\",
+        ...indentAll(optionCompletions, 4),
+        `    ":: :_${ReadonlyArray.append(parentCommands, self.name).join("__")}_commands" \\`,
+        `    "*::: :->${self.name}" \\`,
+        "    && ret=0"
+      ]
+    }
+    case "Map": {
+      return getZshSubcommandCases(self.command as Instruction, parentCommands, subcommands)
+    }
+    case "OrElse": {
+      const left = getZshSubcommandCases(self.left as Instruction, parentCommands, subcommands)
+      const right = getZshSubcommandCases(self.right as Instruction, parentCommands, subcommands)
+      return ReadonlyArray.appendAll(left, right)
+    }
+    case "Subcommands": {
+      const nextSubcommands = getImmediateSubcommands(self.child as Instruction)
+      const parentName = Array.from(getNamesInternal(self.parent as Instruction))[0]
+      const parentLines = getZshSubcommandCases(
+        self.parent as Instruction,
+        parentCommands,
+        ReadonlyArray.appendAll(subcommands, nextSubcommands)
+      )
+      const childCases = getZshSubcommandCases(
+        self.child as Instruction,
+        ReadonlyArray.append(parentCommands, parentName),
+        subcommands
+      )
+      const hyphenName = pipe(
+        ReadonlyArray.append(parentCommands, parentName),
+        ReadonlyArray.join("-")
+      )
+      const childLines = pipe(
+        [
+          "case $state in",
+          `    (${parentName})`,
+          `    words=($line[1] "\${words[@]}")`,
+          "    (( CURRENT += 1 ))",
+          `    curcontext="\${curcontext%:*:*}:${hyphenName}-command-$line[1]:"`,
+          `    case $line[1] in`,
+          ...indentAll(childCases, 8),
+          "    esac",
+          "    ;;",
+          "esac"
+        ],
+        ReadonlyArray.appendAll(
+          ReadonlyArray.isEmptyReadonlyArray(parentCommands)
+            ? ReadonlyArray.empty()
+            : ReadonlyArray.of(";;")
+        )
+      )
+      return ReadonlyArray.appendAll(parentLines, childLines)
+    }
+  }
+}

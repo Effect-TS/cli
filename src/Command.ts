@@ -142,6 +142,15 @@ export const getFishCompletions: <A>(
  * @since 1.0.0
  * @category combinators
  */
+export const getZshCompletions: <A>(
+  self: Command<A>,
+  programName: string
+) => Effect<never, never, ReadonlyArray<string>> = InternalCommand.getZshCompletions
+
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
 export const getNames: <A>(self: Command<A>) => HashSet<string> = InternalCommand.getNames
 
 /**

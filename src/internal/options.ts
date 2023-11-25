@@ -1486,6 +1486,19 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
 const CLUSTERED_REGEX = /^-{1}([^-]{2,}$)/
 const FLAG_REGEX = /^(--[^=]+)(?:=(.+))?$/
 
+const escape = (string: string): string => {
+  return string
+    .replaceAll("\\", "\\\\")
+    .replaceAll("'", "'\\''")
+    .replaceAll("[", "\\[")
+    .replaceAll("]", "\\]")
+    .replaceAll(":", "\\:")
+    .replaceAll("$", "\\$")
+    .replaceAll("`", "\\`")
+    .replaceAll("(", "\\(")
+    .replaceAll(")", "\\)")
+}
+
 const processArgs = (
   args: ReadonlyArray<string>
 ): Effect.Effect<never, ValidationError.ValidationError, ReadonlyArray<string>> => {
@@ -1806,6 +1819,68 @@ export const getFishCompletions = (self: Instruction): ReadonlyArray<string> => 
         getFishCompletions(self.left as Instruction),
         ReadonlyArray.appendAll(getFishCompletions(self.right as Instruction))
       )
+    }
+  }
+}
+
+interface ZshCompletionState {
+  readonly conflicts: ReadonlyArray<string>
+  readonly multiple: boolean
+}
+
+/** @internal */
+export const getZshCompletions = (
+  self: Instruction,
+  state: ZshCompletionState = { conflicts: ReadonlyArray.empty(), multiple: false }
+): ReadonlyArray<string> => {
+  switch (self._tag) {
+    case "Empty": {
+      return ReadonlyArray.empty()
+    }
+    case "Single": {
+      const names = getNames(self)
+      const description = getShortDescription(self)
+      const possibleValues = InternalPrimitive.getZshCompletions(
+        self.primitiveType as InternalPrimitive.Instruction
+      )
+      const multiple = state.multiple ? "*" : ""
+      const conflicts = ReadonlyArray.isNonEmptyReadonlyArray(state.conflicts)
+        ? `(${ReadonlyArray.join(state.conflicts, " ")})`
+        : ""
+      return ReadonlyArray.map(
+        names,
+        (name) => `${conflicts}${multiple}${name}[${escape(description)}]${possibleValues}`
+      )
+    }
+    case "KeyValueMap": {
+      return getZshCompletions(self.argumentOption as Instruction, { ...state, multiple: true })
+    }
+    case "Map":
+    case "WithDefault": {
+      return getZshCompletions(self.options as Instruction, state)
+    }
+    case "Both": {
+      const left = getZshCompletions(self.left as Instruction, state)
+      const right = getZshCompletions(self.right as Instruction, state)
+      return ReadonlyArray.appendAll(left, right)
+    }
+    case "OrElse": {
+      const leftNames = getNames(self.left as Instruction)
+      const rightNames = getNames(self.right as Instruction)
+      const left = getZshCompletions(
+        self.left as Instruction,
+        { ...state, conflicts: ReadonlyArray.appendAll(state.conflicts, rightNames) }
+      )
+      const right = getZshCompletions(
+        self.right as Instruction,
+        { ...state, conflicts: ReadonlyArray.appendAll(state.conflicts, leftNames) }
+      )
+      return ReadonlyArray.appendAll(left, right)
+    }
+    case "Variadic": {
+      return Option.isSome(self.max) && self.max.value > 1
+        ? getZshCompletions(self.argumentOption as Instruction, { ...state, multiple: true })
+        : getZshCompletions(self.argumentOption as Instruction, state)
     }
   }
 }

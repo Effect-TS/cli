@@ -648,3 +648,50 @@ export const getFishCompletions = (self: Instruction): ReadonlyArray<string> => 
     }
   }
 }
+
+/** @internal */
+export const getZshCompletions = (self: Instruction): string => {
+  switch (self._tag) {
+    case "Bool": {
+      return ""
+    }
+    case "Choice": {
+      const choices = pipe(
+        ReadonlyArray.map(self.alternatives, ([name]) => name),
+        ReadonlyArray.join(" ")
+      )
+      return `:CHOICE:(${choices})`
+    }
+    case "DateTime": {
+      return ""
+    }
+    case "Float": {
+      return ""
+    }
+    case "Integer": {
+      return ""
+    }
+    case "Path": {
+      switch (self.pathType) {
+        case "file": {
+          return self.pathExists === "yes" || self.pathExists === "either"
+            ? ":PATH:_files"
+            : ""
+        }
+        case "directory": {
+          return self.pathExists === "yes" || self.pathExists === "either"
+            ? ":PATH:_files -/"
+            : ""
+        }
+        case "either": {
+          return self.pathExists === "yes" || self.pathExists === "either"
+            ? ":PATH:_files"
+            : ""
+        }
+      }
+    }
+    case "Text": {
+      return ""
+    }
+  }
+}

@@ -155,21 +155,22 @@ const handleBuiltInOption = <A>(
     case "ShowCompletions": {
       const commandNames = ReadonlyArray.fromIterable(InternalCommand.getNames(self.command))
       if (ReadonlyArray.isNonEmptyReadonlyArray(commandNames)) {
+        const programName = ReadonlyArray.headNonEmpty(commandNames)
         switch (builtIn.shellType) {
           case "bash": {
-            const programName = ReadonlyArray.headNonEmpty(commandNames)
             return InternalCommand.getBashCompletions(self.command, programName).pipe(
               Effect.flatMap((completions) => Console.log(ReadonlyArray.join(completions, "\n")))
             )
           }
           case "fish": {
-            const programName = ReadonlyArray.headNonEmpty(commandNames)
             return InternalCommand.getFishCompletions(self.command, programName).pipe(
               Effect.flatMap((completions) => Console.log(ReadonlyArray.join(completions, "\n")))
             )
           }
           case "zsh":
-            throw new Error("Zsh completions not implemented ... yet")
+            return InternalCommand.getZshCompletions(self.command, programName).pipe(
+              Effect.flatMap((completions) => Console.log(ReadonlyArray.join(completions, "\n")))
+            )
         }
       }
       throw new Error(
