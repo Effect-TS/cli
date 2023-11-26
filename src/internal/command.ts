@@ -1330,7 +1330,7 @@ const getZshSubcommandCases = (
     }
     case "Subcommands": {
       const nextSubcommands = getImmediateSubcommands(self.child as Instruction)
-      const parentName = Array.from(getNamesInternal(self.parent as Instruction))[0]
+      const parentNames = Array.from(getNamesInternal(self.parent as Instruction))
       const parentLines = getZshSubcommandCases(
         self.parent as Instruction,
         parentCommands,
@@ -1338,15 +1338,16 @@ const getZshSubcommandCases = (
       )
       const childCases = getZshSubcommandCases(
         self.child as Instruction,
-        ReadonlyArray.append(parentCommands, parentName),
+        ReadonlyArray.appendAll(parentCommands, parentNames),
         subcommands
       )
       const hyphenName = pipe(
-        ReadonlyArray.append(parentCommands, parentName),
+        ReadonlyArray.appendAll(parentCommands, parentNames),
         ReadonlyArray.join("-")
       )
       const childLines = pipe(
-        [
+        parentNames,
+        ReadonlyArray.flatMap((parentName) => [
           "case $state in",
           `    (${parentName})`,
           `    words=($line[1] "\${words[@]}")`,
@@ -1357,7 +1358,7 @@ const getZshSubcommandCases = (
           "    esac",
           "    ;;",
           "esac"
-        ],
+        ]),
         ReadonlyArray.appendAll(
           ReadonlyArray.isEmptyReadonlyArray(parentCommands)
             ? ReadonlyArray.empty()
