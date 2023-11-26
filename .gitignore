@@ -7,3 +7,5 @@ build/
 dist/
 .direnv/
 docs/
+# Naval Fate Example
+naval-fate-store/
