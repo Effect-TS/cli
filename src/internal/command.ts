@@ -372,48 +372,47 @@ const getHelpInternal = (self: Instruction): HelpDoc.HelpDoc => {
         command: Instruction,
         preceding: ReadonlyArray<Span.Span>
       ): ReadonlyArray<[Span.Span, Span.Span]> => {
-        if (isStandard(command) || isGetUserInput(command)) {
-          const usage = InternalHelpDoc.getSpan(InternalUsage.getHelp(getUsageInternal(command)))
-          const usages = ReadonlyArray.append(preceding, usage)
-          const finalUsage = ReadonlyArray.reduceRight(
-            usages,
-            InternalSpan.empty,
-            (acc, next) =>
-              InternalSpan.isText(acc) && acc.value === ""
-                ? next
-                : InternalSpan.isText(next) && next.value === ""
-                ? acc
-                : InternalSpan.concat(acc, InternalSpan.concat(InternalSpan.space, next))
-          )
-          const description = isStandard(command)
-            ? InternalHelpDoc.getSpan(command.description)
-            : InternalSpan.empty
-          return ReadonlyArray.of([finalUsage, description])
-        }
-        if (isMap(command)) {
-          return getUsage(command.command as Instruction, preceding)
-        }
-        if (isOrElse(command)) {
-          return ReadonlyArray.appendAll(
-            getUsage(command.left as Instruction, preceding),
-            getUsage(command.right as Instruction, preceding)
-          )
-        }
-        if (isSubcommands(command)) {
-          const parentUsage = getUsage(command.parent as Instruction, preceding)
-          if (ReadonlyArray.isNonEmptyReadonlyArray(parentUsage)) {
-            const [usage] = ReadonlyArray.headNonEmpty(parentUsage)
-            const childUsage = getUsage(
-              command.child as Instruction,
-              ReadonlyArray.append(preceding, usage)
+        switch (command._tag) {
+          case "Standard":
+          case "GetUserInput": {
+            const usage = InternalHelpDoc.getSpan(InternalUsage.getHelp(getUsageInternal(command)))
+            const usages = ReadonlyArray.prepend(preceding, usage)
+            const finalUsage = ReadonlyArray.reduce(
+              usages,
+              InternalSpan.empty,
+              (acc, next) =>
+                InternalSpan.isText(acc) && acc.value === ""
+                  ? next
+                  : InternalSpan.isText(next) && next.value === ""
+                  ? acc
+                  : InternalSpan.spans([acc, InternalSpan.space, next])
             )
-            return ReadonlyArray.appendAll(parentUsage, childUsage)
+            const description = InternalHelpDoc.getSpan(command.description)
+            return ReadonlyArray.of([finalUsage, description])
           }
-          return getUsage(command.child as Instruction, preceding)
+          case "Map": {
+            return getUsage(command.command as Instruction, preceding)
+          }
+          case "OrElse": {
+            return ReadonlyArray.appendAll(
+              getUsage(command.left as Instruction, preceding),
+              getUsage(command.right as Instruction, preceding)
+            )
+          }
+          case "Subcommands": {
+            const parentUsage = getUsage(command.parent as Instruction, preceding)
+            return Option.match(ReadonlyArray.head(parentUsage), {
+              onNone: () => getUsage(command.child as Instruction, preceding),
+              onSome: ([usage]) => {
+                const childUsage = getUsage(
+                  command.child as Instruction,
+                  ReadonlyArray.append(preceding, usage)
+                )
+                return ReadonlyArray.appendAll(parentUsage, childUsage)
+              }
+            })
+          }
         }
-        throw new Error(
-          `[BUG]: Subcommands.usage - unhandled command type: ${JSON.stringify(command)}`
-        )
       }
       const printSubcommands = (
         subcommands: ReadonlyArray<[Span.Span, Span.Span]>
@@ -470,7 +469,7 @@ const getNamesInternal = (self: Instruction): HashSet.HashSet<string> => {
 
 const getSubcommandsInternal = (
   self: Instruction
-): HashMap.HashMap<string, Command.Command<unknown>> => {
+): HashMap.HashMap<string, GetUserInput | Standard> => {
   switch (self._tag) {
     case "Standard":
     case "GetUserInput": {
@@ -486,7 +485,7 @@ const getSubcommandsInternal = (
       )
     }
     case "Subcommands": {
-      return getSubcommandsInternal(self.child as Instruction)
+      return getSubcommandsInternal(self.parent as Instruction)
     }
   }
 }
@@ -689,7 +688,7 @@ const parseInternal = (
     }
     case "Subcommands": {
       const names = Array.from(getNamesInternal(self))
-      const subcommands = getSubcommandsInternal(self)
+      const subcommands = getSubcommandsInternal(self.child as Instruction)
       const [parentArgs, childArgs] = ReadonlyArray.span(
         args,
         (name) => !HashMap.has(subcommands, name)
@@ -942,28 +941,6 @@ const getShortDescription = (self: Instruction): string => {
   }
 }
 
-const getImmediateSubcommands = (
-  self: Instruction
-): ReadonlyArray<[string, Standard | GetUserInput]> => {
-  switch (self._tag) {
-    case "Standard":
-    case "GetUserInput": {
-      return ReadonlyArray.of([self.name, self])
-    }
-    case "Map": {
-      return getImmediateSubcommands(self.command as Instruction)
-    }
-    case "OrElse": {
-      const leftNames = getImmediateSubcommands(self.left as Instruction)
-      const rightNames = getImmediateSubcommands(self.right as Instruction)
-      return ReadonlyArray.appendAll(leftNames, rightNames)
-    }
-    case "Subcommands": {
-      return getImmediateSubcommands(self.parent as Instruction)
-    }
-  }
-}
-
 interface CommandInfo {
   readonly command: Standard | GetUserInput
   readonly parentCommands: ReadonlyArray<string>
@@ -1016,8 +993,9 @@ const traverseCommand = <S>(
         }
         case "Subcommands": {
           const parentNames = Array.from(getNamesInternal(self.parent as Instruction))
-          const nextSubcommands = getImmediateSubcommands(self.child as Instruction)
+          const nextSubcommands = Array.from(getSubcommandsInternal(self.child as Instruction))
           const nextParentCommands = ReadonlyArray.appendAll(parentCommands, parentNames)
+          console.log(self.parent, self.child)
           // Traverse the parent command using old parent names and next subcommands
           return loop(self.parent as Instruction, parentCommands, nextSubcommands, level).pipe(
             Effect.zipRight(
@@ -1329,7 +1307,7 @@ const getZshSubcommandCases = (
       return ReadonlyArray.appendAll(left, right)
     }
     case "Subcommands": {
-      const nextSubcommands = getImmediateSubcommands(self.child as Instruction)
+      const nextSubcommands = Array.from(getSubcommandsInternal(self.child as Instruction))
       const parentNames = Array.from(getNamesInternal(self.parent as Instruction))
       const parentLines = getZshSubcommandCases(
         self.parent as Instruction,

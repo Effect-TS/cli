@@ -376,12 +376,13 @@ describe("Command", () => {
 
     it("should trigger help even if not alone", () =>
       Effect.gen(function*(_) {
+        const config = CliConfig.make({ finalCheckBuiltIn: true })
         const result1 = yield* _(
-          Command.parse(command, params6, CliConfig.defaultConfig),
+          Command.parse(command, params6, config),
           Effect.map(directiveType)
         )
         const result2 = yield* _(
-          Command.parse(command, params7, CliConfig.defaultConfig),
+          Command.parse(command, params7, config),
           Effect.map(directiveType)
         )
         expect(result1).toBe("help")
@@ -390,8 +391,9 @@ describe("Command", () => {
 
     it("should trigger wizard even if not alone", () =>
       Effect.gen(function*(_) {
+        const config = CliConfig.make({ finalCheckBuiltIn: true })
         const result = yield* _(
-          Command.parse(command, params8, CliConfig.defaultConfig),
+          Command.parse(command, params8, config),
           Effect.map(directiveType)
         )
         expect(result).toBe("wizard")
@@ -450,6 +452,7 @@ describe("Command", () => {
         ])
       )
     ]))
+
     it("should create completions for the bash shell", () =>
       Effect.gen(function*(_) {
         const result = yield* _(Command.getBashCompletions(command, "forge"))
