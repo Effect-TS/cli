@@ -32,12 +32,20 @@ const speedOption = Options.integer("speed").pipe(
   Options.withDefault(10)
 )
 
+const shipCommandParent = HandledCommand.makeRequestHelp("ship", {
+  options: Options.withDefault(Options.boolean("verbose"), false)
+})
+
 const newShipCommand = HandledCommand.make("new", {
   args: nameArg
 }, ({ args: name }) =>
   Effect.gen(function*(_) {
+    const { options: verbose } = yield* _(shipCommandParent)
     yield* _(createShip(name))
     yield* _(Console.log(`Created ship: '${name}'`))
+    if (verbose) {
+      yield* _(Console.log(`Verbose mode enabled`))
+    }
   }))
 
 const moveShipCommand = HandledCommand.make("move", {
@@ -57,13 +65,13 @@ const shootShipCommand = HandledCommand.make("shoot", {
     yield* _(Console.log(`Shot cannons at coordinates (${x}, ${y})`))
   }))
 
-const shipCommand = HandledCommand.makeUnit("ship").pipe(
-  HandledCommand.withSubcommands([
-    newShipCommand,
-    moveShipCommand,
-    shootShipCommand
-  ])
-)
+const shipCommand = HandledCommand.withSubcommands(shipCommandParent, [
+  newShipCommand,
+  moveShipCommand,
+  shootShipCommand
+])
+
+const mineCommandParent = HandledCommand.makeRequestHelp("mine")
 
 const setMineCommand = HandledCommand.make("set", {
   args: coordinatesArg,
@@ -84,12 +92,10 @@ const removeMineCommand = HandledCommand.make("remove", {
     yield* _(Console.log(`Removing mine at coordinates (${x}, ${y}), if present`))
   }))
 
-const mineCommand = HandledCommand.makeUnit("mine").pipe(
-  HandledCommand.withSubcommands([
-    setMineCommand,
-    removeMineCommand
-  ])
-)
+const mineCommand = HandledCommand.withSubcommands(mineCommandParent, [
+  setMineCommand,
+  removeMineCommand
+])
 
 const run = Command.make("naval_fate").pipe(
   Command.withDescription("An implementation of the Naval Fate CLI application."),
