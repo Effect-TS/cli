@@ -84,7 +84,14 @@ export const run = dual<
       onSuccess: Effect.unifiedFn((directive) => {
         switch (directive._tag) {
           case "UserDefined": {
-            return execute(directive.value)
+            return execute(directive.value).pipe(
+              Effect.catchSome((e) =>
+                InternalValidationError.isValidationError(e) &&
+                  InternalValidationError.isHelpRequested(e)
+                  ? Option.some(handleBuiltInOption(self, e.showHelp, config))
+                  : Option.none()
+              )
+            )
           }
           case "BuiltIn": {
             return handleBuiltInOption(self, directive.option, config).pipe(
@@ -210,7 +217,8 @@ const handleBuiltInOption = <A>(
         ])
       )
       const help = InternalHelpDoc.sequence(header, description)
-      return Console.log(InternalHelpDoc.toAnsiText(help)).pipe(
+      const text = InternalHelpDoc.toAnsiText(help).trimEnd()
+      return Console.log(text).pipe(
         Effect.zipRight(InternalCommand.wizard(builtIn.command, config)),
         Effect.tap((args) => Console.log(InternalHelpDoc.toAnsiText(renderWizardArgs(args))))
       )

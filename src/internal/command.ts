@@ -304,16 +304,9 @@ export const withSubcommands = dual<
   if (ReadonlyArray.isNonEmptyReadonlyArray(subcommands)) {
     const head = ReadonlyArray.headNonEmpty<Command.Command<unknown>>(subcommands)
     const tail = ReadonlyArray.tailNonEmpty<Command.Command<unknown>>(subcommands)
-    if (ReadonlyArray.isNonEmptyReadonlyArray(tail)) {
-      const child = ReadonlyArray.reduce(
-        ReadonlyArray.tailNonEmpty(tail),
-        orElse(head, ReadonlyArray.headNonEmpty(tail)),
-        orElse
-      )
-      op.child = child
-      return op
-    }
-    op.child = head
+    op.child = ReadonlyArray.isNonEmptyReadonlyArray(tail)
+      ? ReadonlyArray.reduce(tail, head, orElse)
+      : head
     return op
   }
   throw new Error("[BUG]: Command.subcommands - received empty list of subcommands")
@@ -376,7 +369,7 @@ const getHelpInternal = (self: Instruction): HelpDoc.HelpDoc => {
           case "Standard":
           case "GetUserInput": {
             const usage = InternalHelpDoc.getSpan(InternalUsage.getHelp(getUsageInternal(command)))
-            const usages = ReadonlyArray.prepend(preceding, usage)
+            const usages = ReadonlyArray.append(preceding, usage)
             const finalUsage = ReadonlyArray.reduce(
               usages,
               InternalSpan.empty,
@@ -693,59 +686,59 @@ const parseInternal = (
         args,
         (name) => !HashMap.has(subcommands, name)
       )
-      const helpDirectiveForParent = Effect.succeed(
-        InternalCommandDirective.builtIn(InternalBuiltInOptions.showHelp(
+      const helpDirectiveForParent = Effect.sync(() => {
+        return InternalCommandDirective.builtIn(InternalBuiltInOptions.showHelp(
           getUsageInternal(self),
           getHelpInternal(self)
         ))
-      )
-      const helpDirectiveForChild = parseInternal(
-        self.child as Instruction,
-        childArgs,
-        config
-      ).pipe(
-        Effect.flatMap((directive) => {
-          if (
-            InternalCommandDirective.isBuiltIn(directive) &&
-            InternalBuiltInOptions.isShowHelp(directive.option)
-          ) {
-            const parentName = Option.getOrElse(ReadonlyArray.head(names), () => "")
-            const newDirective = InternalCommandDirective.builtIn(InternalBuiltInOptions.showHelp(
-              InternalUsage.concat(
-                InternalUsage.named(ReadonlyArray.of(parentName), Option.none()),
-                directive.option.usage
-              ),
-              directive.option.helpDoc
-            ))
-            return Effect.succeed(newDirective)
-          }
-          return Effect.fail(InternalValidationError.invalidArgument(InternalHelpDoc.empty))
-        })
-      )
-      const wizardDirectiveForParent = Effect.succeed(
+      })
+      const helpDirectiveForChild = Effect.suspend(() => {
+        return parseInternal(self.child as Instruction, childArgs, config).pipe(
+          Effect.flatMap((directive) => {
+            if (
+              InternalCommandDirective.isBuiltIn(directive) &&
+              InternalBuiltInOptions.isShowHelp(directive.option)
+            ) {
+              const parentName = Option.getOrElse(ReadonlyArray.head(names), () => "")
+              const newDirective = InternalCommandDirective.builtIn(InternalBuiltInOptions.showHelp(
+                InternalUsage.concat(
+                  InternalUsage.named(ReadonlyArray.of(parentName), Option.none()),
+                  directive.option.usage
+                ),
+                directive.option.helpDoc
+              ))
+              return Effect.succeed(newDirective)
+            }
+            return Effect.fail(InternalValidationError.invalidArgument(InternalHelpDoc.empty))
+          })
+        )
+      })
+      const wizardDirectiveForParent = Effect.sync(() =>
         InternalCommandDirective.builtIn(InternalBuiltInOptions.showWizard(self))
       )
-      const wizardDirectiveForChild = parseInternal(
-        self.child as Instruction,
-        childArgs,
-        config
-      ).pipe(
-        Effect.flatMap((directive) => {
-          if (
-            InternalCommandDirective.isBuiltIn(directive) &&
-            InternalBuiltInOptions.isShowWizard(directive.option)
-          ) {
-            return Effect.succeed(directive)
-          }
-          return Effect.fail(InternalValidationError.invalidArgument(InternalHelpDoc.empty))
-        })
+      const wizardDirectiveForChild = Effect.suspend(() =>
+        parseInternal(self.child as Instruction, childArgs, config).pipe(
+          Effect.flatMap((directive) => {
+            if (
+              InternalCommandDirective.isBuiltIn(directive) &&
+              InternalBuiltInOptions.isShowWizard(directive.option)
+            ) {
+              return Effect.succeed(directive)
+            }
+            return Effect.fail(InternalValidationError.invalidArgument(InternalHelpDoc.empty))
+          })
+        )
       )
       return parseInternal(self.parent as Instruction, parentArgs, config).pipe(
         Effect.flatMap((directive) => {
           switch (directive._tag) {
             case "BuiltIn": {
               if (InternalBuiltInOptions.isShowHelp(directive.option)) {
-                return Effect.orElse(helpDirectiveForChild, () => helpDirectiveForParent)
+                // We do not want to display the child help docs if there are
+                // no arguments indicating the CLI command was for the child
+                return ReadonlyArray.isNonEmptyReadonlyArray(childArgs)
+                  ? Effect.orElse(helpDirectiveForChild, () => helpDirectiveForParent)
+                  : helpDirectiveForParent
               }
               if (InternalBuiltInOptions.isShowWizard(directive.option)) {
                 return Effect.orElse(wizardDirectiveForChild, () => wizardDirectiveForParent)
@@ -848,73 +841,124 @@ const withDescriptionInternal = (
   }
 }
 
-const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.Effect<
+const wizardInternal = (
+  self: Instruction,
+  config: CliConfig.CliConfig
+): Effect.Effect<
   FileSystem.FileSystem | Terminal.Terminal,
   ValidationError.ValidationError,
   ReadonlyArray<string>
 > => {
-  switch (self._tag) {
-    case "Standard": {
-      const message = InternalHelpDoc.p(pipe(
-        InternalSpan.text("\n"),
-        InternalSpan.concat(InternalSpan.strong(InternalSpan.code("COMMAND:"))),
-        InternalSpan.concat(InternalSpan.space),
-        InternalSpan.concat(InternalSpan.code(self.name))
-      ))
-      return Console.log(InternalHelpDoc.toAnsiText(message)).pipe(Effect.zipRight(Effect.zipWith(
-        InternalOptions.wizard(self.options, config),
-        InternalArgs.wizard(self.args, config),
-        (options, args) => ReadonlyArray.prepend(ReadonlyArray.appendAll(options, args), self.name)
-      )))
+  const loop = (self: WizardCommandSequence): Effect.Effect<
+    FileSystem.FileSystem | Terminal.Terminal,
+    ValidationError.ValidationError,
+    ReadonlyArray<string>
+  > => {
+    switch (self._tag) {
+      case "SingleCommandWizard": {
+        const optionsWizard = isStandard(self.command)
+          ? InternalOptions.wizard(self.command.options, config)
+          : Effect.succeed(ReadonlyArray.empty())
+        const argsWizard = isStandard(self.command)
+          ? InternalArgs.wizard(self.command.args, config)
+          : Effect.succeed(ReadonlyArray.empty())
+        const help = InternalHelpDoc.p(pipe(
+          InternalSpan.text("\n"),
+          InternalSpan.concat(InternalSpan.strong(InternalSpan.code("COMMAND:"))),
+          InternalSpan.concat(InternalSpan.space),
+          InternalSpan.concat(InternalSpan.code(self.command.name))
+        ))
+        const message = InternalHelpDoc.toAnsiText(help)
+        return Console.log(message).pipe(
+          Effect.zipRight(Effect.zipWith(optionsWizard, argsWizard, (options, args) =>
+            pipe(
+              ReadonlyArray.appendAll(options, args),
+              ReadonlyArray.prepend(self.command.name)
+            )))
+        )
+      }
+      case "AlternativeCommandWizard": {
+        const makeChoice = (title: string, value: WizardCommandSequence) => ({ title, value })
+        const choices = self.alternatives.map((alternative) => {
+          switch (alternative._tag) {
+            case "SingleCommandWizard": {
+              return makeChoice(alternative.command.name, alternative)
+            }
+            case "SubcommandWizard": {
+              return makeChoice(alternative.names, alternative)
+            }
+          }
+        })
+        const description = InternalHelpDoc.p("Select which command you would like to execute")
+        const message = InternalHelpDoc.toAnsiText(description).trimEnd()
+        return InternalSelectPrompt.select({ message, choices }).pipe(
+          Effect.flatMap((nextSequence) => loop(nextSequence))
+        )
+      }
+      case "SubcommandWizard": {
+        return Effect.zipWith(
+          loop(self.parent),
+          loop(self.child),
+          (parent, child) => ReadonlyArray.appendAll(parent, child)
+        )
+      }
     }
+  }
+  return loop(getWizardCommandSequence(self))
+}
+
+type WizardCommandSequence = SingleCommandWizard | AlternativeCommandWizard | SubcommandWizard
+
+interface SingleCommandWizard {
+  readonly _tag: "SingleCommandWizard"
+  readonly command: GetUserInput | Standard
+}
+
+interface AlternativeCommandWizard {
+  readonly _tag: "AlternativeCommandWizard"
+  readonly alternatives: ReadonlyArray<SingleCommandWizard | SubcommandWizard>
+}
+
+interface SubcommandWizard {
+  _tag: "SubcommandWizard"
+  readonly names: string
+  readonly parent: WizardCommandSequence
+  readonly child: WizardCommandSequence
+}
+
+/**
+ * Creates an intermediate data structure that allows commands to be properly
+ * sequenced by the prompts of Wizard Mode.
+ */
+const getWizardCommandSequence = (self: Instruction): WizardCommandSequence => {
+  switch (self._tag) {
+    case "Standard":
     case "GetUserInput": {
-      return Effect.succeed(ReadonlyArray.empty())
+      return { _tag: "SingleCommandWizard", command: self }
     }
     case "Map": {
-      return wizardInternal(self.command as Instruction, config)
+      return getWizardCommandSequence(self.command as Instruction)
     }
     case "OrElse": {
-      const description = InternalHelpDoc.p("Select which command you would like to execute")
-      const makeChoice = (title: string, value: Instruction) => ({
-        title,
-        value: [title, value] as const
-      })
-      const choices = ReadonlyArray.compact([
-        Option.map(
-          ReadonlyArray.head(Array.from(getNamesInternal(self.left as Instruction))),
-          (title) => makeChoice(title, self.left as Instruction)
-        ),
-        Option.map(
-          ReadonlyArray.head(Array.from(getNamesInternal(self.right as Instruction))),
-          (title) => makeChoice(title, self.right as Instruction)
-        )
-      ])
-      const message = InternalHelpDoc.toAnsiText(description).trimEnd()
-      return Console.log().pipe(
-        Effect.zipRight(InternalSelectPrompt.select({ message, choices })),
-        Effect.flatMap(([name, command]) =>
-          wizardInternal(command, config).pipe(Effect.map(ReadonlyArray.prepend(name)))
-        )
-      )
+      const left = getWizardCommandSequence(self.left as Instruction)
+      const leftAlternatives = left._tag === "AlternativeCommandWizard"
+        ? left.alternatives
+        : ReadonlyArray.of(left)
+      const right = getWizardCommandSequence(self.right as Instruction)
+      const rightAlternatives = right._tag === "AlternativeCommandWizard"
+        ? right.alternatives
+        : ReadonlyArray.of(right)
+      const alternatives = ReadonlyArray.appendAll(leftAlternatives, rightAlternatives)
+      return { _tag: "AlternativeCommandWizard", alternatives }
     }
     case "Subcommands": {
-      const description = InternalHelpDoc.p("Select which command you would like to execute")
-      const makeChoice = (title: string, value: Instruction) => ({ title, value })
-      const parentName = Option.getOrElse(
-        ReadonlyArray.head(Array.from(getNamesInternal(self))),
-        () => "<anonymous>"
+      const names = pipe(
+        ReadonlyArray.fromIterable(getNamesInternal(self.parent as Instruction)),
+        ReadonlyArray.join(" | ")
       )
-      const parentChoice = makeChoice(parentName, self.parent as Instruction)
-      const childChoices = ReadonlyArray.map(
-        Array.from(getSubcommandsInternal(self)),
-        ([name, command]) => makeChoice(name, command as Instruction)
-      )
-      const choices = ReadonlyArray.prepend(childChoices, parentChoice)
-      const message = InternalHelpDoc.toAnsiText(description).trimEnd()
-      return Console.log().pipe(
-        Effect.zipRight(InternalSelectPrompt.select({ message, choices })),
-        Effect.flatMap((command) => wizardInternal(command, config))
-      )
+      const parent = getWizardCommandSequence(self.parent as Instruction)
+      const child = getWizardCommandSequence(self.child as Instruction)
+      return { _tag: "SubcommandWizard", names, parent, child }
     }
   }
 }
@@ -995,7 +1039,6 @@ const traverseCommand = <S>(
           const parentNames = Array.from(getNamesInternal(self.parent as Instruction))
           const nextSubcommands = Array.from(getSubcommandsInternal(self.child as Instruction))
           const nextParentCommands = ReadonlyArray.appendAll(parentCommands, parentNames)
-          console.log(self.parent, self.child)
           // Traverse the parent command using old parent names and next subcommands
           return loop(self.parent as Instruction, parentCommands, nextSubcommands, level).pipe(
             Effect.zipRight(
@@ -1346,4 +1389,20 @@ const getZshSubcommandCases = (
       return ReadonlyArray.appendAll(parentLines, childLines)
     }
   }
+}
+
+// Circular with ValidationError
+
+/** @internal */
+export const helpRequestedError = <A>(
+  command: Command.Command<A>
+): ValidationError.ValidationError => {
+  const op = Object.create(InternalValidationError.proto)
+  op._tag = "HelpRequested"
+  op.error = InternalHelpDoc.empty
+  op.showHelp = InternalBuiltInOptions.showHelp(
+    getUsageInternal(command as Instruction),
+    getHelpInternal(command as Instruction)
+  )
+  return op
 }
