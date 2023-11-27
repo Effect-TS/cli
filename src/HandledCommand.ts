@@ -8,6 +8,7 @@ import { dual } from "effect/Function"
 import { globalValue } from "effect/GlobalValue"
 import type * as Option from "effect/Option"
 import { type Pipeable, pipeArguments } from "effect/Pipeable"
+import * as Predicate from "effect/Predicate"
 import * as ReadonlyArray from "effect/ReadonlyArray"
 import type * as Types from "effect/Types"
 import * as Args from "./Args.js"
@@ -209,17 +210,19 @@ const HandledCommand = <A, R, E>(
 ): HandledCommand<A, R, E> => {
   const self = Object.create(Prototype)
   self.command = Command.map(command, (args) =>
-    new Proxy(args as any, {
-      get(target, p, _receiver) {
-        if (p === TypeId) {
-          return self.tag
+    Predicate.hasProperty(args, TypeId) ?
+      args :
+      new Proxy(args as any, {
+        get(target, p, _receiver) {
+          if (p === TypeId) {
+            return self.tag
+          }
+          return target[p as any]
+        },
+        has(target, p) {
+          return p === TypeId || p in target
         }
-        return target[p as any]
-      },
-      has(target, p) {
-        return p === TypeId || p in target
-      }
-    }))
+      }))
   self.handler = handler
   self.tag = tag ?? Context.Tag()
   modifiedCommands.set(self.tag, self.command)
