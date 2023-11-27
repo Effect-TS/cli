@@ -84,7 +84,14 @@ export const run = dual<
       onSuccess: Effect.unifiedFn((directive) => {
         switch (directive._tag) {
           case "UserDefined": {
-            return execute(directive.value)
+            return execute(directive.value).pipe(
+              Effect.catchSome((e) =>
+                InternalValidationError.isValidationError(e) &&
+                  InternalValidationError.isHelpRequested(e)
+                  ? Option.some(handleBuiltInOption(self, e.showHelp, config))
+                  : Option.none()
+              )
+            )
           }
           case "BuiltIn": {
             return handleBuiltInOption(self, directive.option, config).pipe(

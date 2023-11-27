@@ -307,9 +307,9 @@ describe("Command", () => {
          |
          |  - child1         help 1
          |
-         |  - child2 child1  help 2
+         |  - child1 child2  help 2
          |
-         |  - child3 child1  help 3
+         |  - child1 child3  help 3
          |`
       ))
     })

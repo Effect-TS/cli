@@ -1,4 +1,4 @@
-import { Args, CliApp, Command, Options } from "@effect/cli"
+import { Args, CliApp, Command, Options, ValidationError } from "@effect/cli"
 import * as KeyValueStore from "@effect/platform-node/KeyValueStore"
 import * as NodeContext from "@effect/platform-node/NodeContext"
 import * as Runtime from "@effect/platform-node/Runtime"
@@ -93,13 +93,13 @@ const handleSubcommand = (command: ShipCommand | MineCommand) => {
   switch (command._tag) {
     case "ShipCommand": {
       return Option.match(command.subcommand, {
-        onNone: () => Effect.unit,
+        onNone: () => Effect.fail(ValidationError.helpRequested(shipCommand)),
         onSome: (subcommand) => handleShipSubcommand(subcommand)
       })
     }
     case "MineCommand": {
       return Option.match(command.subcommand, {
-        onNone: () => Effect.unit,
+        onNone: () => Effect.fail(ValidationError.helpRequested(mineCommand)),
         onSome: (subcommand) => handleMineSubcommand(subcommand)
       })
     }
@@ -158,7 +158,7 @@ const main = Effect.sync(() => globalThis.process.argv.slice(2)).pipe(
       argv,
       Effect.unifiedFn((args) =>
         Option.match(args.subcommand, {
-          onNone: () => Effect.unit,
+          onNone: () => Effect.fail(ValidationError.helpRequested(navalFate)),
           onSome: (subcommand) => handleSubcommand(subcommand)
         })
       )

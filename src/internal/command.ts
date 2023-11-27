@@ -304,16 +304,9 @@ export const withSubcommands = dual<
   if (ReadonlyArray.isNonEmptyReadonlyArray(subcommands)) {
     const head = ReadonlyArray.headNonEmpty<Command.Command<unknown>>(subcommands)
     const tail = ReadonlyArray.tailNonEmpty<Command.Command<unknown>>(subcommands)
-    if (ReadonlyArray.isNonEmptyReadonlyArray(tail)) {
-      const child = ReadonlyArray.reduce(
-        ReadonlyArray.tailNonEmpty(tail),
-        orElse(head, ReadonlyArray.headNonEmpty(tail)),
-        orElse
-      )
-      op.child = child
-      return op
-    }
-    op.child = head
+    op.child = ReadonlyArray.isNonEmptyReadonlyArray(tail)
+      ? ReadonlyArray.reduce(tail, head, orElse)
+      : head
     return op
   }
   throw new Error("[BUG]: Command.subcommands - received empty list of subcommands")
@@ -376,7 +369,7 @@ const getHelpInternal = (self: Instruction): HelpDoc.HelpDoc => {
           case "Standard":
           case "GetUserInput": {
             const usage = InternalHelpDoc.getSpan(InternalUsage.getHelp(getUsageInternal(command)))
-            const usages = ReadonlyArray.prepend(preceding, usage)
+            const usages = ReadonlyArray.append(preceding, usage)
             const finalUsage = ReadonlyArray.reduce(
               usages,
               InternalSpan.empty,
@@ -693,59 +686,59 @@ const parseInternal = (
         args,
         (name) => !HashMap.has(subcommands, name)
       )
-      const helpDirectiveForParent = Effect.succeed(
-        InternalCommandDirective.builtIn(InternalBuiltInOptions.showHelp(
+      const helpDirectiveForParent = Effect.sync(() => {
+        return InternalCommandDirective.builtIn(InternalBuiltInOptions.showHelp(
           getUsageInternal(self),
           getHelpInternal(self)
         ))
-      )
-      const helpDirectiveForChild = parseInternal(
-        self.child as Instruction,
-        childArgs,
-        config
-      ).pipe(
-        Effect.flatMap((directive) => {
-          if (
-            InternalCommandDirective.isBuiltIn(directive) &&
-            InternalBuiltInOptions.isShowHelp(directive.option)
-          ) {
-            const parentName = Option.getOrElse(ReadonlyArray.head(names), () => "")
-            const newDirective = InternalCommandDirective.builtIn(InternalBuiltInOptions.showHelp(
-              InternalUsage.concat(
-                InternalUsage.named(ReadonlyArray.of(parentName), Option.none()),
-                directive.option.usage
-              ),
-              directive.option.helpDoc
-            ))
-            return Effect.succeed(newDirective)
-          }
-          return Effect.fail(InternalValidationError.invalidArgument(InternalHelpDoc.empty))
-        })
-      )
-      const wizardDirectiveForParent = Effect.succeed(
+      })
+      const helpDirectiveForChild = Effect.suspend(() => {
+        return parseInternal(self.child as Instruction, childArgs, config).pipe(
+          Effect.flatMap((directive) => {
+            if (
+              InternalCommandDirective.isBuiltIn(directive) &&
+              InternalBuiltInOptions.isShowHelp(directive.option)
+            ) {
+              const parentName = Option.getOrElse(ReadonlyArray.head(names), () => "")
+              const newDirective = InternalCommandDirective.builtIn(InternalBuiltInOptions.showHelp(
+                InternalUsage.concat(
+                  InternalUsage.named(ReadonlyArray.of(parentName), Option.none()),
+                  directive.option.usage
+                ),
+                directive.option.helpDoc
+              ))
+              return Effect.succeed(newDirective)
+            }
+            return Effect.fail(InternalValidationError.invalidArgument(InternalHelpDoc.empty))
+          })
+        )
+      })
+      const wizardDirectiveForParent = Effect.sync(() =>
         InternalCommandDirective.builtIn(InternalBuiltInOptions.showWizard(self))
       )
-      const wizardDirectiveForChild = parseInternal(
-        self.child as Instruction,
-        childArgs,
-        config
-      ).pipe(
-        Effect.flatMap((directive) => {
-          if (
-            InternalCommandDirective.isBuiltIn(directive) &&
-            InternalBuiltInOptions.isShowWizard(directive.option)
-          ) {
-            return Effect.succeed(directive)
-          }
-          return Effect.fail(InternalValidationError.invalidArgument(InternalHelpDoc.empty))
-        })
+      const wizardDirectiveForChild = Effect.suspend(() =>
+        parseInternal(self.child as Instruction, childArgs, config).pipe(
+          Effect.flatMap((directive) => {
+            if (
+              InternalCommandDirective.isBuiltIn(directive) &&
+              InternalBuiltInOptions.isShowWizard(directive.option)
+            ) {
+              return Effect.succeed(directive)
+            }
+            return Effect.fail(InternalValidationError.invalidArgument(InternalHelpDoc.empty))
+          })
+        )
       )
       return parseInternal(self.parent as Instruction, parentArgs, config).pipe(
         Effect.flatMap((directive) => {
           switch (directive._tag) {
             case "BuiltIn": {
               if (InternalBuiltInOptions.isShowHelp(directive.option)) {
-                return Effect.orElse(helpDirectiveForChild, () => helpDirectiveForParent)
+                // We do not want to display the child help docs if there are
+                // no arguments indicating the CLI command was for the child
+                return ReadonlyArray.isNonEmptyReadonlyArray(childArgs)
+                  ? Effect.orElse(helpDirectiveForChild, () => helpDirectiveForParent)
+                  : helpDirectiveForParent
               }
               if (InternalBuiltInOptions.isShowWizard(directive.option)) {
                 return Effect.orElse(wizardDirectiveForChild, () => wizardDirectiveForParent)
@@ -995,7 +988,6 @@ const traverseCommand = <S>(
           const parentNames = Array.from(getNamesInternal(self.parent as Instruction))
           const nextSubcommands = Array.from(getSubcommandsInternal(self.child as Instruction))
           const nextParentCommands = ReadonlyArray.appendAll(parentCommands, parentNames)
-          console.log(self.parent, self.child)
           // Traverse the parent command using old parent names and next subcommands
           return loop(self.parent as Instruction, parentCommands, nextSubcommands, level).pipe(
             Effect.zipRight(
@@ -1346,4 +1338,20 @@ const getZshSubcommandCases = (
       return ReadonlyArray.appendAll(parentLines, childLines)
     }
   }
+}
+
+// Circular with ValidationError
+
+/** @internal */
+export const helpRequestedError = <A>(
+  command: Command.Command<A>
+): ValidationError.ValidationError => {
+  const op = Object.create(InternalValidationError.proto)
+  op._tag = "HelpRequested"
+  op.error = InternalHelpDoc.empty
+  op.showHelp = InternalBuiltInOptions.showHelp(
+    getUsageInternal(command as Instruction),
+    getHelpInternal(command as Instruction)
+  )
+  return op
 }
