@@ -32,42 +32,32 @@ const speedOption = Options.integer("speed").pipe(
   Options.withDefault(10)
 )
 
-const newShipCommand = HandledCommand.fromCommand(
-  Command.make("new", {
-    args: nameArg
-  }),
-  ({ args: name }) =>
-    Effect.gen(function*(_) {
-      yield* _(createShip(name))
-      yield* _(Console.log(`Created ship: '${name}'`))
-    })
-)
+const newShipCommand = HandledCommand.make("new", {
+  args: nameArg
+}, ({ args: name }) =>
+  Effect.gen(function*(_) {
+    yield* _(createShip(name))
+    yield* _(Console.log(`Created ship: '${name}'`))
+  }))
 
-const moveShipCommand = HandledCommand.fromCommand(
-  Command.make("move", {
-    args: nameAndCoordinatesArg,
-    options: speedOption
-  }),
-  ({ args: { name, x, y }, options: speed }) =>
-    Effect.gen(function*(_) {
-      yield* _(moveShip(name, x, y))
-      yield* _(Console.log(`Moving ship '${name}' to coordinates (${x}, ${y}) at ${speed} knots`))
-    })
-)
+const moveShipCommand = HandledCommand.make("move", {
+  args: nameAndCoordinatesArg,
+  options: speedOption
+}, ({ args: { name, x, y }, options: speed }) =>
+  Effect.gen(function*(_) {
+    yield* _(moveShip(name, x, y))
+    yield* _(Console.log(`Moving ship '${name}' to coordinates (${x}, ${y}) at ${speed} knots`))
+  }))
 
-const shootShipCommand = HandledCommand.fromCommand(
-  Command.make("shoot", {
-    args: coordinatesArg
-  }),
-  ({ args: { x, y } }) =>
-    Effect.gen(function*(_) {
-      yield* _(shoot(x, y))
-      yield* _(Console.log(`Shot cannons at coordinates (${x}, ${y})`))
-    })
-)
+const shootShipCommand = HandledCommand.make("shoot", {
+  args: coordinatesArg
+}, ({ args: { x, y } }) =>
+  Effect.gen(function*(_) {
+    yield* _(shoot(x, y))
+    yield* _(Console.log(`Shot cannons at coordinates (${x}, ${y})`))
+  }))
 
-const shipCommand = Command.make("ship").pipe(
-  HandledCommand.fromCommandUnit,
+const shipCommand = HandledCommand.makeUnit("ship").pipe(
   HandledCommand.withSubcommands([
     newShipCommand,
     moveShipCommand,
@@ -75,33 +65,26 @@ const shipCommand = Command.make("ship").pipe(
   ])
 )
 
-const setMineCommand = HandledCommand.fromCommand(
-  Command.make("set", {
-    args: coordinatesArg,
-    options: mooredOption
-  }),
-  ({ args: { x, y }, options: moored }) =>
-    Effect.gen(function*(_) {
-      yield* _(setMine(x, y))
-      yield* _(
-        Console.log(`Set ${moored ? "moored" : "drifting"} mine at coordinates (${x}, ${y})`)
-      )
-    })
-)
+const setMineCommand = HandledCommand.make("set", {
+  args: coordinatesArg,
+  options: mooredOption
+}, ({ args: { x, y }, options: moored }) =>
+  Effect.gen(function*(_) {
+    yield* _(setMine(x, y))
+    yield* _(
+      Console.log(`Set ${moored ? "moored" : "drifting"} mine at coordinates (${x}, ${y})`)
+    )
+  }))
 
-const removeMineCommand = HandledCommand.fromCommand(
-  Command.make("remove", {
-    args: coordinatesArg
-  }),
-  ({ args: { x, y } }) =>
-    Effect.gen(function*(_) {
-      yield* _(removeMine(x, y))
-      yield* _(Console.log(`Removing mine at coordinates (${x}, ${y}), if present`))
-    })
-)
+const removeMineCommand = HandledCommand.make("remove", {
+  args: coordinatesArg
+}, ({ args: { x, y } }) =>
+  Effect.gen(function*(_) {
+    yield* _(removeMine(x, y))
+    yield* _(Console.log(`Removing mine at coordinates (${x}, ${y}), if present`))
+  }))
 
-const mineCommand = Command.make("mine").pipe(
-  HandledCommand.fromCommandUnit,
+const mineCommand = HandledCommand.makeUnit("mine").pipe(
   HandledCommand.withSubcommands([
     setMineCommand,
     removeMineCommand

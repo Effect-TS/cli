@@ -70,6 +70,58 @@ export const fromCommandUnit = <A extends { readonly name: string }>(
 
 /**
  * @since 1.0.0
+ * @category constructors
+ */
+export const fromCommandOrDie = <A extends { readonly name: string }>(
+  command: Command.Command<A>,
+  orDie: () => unknown
+) => fromCommand(command, (_) => Effect.dieSync(orDie))
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const make = <Name extends string, R, E, OptionsType = void, ArgsType = void>(
+  name: Name,
+  config: Command.Command.ConstructorConfig<OptionsType, ArgsType>,
+  handler: (
+    _: { readonly name: Name; readonly options: OptionsType; readonly args: ArgsType }
+  ) => Effect.Effect<R, E, void>
+): HandledCommand<
+  { readonly name: Name; readonly options: OptionsType; readonly args: ArgsType },
+  R,
+  E
+> => fromCommand(Command.make(name, config), handler)
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const makeUnit = <Name extends string, OptionsType = void, ArgsType = void>(
+  name: Name,
+  config?: Command.Command.ConstructorConfig<OptionsType, ArgsType>
+): HandledCommand<
+  { readonly name: Name; readonly options: OptionsType; readonly args: ArgsType },
+  never,
+  never
+> => fromCommandUnit(Command.make(name, config))
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const makeOrDie = <Name extends string, OptionsType = void, ArgsType = void>(
+  name: Name,
+  config: Command.Command.ConstructorConfig<OptionsType, ArgsType>,
+  orDie: () => unknown
+): HandledCommand<
+  { readonly name: Name; readonly options: OptionsType; readonly args: ArgsType },
+  never,
+  never
+> => fromCommandOrDie(Command.make(name, config), orDie)
+
+/**
+ * @since 1.0.0
  * @category combinators
  */
 export const withSubcommands = dual<
