@@ -5,6 +5,7 @@ import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Effectable from "effect/Effectable"
 import { dual } from "effect/Function"
+import { globalValue } from "effect/GlobalValue"
 import type * as Option from "effect/Option"
 import { type Pipeable, pipeArguments } from "effect/Pipeable"
 import * as ReadonlyArray from "effect/ReadonlyArray"
@@ -12,6 +13,7 @@ import * as CliApp from "./CliApp.js"
 import * as Command from "./Command.js"
 import type { HelpDoc } from "./HelpDoc.js"
 import type { Span } from "./HelpDoc/Span.js"
+import type { HandledCommand } from "./index.js"
 import * as ValidationError from "./ValidationError.js"
 
 /**
@@ -70,6 +72,14 @@ export const fromCommand = dual<
   return self
 })
 
+const modifiedCommands = globalValue(
+  "@effect/cli/HandledCommand/modifiedCommands",
+  () => new WeakMap<Context.Tag<any, any>, Command.Command<any>>()
+)
+
+const getCommand = <A, R, E>(self: HandledCommand<A, R, E>) =>
+  modifiedCommands.get(self.tag) ?? self.command
+
 /**
  * @since 1.0.0
  * @category combinators
@@ -85,6 +95,7 @@ export const modify = dual<
 >(2, (self, f) => {
   const command = f(self)
   ;(command as any).tag = self.tag
+  modifiedCommands.set(self.tag, command.command)
   return command
 })
 
@@ -102,8 +113,13 @@ export const fromCommandUnit = <A extends { readonly name: string }>(
  */
 export const fromCommandRequestHelp = <A extends { readonly name: string }>(
   command: Command.Command<A>
-): HandledCommand<A, never, ValidationError.ValidationError> =>
-  fromCommand(command, (_) => Effect.fail(ValidationError.helpRequested(command)))
+): HandledCommand<A, never, ValidationError.ValidationError> => {
+  const self: HandledCommand<A, never, ValidationError.ValidationError> = fromCommand(
+    command,
+    (_) => Effect.fail(ValidationError.helpRequested(getCommand(self)))
+  )
+  return self
+}
 
 /**
  * @since 1.0.0
@@ -209,7 +225,7 @@ export const withSubcommands = dual<
       if (args.subcommand._tag === "Some") {
         return Effect.provideService(
           handlers[args.subcommand.value.name](args.subcommand.value),
-          (self as any).tag,
+          self.tag,
           args as any
         )
       }
