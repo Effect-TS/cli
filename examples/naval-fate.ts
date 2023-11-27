@@ -21,8 +21,8 @@ const { createShip, moveShip, removeMine, setMine, shoot } = Effect.serviceFunct
 const nameArg = Args.text({ name: "name" })
 const xArg = Args.integer({ name: "x" })
 const yArg = Args.integer({ name: "y" })
-const nameAndCoordinatesArg = Args.all({ name: nameArg, x: xArg, y: yArg })
-const coordinatesArg = Args.all({ x: xArg, y: yArg })
+const coordinatesArg = { x: xArg, y: yArg }
+const nameAndCoordinatesArg = { name: nameArg, ...coordinatesArg }
 
 const mooredOption = Options.boolean("moored").pipe(
   Options.withDescription("Whether the mine is moored (anchored) or drifting")
@@ -33,14 +33,14 @@ const speedOption = Options.integer("speed").pipe(
 )
 
 const shipCommandParent = HandledCommand.makeRequestHelp("ship", {
-  options: Options.withDefault(Options.boolean("verbose"), false)
+  verbose: Options.withDefault(Options.boolean("verbose"), false)
 })
 
 const newShipCommand = HandledCommand.make("new", {
-  args: nameArg
-}, ({ args: name }) =>
+  name: nameArg
+}, ({ name }) =>
   Effect.gen(function*(_) {
-    const { options: verbose } = yield* _(shipCommandParent)
+    const { verbose } = yield* _(shipCommandParent)
     yield* _(createShip(name))
     yield* _(Console.log(`Created ship: '${name}'`))
     if (verbose) {
@@ -49,21 +49,23 @@ const newShipCommand = HandledCommand.make("new", {
   }))
 
 const moveShipCommand = HandledCommand.make("move", {
-  args: nameAndCoordinatesArg,
-  options: speedOption
-}, ({ args: { name, x, y }, options: speed }) =>
+  ...nameAndCoordinatesArg,
+  speed: speedOption
+}, ({ name, speed, x, y }) =>
   Effect.gen(function*(_) {
     yield* _(moveShip(name, x, y))
     yield* _(Console.log(`Moving ship '${name}' to coordinates (${x}, ${y}) at ${speed} knots`))
   }))
 
-const shootShipCommand = HandledCommand.make("shoot", {
-  args: coordinatesArg
-}, ({ args: { x, y } }) =>
-  Effect.gen(function*(_) {
-    yield* _(shoot(x, y))
-    yield* _(Console.log(`Shot cannons at coordinates (${x}, ${y})`))
-  }))
+const shootShipCommand = HandledCommand.make(
+  "shoot",
+  { ...coordinatesArg },
+  ({ x, y }) =>
+    Effect.gen(function*(_) {
+      yield* _(shoot(x, y))
+      yield* _(Console.log(`Shot cannons at coordinates (${x}, ${y})`))
+    })
+)
 
 const shipCommand = HandledCommand.withSubcommands(shipCommandParent, [
   newShipCommand,
@@ -74,9 +76,9 @@ const shipCommand = HandledCommand.withSubcommands(shipCommandParent, [
 const mineCommandParent = HandledCommand.makeRequestHelp("mine")
 
 const setMineCommand = HandledCommand.make("set", {
-  args: coordinatesArg,
-  options: mooredOption
-}, ({ args: { x, y }, options: moored }) =>
+  ...coordinatesArg,
+  moored: mooredOption
+}, ({ moored, x, y }) =>
   Effect.gen(function*(_) {
     yield* _(setMine(x, y))
     yield* _(
@@ -85,8 +87,8 @@ const setMineCommand = HandledCommand.make("set", {
   }))
 
 const removeMineCommand = HandledCommand.make("remove", {
-  args: coordinatesArg
-}, ({ args: { x, y } }) =>
+  ...coordinatesArg
+}, ({ x, y }) =>
   Effect.gen(function*(_) {
     yield* _(removeMine(x, y))
     yield* _(Console.log(`Removing mine at coordinates (${x}, ${y}), if present`))
