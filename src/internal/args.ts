@@ -734,7 +734,7 @@ const withDescriptionInternal = (self: Instruction, description: string): Args.A
   }
 }
 
-const wizardHeader = InternalHelpDoc.p("ARGS WIZARD")
+const wizardHeader = InternalHelpDoc.p("ARG WIZARD")
 
 const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.Effect<
   FileSystem.FileSystem | Terminal.Terminal,

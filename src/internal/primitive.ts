@@ -539,7 +539,7 @@ const wizardInternal = (self: Instruction, help: HelpDoc.HelpDoc): Prompt.Prompt
     case "Integer": {
       const primitiveHelp = InternalHelpDoc.p("Enter an integer")
       const message = InternalHelpDoc.sequence(help, primitiveHelp)
-      return InternalNumberPrompt.float({
+      return InternalNumberPrompt.integer({
         message: InternalHelpDoc.toAnsiText(message).trimEnd()
       }).pipe(InternalPrompt.map((value) => `${value}`))
     }
