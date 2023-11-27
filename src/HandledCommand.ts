@@ -66,7 +66,7 @@ export const fromCommand = dual<
  */
 export const fromCommandUnit = <A extends { readonly name: string }>(
   command: Command.Command<A>
-) => fromCommand(command, (_) => Effect.unit)
+): HandledCommand<A, never, never> => fromCommand(command, (_) => Effect.unit)
 
 /**
  * @since 1.0.0
@@ -75,7 +75,7 @@ export const fromCommandUnit = <A extends { readonly name: string }>(
 export const fromCommandOrDie = <A extends { readonly name: string }>(
   command: Command.Command<A>,
   orDie: () => unknown
-) => fromCommand(command, (_) => Effect.dieSync(orDie))
+): HandledCommand<A, never, never> => fromCommand(command, (_) => Effect.dieSync(orDie))
 
 /**
  * @since 1.0.0
