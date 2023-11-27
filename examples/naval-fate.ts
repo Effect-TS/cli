@@ -101,7 +101,7 @@ const mineCommand = HandledCommand.withSubcommands(mineCommandParent, [
 
 const run = Command.make("naval_fate").pipe(
   Command.withDescription("An implementation of the Naval Fate CLI application."),
-  HandledCommand.fromCommandUnit,
+  HandledCommand.fromCommandRequestHelp,
   HandledCommand.withSubcommands([shipCommand, mineCommand]),
   HandledCommand.toAppAndRun({
     name: "Naval Fate",

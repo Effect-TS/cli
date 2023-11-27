@@ -65,13 +65,15 @@ export declare namespace HandledCommand {
    * @category models
    */
   export type ParseConfig<A extends ConfigBase> = Types.Simplify<
-    {
-      readonly [Key in keyof A]: A[Key] extends Args.Args<infer Value> ? Value
-        : A[Key] extends Options.Options<infer Value> ? Value
-        : A[Key] extends ConfigBase ? ParseConfig<A[Key]>
-        : never
-    }
+    { readonly [Key in keyof A]: ParseConfigValue<A[Key]> }
   >
+
+  type ParseConfigValue<A> = A extends ReadonlyArray<infer _> ?
+    { readonly [Key in keyof A]: ParseConfigValue<A[Key]> } :
+    A extends Args.Args<infer Value> ? Value
+    : A extends Options.Options<infer Value> ? Value
+    : A extends ConfigBase ? ParseConfig<A>
+    : never
 
   interface ParsedConfigTree {
     [key: string]: ParsedConfigNode
