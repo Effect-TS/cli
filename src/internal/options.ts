@@ -1350,7 +1350,7 @@ const parseInternal = (
   }
 }
 
-const wizardHeader = InternalHelpDoc.p("OPTIONS WIZARD")
+const wizardHeader = InternalHelpDoc.p("Option Wizard")
 
 const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.Effect<
   FileSystem.FileSystem | Terminal.Terminal,
@@ -1417,12 +1417,13 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
           (title) => makeChoice(title, self.right as Instruction)
         )
       ])
-      return Console.log().pipe(Effect.zipRight(
-        InternalSelectPrompt.select({
+      return Console.log().pipe(
+        Effect.zipRight(InternalSelectPrompt.select({
           message: InternalHelpDoc.toAnsiText(message).trimEnd(),
           choices
-        }).pipe(Effect.flatMap((option) => wizardInternal(option, config)))
-      ))
+        })),
+        Effect.flatMap((option) => wizardInternal(option, config))
+      )
     }
     case "Variadic": {
       const repeatHelp = InternalHelpDoc.p(
@@ -1460,15 +1461,13 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
         InternalHelpDoc.sequence(defaultHelp)
       )
       return Console.log().pipe(
-        Effect.zipRight(
-          InternalSelectPrompt.select({
-            message: InternalHelpDoc.toAnsiText(message).trimEnd(),
-            choices: [
-              { title: `Default ['${JSON.stringify(self.fallback)}']`, value: true },
-              { title: "Custom", value: false }
-            ]
-          })
-        ),
+        Effect.zipRight(InternalSelectPrompt.select({
+          message: InternalHelpDoc.toAnsiText(message).trimEnd(),
+          choices: [
+            { title: `Default ['${JSON.stringify(self.fallback)}']`, value: true },
+            { title: "Custom", value: false }
+          ]
+        })),
         Effect.flatMap((useFallback) =>
           useFallback
             ? Effect.succeed(ReadonlyArray.empty())

@@ -217,7 +217,8 @@ const handleBuiltInOption = <A>(
         ])
       )
       const help = InternalHelpDoc.sequence(header, description)
-      return Console.log(InternalHelpDoc.toAnsiText(help)).pipe(
+      const text = InternalHelpDoc.toAnsiText(help).trimEnd()
+      return Console.log(text).pipe(
         Effect.zipRight(InternalCommand.wizard(builtIn.command, config)),
         Effect.tap((args) => Console.log(InternalHelpDoc.toAnsiText(renderWizardArgs(args))))
       )
