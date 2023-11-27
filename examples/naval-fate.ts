@@ -1,22 +1,15 @@
-import { Args, CliApp, Command, Options } from "@effect/cli"
+import { Args, Command, HandledCommand, Options } from "@effect/cli"
 import * as KeyValueStore from "@effect/platform-node/KeyValueStore"
 import * as NodeContext from "@effect/platform-node/NodeContext"
 import * as Runtime from "@effect/platform-node/Runtime"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
-import * as Option from "effect/Option"
-import type { MineSubcommand, ShipSubcommand } from "./naval-fate/domain.js"
-import {
-  MineCommand,
-  MoveShipCommand,
-  NewShipCommand,
-  RemoveMineCommand,
-  SetMineCommand,
-  ShipCommand,
-  ShootShipCommand
-} from "./naval-fate/domain.js"
 import * as NavalFateStore from "./naval-fate/store.js"
+
+const { createShip, moveShip, removeMine, setMine, shoot } = Effect.serviceFunctions(
+  NavalFateStore.NavalFateStore
+)
 
 // naval_fate [-h | --help] [--version]
 // naval_fate ship new <name>...
@@ -39,132 +32,93 @@ const speedOption = Options.integer("speed").pipe(
   Options.withDefault(10)
 )
 
-const newShipCommand = Command.make("new", {
-  args: nameArg
-}).pipe(Command.map(({ args }) => new NewShipCommand({ name: args })))
+const newShipCommand = HandledCommand.fromCommand(
+  Command.make("new", {
+    args: nameArg
+  }),
+  ({ args: name }) =>
+    Effect.gen(function*(_) {
+      yield* _(createShip(name))
+      yield* _(Console.log(`Created ship: '${name}'`))
+    })
+)
 
-const moveShipCommand = Command.make("move", {
-  args: nameAndCoordinatesArg,
-  options: speedOption
-}).pipe(Command.map(({ args, options }) => new MoveShipCommand({ ...args, speed: options })))
+const moveShipCommand = HandledCommand.fromCommand(
+  Command.make("move", {
+    args: nameAndCoordinatesArg,
+    options: speedOption
+  }),
+  ({ args: { name, x, y }, options: speed }) =>
+    Effect.gen(function*(_) {
+      yield* _(moveShip(name, x, y))
+      yield* _(Console.log(`Moving ship '${name}' to coordinates (${x}, ${y}) at ${speed} knots`))
+    })
+)
 
-const shootShipCommand = Command.make("shoot", {
-  args: coordinatesArg
-}).pipe(Command.map(({ args }) => new ShootShipCommand(args)))
+const shootShipCommand = HandledCommand.fromCommand(
+  Command.make("shoot", {
+    args: coordinatesArg
+  }),
+  ({ args: { x, y } }) =>
+    Effect.gen(function*(_) {
+      yield* _(shoot(x, y))
+      yield* _(Console.log(`Shot cannons at coordinates (${x}, ${y})`))
+    })
+)
 
 const shipCommand = Command.make("ship").pipe(
-  Command.withSubcommands([
+  HandledCommand.fromCommandUnit,
+  HandledCommand.withSubcommands([
     newShipCommand,
     moveShipCommand,
     shootShipCommand
-  ]),
-  Command.map(({ subcommand }) => new ShipCommand({ subcommand }))
+  ])
 )
 
-const setMineCommand = Command.make("set", {
-  args: coordinatesArg,
-  options: mooredOption
-}).pipe(Command.map(({ args, options }) => new SetMineCommand({ ...args, moored: options })))
+const setMineCommand = HandledCommand.fromCommand(
+  Command.make("set", {
+    args: coordinatesArg,
+    options: mooredOption
+  }),
+  ({ args: { x, y }, options: moored }) =>
+    Effect.gen(function*(_) {
+      yield* _(setMine(x, y))
+      yield* _(
+        Console.log(`Set ${moored ? "moored" : "drifting"} mine at coordinates (${x}, ${y})`)
+      )
+    })
+)
 
-const removeMineCommand = Command.make("remove", {
-  args: coordinatesArg
-}).pipe(Command.map(({ args }) => new RemoveMineCommand(args)))
+const removeMineCommand = HandledCommand.fromCommand(
+  Command.make("remove", {
+    args: coordinatesArg
+  }),
+  ({ args: { x, y } }) =>
+    Effect.gen(function*(_) {
+      yield* _(removeMine(x, y))
+      yield* _(Console.log(`Removing mine at coordinates (${x}, ${y}), if present`))
+    })
+)
 
 const mineCommand = Command.make("mine").pipe(
-  Command.withSubcommands([
+  HandledCommand.fromCommandUnit,
+  HandledCommand.withSubcommands([
     setMineCommand,
     removeMineCommand
-  ]),
-  Command.map(({ subcommand }) => new MineCommand({ subcommand }))
+  ])
 )
 
-const navalFate = Command.make("naval_fate").pipe(
-  Command.withSubcommands([shipCommand, mineCommand]),
-  Command.withDescription("An implementation of the Naval Fate CLI application.")
-)
-
-const navalFateApp = CliApp.make({
-  name: "Naval Fate",
-  version: "1.0.0",
-  command: navalFate
-})
-
-const handleSubcommand = (command: ShipCommand | MineCommand) => {
-  switch (command._tag) {
-    case "ShipCommand": {
-      return Option.match(command.subcommand, {
-        onNone: () => Effect.unit,
-        onSome: (subcommand) => handleShipSubcommand(subcommand)
-      })
-    }
-    case "MineCommand": {
-      return Option.match(command.subcommand, {
-        onNone: () => Effect.unit,
-        onSome: (subcommand) => handleMineSubcommand(subcommand)
-      })
-    }
-  }
-}
-
-const handleShipSubcommand = (command: ShipSubcommand) =>
-  Effect.gen(function*($) {
-    const store = yield* $(NavalFateStore.NavalFateStore)
-    switch (command._tag) {
-      case "NewShipCommand": {
-        const { name } = command
-        yield* $(store.createShip(name))
-        yield* $(Console.log(`Created ship: '${name}'`))
-        break
-      }
-      case "MoveShipCommand": {
-        const { name, speed, x, y } = command
-        yield* $(store.moveShip(name, x, y))
-        yield* $(Console.log(`Moving ship '${name}' to coordinates (${x}, ${y}) at ${speed} knots`))
-        break
-      }
-      case "ShootShipCommand": {
-        const { x, y } = command
-        yield* $(store.shoot(x, y))
-        yield* $(Console.log(`Shot cannons at coordinates (${x}, ${y})`))
-        break
-      }
-    }
+const run = Command.make("naval_fate").pipe(
+  Command.withDescription("An implementation of the Naval Fate CLI application."),
+  HandledCommand.fromCommandUnit,
+  HandledCommand.withSubcommands([shipCommand, mineCommand]),
+  HandledCommand.toAppAndRun({
+    name: "Naval Fate",
+    version: "1.0.0"
   })
-
-const handleMineSubcommand = (command: MineSubcommand) =>
-  Effect.gen(function*($) {
-    const store = yield* $(NavalFateStore.NavalFateStore)
-    switch (command._tag) {
-      case "SetMineCommand": {
-        const { moored, x, y } = command
-        const mineType = moored ? "moored" : "drifting"
-        yield* $(store.setMine(x, y))
-        yield* $(Console.log(`Set ${mineType} mine at coordinates (${x}, ${y})`))
-        break
-      }
-      case "RemoveMineCommand": {
-        const { x, y } = command
-        yield* $(store.removeMine(x, y))
-        yield* $(Console.log(`Removing mine at coordinates (${x}, ${y}), if present`))
-        break
-      }
-    }
-  })
-
-const main = Effect.sync(() => globalThis.process.argv.slice(2)).pipe(
-  Effect.flatMap((argv) =>
-    CliApp.run(
-      navalFateApp,
-      argv,
-      Effect.unifiedFn((args) =>
-        Option.match(args.subcommand, {
-          onNone: () => Effect.unit,
-          onSome: (subcommand) => handleSubcommand(subcommand)
-        })
-      )
-    )
-  )
 )
+
+const main = Effect.suspend(() => run(globalThis.process.argv.slice(2)))
 
 const MainLayer = NavalFateStore.layer.pipe(
   Layer.use(KeyValueStore.layerFileSystem("naval-fate-store")),

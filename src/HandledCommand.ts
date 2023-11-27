@@ -4,9 +4,13 @@
 import * as Effect from "effect/Effect"
 import { dual } from "effect/Function"
 import type * as Option from "effect/Option"
-import type { Pipeable } from "effect/Pipeable"
-import ReadonlyArray from "effect/ReadonlyArray"
+import { type Pipeable, pipeArguments } from "effect/Pipeable"
+import * as ReadonlyArray from "effect/ReadonlyArray"
+import * as CliApp from "./CliApp.js"
 import * as Command from "./Command.js"
+import type { HelpDoc } from "./HelpDoc.js"
+import type { Span } from "./HelpDoc/Span.js"
+import type { ValidationError } from "./ValidationError.js"
 
 /**
  * @since 1.0.0
@@ -24,36 +28,33 @@ export type TypeId = typeof TypeId
  * @since 1.0.0
  * @category models
  */
-export interface HandledCommand<Name extends string, A, R, E> extends Pipeable {
+export interface HandledCommand<A, R, E> extends Pipeable {
   readonly [TypeId]: TypeId
-  readonly name: Name
   readonly command: Command.Command<A>
   readonly handler: (_: A) => Effect.Effect<R, E, void>
 }
 
 const Prototype = {
-  [TypeId]: TypeId
+  [TypeId]: TypeId,
+  pipe() {
+    return pipeArguments(this, arguments)
+  }
 }
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const make = dual<
-  <Name extends string, A, R, E>(
-    name: Name,
+export const fromCommand = dual<
+  <A extends { readonly name: string }, R, E>(
     handler: (_: A) => Effect.Effect<R, E, void>
-  ) => (
-    command: Command.Command<{ readonly name: Name } & A>
-  ) => HandledCommand<Name, A, R, E>,
-  <Name extends string, A, R, E>(
-    command: Command.Command<{ readonly name: Name } & A>,
-    name: Name,
+  ) => (command: Command.Command<A>) => HandledCommand<A, R, E>,
+  <A extends { readonly name: string }, R, E>(
+    command: Command.Command<A>,
     handler: (_: A) => Effect.Effect<R, E, void>
-  ) => HandledCommand<Name, "name", R, E>
->(3, (command, name, handler) => {
+  ) => HandledCommand<A, R, E>
+>(2, (command, handler) => {
   const self = Object.create(Prototype)
-  self.name = name
   self.command = command
   self.handler = handler
   return self
@@ -63,29 +64,18 @@ export const make = dual<
  * @since 1.0.0
  * @category constructors
  */
-export const makeUnit = dual<
-  <Name extends string, A>(
-    name: Name
-  ) => (
-    command: Command.Command<{ readonly name: Name } & A>
-  ) => HandledCommand<Name, A, never, never>,
-  <Name extends string, A>(
-    command: Command.Command<{ readonly name: Name } & A>,
-    name: Name
-  ) => HandledCommand<Name, A, never, never>
->(2, (command, name) => make(command, name, (_) => Effect.unit) as any)
+export const fromCommandUnit = <A extends { readonly name: string }>(
+  command: Command.Command<A>
+) => fromCommand(command, (_) => Effect.unit)
 
 /**
  * @since 1.0.0
  * @category combinators
  */
 export const withSubcommands = dual<
-  <
-    Subcommand extends ReadonlyArray.NonEmptyReadonlyArray<HandledCommand<any, any, any, any>>
-  >(
+  <Subcommand extends ReadonlyArray.NonEmptyReadonlyArray<HandledCommand<any, any, any>>>(
     subcommands: Subcommand
-  ) => <Name extends string, A, R, E>(self: HandledCommand<Name, A, R, E>) => HandledCommand<
-    Name,
+  ) => <A, R, E>(self: HandledCommand<A, R, E>) => HandledCommand<
     Command.Command.ComputeParsedType<
       & A
       & Readonly<
@@ -96,16 +86,14 @@ export const withSubcommands = dual<
     E | Effect.Effect.Error<ReturnType<Subcommand[number]["handler"]>>
   >,
   <
-    Name extends string,
     A,
     R,
     E,
-    Subcommand extends ReadonlyArray.NonEmptyReadonlyArray<HandledCommand<any, any, any, any>>
+    Subcommand extends ReadonlyArray.NonEmptyReadonlyArray<HandledCommand<any, any, any>>
   >(
-    self: HandledCommand<Name, A, R, E>,
+    self: HandledCommand<A, R, E>,
     subcommands: Subcommand
   ) => HandledCommand<
-    Name,
     Command.Command.ComputeParsedType<
       & A
       & Readonly<
@@ -124,17 +112,53 @@ export const withSubcommands = dual<
     subcommands,
     {} as Record<string, (_: any) => Effect.Effect<any, any, void>>,
     (handlers, subcommand) => {
-      handlers[subcommand.name] = subcommand.handler
+      for (const name of Command.getNames(subcommand.command)) {
+        handlers[name] = subcommand.handler
+      }
       return handlers
     }
   )
   const handler = (
-    args: { readonly subcommand: Option.Option<{ readonly name: string }> }
+    args: {
+      readonly name: string
+      readonly subcommand: Option.Option<{ readonly name: string }>
+    }
   ) => {
     if (args.subcommand._tag === "Some") {
       return handlers[args.subcommand.value.name](args.subcommand.value)
     }
     return self.handler(args as any)
   }
-  return make(command as any, self.name, handler) as any
+  return fromCommand(command as any, handler) as any
+})
+
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
+export const toAppAndRun = dual<
+  (config: {
+    readonly name: string
+    readonly version: string
+    readonly summary?: Span | undefined
+    readonly footer?: HelpDoc | undefined
+  }) => <A, R, E>(
+    self: HandledCommand<A, R, E>
+  ) => (
+    args: ReadonlyArray<string>
+  ) => Effect.Effect<R | CliApp.CliApp.Environment, E | ValidationError, void>,
+  <A, R, E>(self: HandledCommand<A, R, E>, config: {
+    readonly name: string
+    readonly version: string
+    readonly summary?: Span | undefined
+    readonly footer?: HelpDoc | undefined
+  }) => (
+    args: ReadonlyArray<string>
+  ) => Effect.Effect<R | CliApp.CliApp.Environment, E | ValidationError, void>
+>(2, (self, config) => {
+  const app = CliApp.make({
+    ...config,
+    command: self.command
+  })
+  return (args) => CliApp.run(app, args, self.handler)
 })

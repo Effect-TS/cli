@@ -36,6 +36,11 @@ export * as CommandDirective from "./CommandDirective.js"
 /**
  * @since 1.0.0
  */
+export * as HandledCommand from "./HandledCommand.js"
+
+/**
+ * @since 1.0.0
+ */
 export * as HelpDoc from "./HelpDoc.js"
 
 /**
