@@ -264,8 +264,7 @@ export const getUsage = <Name extends string, R, E, A>(
   self: Command.Command<Name, R, E, A>
 ): Usage => InternalDescriptor.getUsage(self.descriptor)
 
-/** @internal */
-export const mapDescriptor = dual<
+const mapDescriptor = dual<
   <A>(f: (_: Descriptor.Command<A>) => Descriptor.Command<A>) => <Name extends string, R, E>(
     self: Command.Command<Name, R, E, A>
   ) => Command.Command<Name, R, E, A>,
@@ -274,21 +273,6 @@ export const mapDescriptor = dual<
     f: (_: Descriptor.Command<A>) => Descriptor.Command<A>
   ) => Command.Command<Name, R, E, A>
 >(2, (self, f) => makeProto(f(getDescriptor(self)), self.handler, self.tag))
-
-/** @internal */
-export const mapBoth = dual<
-  <A, B>(
-    f: (_: Descriptor.Command<A>) => Descriptor.Command<B>,
-    g: (_: B) => A
-  ) => <Name extends string, R, E>(
-    self: Command.Command<Name, R, E, A>
-  ) => Command.Command<Name, R, E, B>,
-  <Name extends string, R, E, A, B>(
-    self: Command.Command<Name, R, E, A>,
-    f: (_: Descriptor.Command<A>) => Descriptor.Command<B>,
-    g: (_: B) => A
-  ) => Command.Command<Name, R, E, B>
->(3, (self, f, g) => makeProto(f(getDescriptor(self)), (_) => self.handler(g(_)), self.tag))
 
 /** @internal */
 export const prompt = <Name extends string, A, R, E>(

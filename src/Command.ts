@@ -233,20 +233,6 @@ export const make: {
 
 /**
  * @since 1.0.0
- * @category combinators
- */
-export const mapDescriptor: {
-  <A>(
-    f: (_: Descriptor.Command<A>) => Descriptor.Command<A>
-  ): <Name extends string, R, E>(self: Command<Name, R, E, A>) => Command<Name, R, E, A>
-  <Name extends string, R, E, A>(
-    self: Command<Name, R, E, A>,
-    f: (_: Descriptor.Command<A>) => Descriptor.Command<A>
-  ): Command<Name, R, E, A>
-} = Internal.mapDescriptor
-
-/**
- * @since 1.0.0
  * @category constructors
  */
 export const prompt: <Name extends string, A, R, E>(
