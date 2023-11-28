@@ -91,8 +91,15 @@ const removeMineCommand = Command.make("remove", {
 const run = Command.make("naval_fate").pipe(
   Command.withDescription("An implementation of the Naval Fate CLI application."),
   Command.withSubcommands([
-    Command.withSubcommands(shipCommand, [newShipCommand, moveShipCommand, shootShipCommand]),
-    Command.withSubcommands(mineCommand, [setMineCommand, removeMineCommand])
+    shipCommand.pipe(Command.withSubcommands([
+      newShipCommand,
+      moveShipCommand,
+      shootShipCommand
+    ])),
+    mineCommand.pipe(Command.withSubcommands([
+      setMineCommand,
+      removeMineCommand
+    ]))
   ]),
   Command.run({
     name: "Naval Fate",
