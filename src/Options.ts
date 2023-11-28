@@ -2,7 +2,7 @@
  * @since 1.0.0
  */
 import type { FileSystem } from "@effect/platform/FileSystem"
-import type { Terminal } from "@effect/platform/Terminal"
+import type { QuitException, Terminal } from "@effect/platform/Terminal"
 import type { Effect } from "effect/Effect"
 import type { Either } from "effect/Either"
 import type { HashMap } from "effect/HashMap"
@@ -474,9 +474,11 @@ export const withPseudoName: {
 export const wizard: {
   (
     config: CliConfig
-  ): <A>(self: Options<A>) => Effect<FileSystem | Terminal, ValidationError, ReadonlyArray<string>>
+  ): <A>(
+    self: Options<A>
+  ) => Effect<FileSystem | Terminal, QuitException | ValidationError, ReadonlyArray<string>>
   <A>(
     self: Options<A>,
     config: CliConfig
-  ): Effect<FileSystem | Terminal, ValidationError, ReadonlyArray<string>>
+  ): Effect<FileSystem | Terminal, QuitException | ValidationError, ReadonlyArray<string>>
 } = InternalOptions.wizard
