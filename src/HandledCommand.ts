@@ -35,13 +35,13 @@ export type TypeId = typeof TypeId
  * @since 1.0.0
  * @category models
  */
-export interface HandledCommand<A, R, E>
-  extends Pipeable, Effect.Effect<Command.Command<A>, never, A>
+export interface HandledCommand<Name extends string, A, R, E>
+  extends Pipeable, Effect.Effect<Command.Command<Name>, never, A>
 {
   readonly [TypeId]: TypeId
   readonly command: Command.Command<A>
   readonly handler: (_: A) => Effect.Effect<R, E, void>
-  readonly tag: Context.Tag<Command.Command<A>, A>
+  readonly tag: Context.Tag<Command.Command<Name>, A>
 }
 
 /**
@@ -187,7 +187,7 @@ const reconstructConfigTree = (
 const Prototype = {
   ...Effectable.CommitPrototype,
   [TypeId]: TypeId,
-  commit(this: HandledCommand<any, any, any>) {
+  commit(this: HandledCommand<string, any, any, any>) {
     return this.tag
   },
   pipe() {
@@ -200,14 +200,14 @@ const modifiedCommands = globalValue(
   () => new WeakMap<Context.Tag<any, any>, Command.Command<any>>()
 )
 
-const getCommand = <A, R, E>(self: HandledCommand<A, R, E>) =>
+const getCommand = <Name extends string, A, R, E>(self: HandledCommand<Name, A, R, E>) =>
   modifiedCommands.get(self.tag) ?? self.command
 
-const HandledCommand = <A, R, E>(
+const HandledCommand = <Name extends string, A, R, E>(
   command: Command.Command<A>,
   handler: (_: A) => Effect.Effect<R, E, void>,
   tag?: Context.Tag<any, any>
-): HandledCommand<A, R, E> => {
+): HandledCommand<Name, A, R, E> => {
   const self = Object.create(Prototype)
   self.command = Command.map(command, (args) =>
     Predicate.hasProperty(args, TypeId) ?
@@ -234,31 +234,31 @@ const HandledCommand = <A, R, E>(
  * @category constructors
  */
 export const fromCommand = dual<
-  <A, R, E>(
+  <A extends { readonly name: string }, R, E>(
     handler: (_: A) => Effect.Effect<R, E, void>
-  ) => (command: Command.Command<A>) => HandledCommand<A, R, E>,
-  <A, R, E>(
+  ) => (command: Command.Command<A>) => HandledCommand<A["name"], A, R, E>,
+  <A extends { readonly name: string }, R, E>(
     command: Command.Command<A>,
     handler: (_: A) => Effect.Effect<R, E, void>
-  ) => HandledCommand<A, R, E>
+  ) => HandledCommand<A["name"], A, R, E>
 >(2, (command, handler) => HandledCommand(command, handler))
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const fromCommandUnit = <A>(
+export const fromCommandUnit = <A extends { readonly name: string }>(
   command: Command.Command<A>
-): HandledCommand<A, never, never> => HandledCommand(command, (_) => Effect.unit)
+): HandledCommand<A["name"], A, never, never> => HandledCommand(command, (_) => Effect.unit)
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const fromCommandRequestHelp = <A>(
+export const fromCommandHelp = <A extends { readonly name: string }>(
   command: Command.Command<A>
-): HandledCommand<A, never, ValidationError.ValidationError> => {
-  const self: HandledCommand<A, never, ValidationError.ValidationError> = HandledCommand(
+): HandledCommand<A["name"], A, never, ValidationError.ValidationError> => {
+  const self: HandledCommand<A["name"], A, never, ValidationError.ValidationError> = HandledCommand(
     command,
     (_) => Effect.fail(ValidationError.helpRequested(getCommand(self)))
   )
@@ -288,10 +288,11 @@ export const make = <Name extends string, const Config extends HandledCommand.Co
   config: Config,
   handler: (_: Types.Simplify<HandledCommand.ParseConfig<Config>>) => Effect.Effect<R, E, void>
 ): HandledCommand<
+  Name,
   Types.Simplify<HandledCommand.ParseConfig<Config>>,
   R,
   E
-> => fromCommand(makeCommand(name, config), handler)
+> => HandledCommand(makeCommand(name, config), handler)
 
 /**
  * @since 1.0.0
@@ -300,38 +301,46 @@ export const make = <Name extends string, const Config extends HandledCommand.Co
 export const makeUnit: {
   <Name extends string>(
     name: Name
-  ): HandledCommand<{}, never, never>
+  ): HandledCommand<Name, {}, never, never>
   <Name extends string, const Config extends HandledCommand.ConfigBase>(
     name: Name,
     config: Config
   ): HandledCommand<
+    Name,
     Types.Simplify<HandledCommand.ParseConfig<Config>>,
     never,
     never
   >
-} = (name: string, config = {}) => fromCommandUnit(makeCommand(name, config))
+} = (name: string, config = {}) => fromCommandUnit(makeCommand(name, config) as any) as any
 
 /**
  * @since 1.0.0
  * @category constructors
  */
-export const makeRequestHelp: {
-  (name: string): HandledCommand<{}, never, ValidationError.ValidationError>
-  <const Config extends HandledCommand.ConfigBase>(name: string, config: Config): HandledCommand<
+export const makeHelp: {
+  <Name extends string>(
+    name: Name
+  ): HandledCommand<Name, {}, never, ValidationError.ValidationError>
+  <Name extends string, const Config extends HandledCommand.ConfigBase>(
+    name: Name,
+    config: Config
+  ): HandledCommand<
+    Name,
     Types.Simplify<HandledCommand.ParseConfig<Config>>,
     never,
     ValidationError.ValidationError
   >
-} = (name: string, config = {}) => fromCommandRequestHelp(makeCommand(name, config)) as any
+} = (name: string, config = {}) => fromCommandHelp(makeCommand(name, config) as any) as any
 
 /**
  * @since 1.0.0
  * @category combinators
  */
 export const withSubcommands = dual<
-  <Subcommand extends ReadonlyArray.NonEmptyReadonlyArray<HandledCommand<any, any, any>>>(
+  <Subcommand extends ReadonlyArray.NonEmptyReadonlyArray<HandledCommand<any, any, any, any>>>(
     subcommands: Subcommand
-  ) => <A, R, E>(self: HandledCommand<A, R, E>) => HandledCommand<
+  ) => <Name extends string, A, R, E>(self: HandledCommand<Name, A, R, E>) => HandledCommand<
+    Name,
     Command.Command.ComputeParsedType<
       & A
       & Readonly<
@@ -339,18 +348,23 @@ export const withSubcommands = dual<
       >
     >,
     | R
-    | Exclude<Effect.Effect.Context<ReturnType<Subcommand[number]["handler"]>>, Command.Command<A>>,
+    | Exclude<
+      Effect.Effect.Context<ReturnType<Subcommand[number]["handler"]>>,
+      Command.Command<Name>
+    >,
     E | Effect.Effect.Error<ReturnType<Subcommand[number]["handler"]>>
   >,
   <
+    Name extends string,
     A,
     R,
     E,
-    Subcommand extends ReadonlyArray.NonEmptyReadonlyArray<HandledCommand<any, any, any>>
+    Subcommand extends ReadonlyArray.NonEmptyReadonlyArray<HandledCommand<any, any, any, any>>
   >(
-    self: HandledCommand<A, R, E>,
+    self: HandledCommand<Name, A, R, E>,
     subcommands: Subcommand
   ) => HandledCommand<
+    Name,
     Command.Command.ComputeParsedType<
       & A
       & Readonly<
@@ -358,7 +372,10 @@ export const withSubcommands = dual<
       >
     >,
     | R
-    | Exclude<Effect.Effect.Context<ReturnType<Subcommand[number]["handler"]>>, Command.Command<A>>,
+    | Exclude<
+      Effect.Effect.Context<ReturnType<Subcommand[number]["handler"]>>,
+      Command.Command<Name>
+    >,
     E | Effect.Effect.Error<ReturnType<Subcommand[number]["handler"]>>
   >
 >(2, (self, subcommands) => {
@@ -402,12 +419,12 @@ export const toAppAndRun = dual<
     readonly version: string
     readonly summary?: Span | undefined
     readonly footer?: HelpDoc | undefined
-  }) => <A, R, E>(
-    self: HandledCommand<A, R, E>
+  }) => <Name extends string, A, R, E>(
+    self: HandledCommand<Name, A, R, E>
   ) => (
     args: ReadonlyArray<string>
   ) => Effect.Effect<R | CliApp.CliApp.Environment, E | ValidationError.ValidationError, void>,
-  <A, R, E>(self: HandledCommand<A, R, E>, config: {
+  <Name extends string, A, R, E>(self: HandledCommand<Name, A, R, E>, config: {
     readonly name: string
     readonly version: string
     readonly summary?: Span | undefined

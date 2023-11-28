@@ -32,7 +32,7 @@ const speedOption = Options.integer("speed").pipe(
   Options.withDefault(10)
 )
 
-const shipCommandParent = HandledCommand.makeRequestHelp("ship", {
+const shipCommandParent = HandledCommand.makeHelp("ship", {
   verbose: Options.boolean("verbose")
 })
 
@@ -73,7 +73,7 @@ const shipCommand = HandledCommand.withSubcommands(shipCommandParent, [
   shootShipCommand
 ])
 
-const mineCommandParent = HandledCommand.makeRequestHelp("mine")
+const mineCommandParent = HandledCommand.makeHelp("mine")
 
 const setMineCommand = HandledCommand.make("set", {
   ...coordinatesArg,
@@ -101,7 +101,7 @@ const mineCommand = HandledCommand.withSubcommands(mineCommandParent, [
 
 const run = Command.make("naval_fate").pipe(
   Command.withDescription("An implementation of the Naval Fate CLI application."),
-  HandledCommand.fromCommandRequestHelp,
+  HandledCommand.fromCommandHelp,
   HandledCommand.withSubcommands([shipCommand, mineCommand]),
   HandledCommand.toAppAndRun({
     name: "Naval Fate",
