@@ -1,5 +1,5 @@
 import * as Args from "@effect/cli/Args"
-import * as Handled from "@effect/cli/HandledCommand"
+import * as Handled from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
 import * as NodeContext from "@effect/platform-node/NodeContext"
 import * as Runtime from "@effect/platform-node/Runtime"
@@ -55,7 +55,7 @@ const finalCommand = minigit.pipe(Handled.withSubcommands([minigitAdd, minigitCl
 // Application
 // =============================================================================
 
-const run = Handled.toAppAndRun(finalCommand, {
+const run = Handled.run(finalCommand, {
   name: "MiniGit Distributed Version Control",
   version: "v2.42.1"
 })

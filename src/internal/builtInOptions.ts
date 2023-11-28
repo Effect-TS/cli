@@ -1,6 +1,6 @@
 import * as Option from "effect/Option"
 import type * as BuiltInOptions from "../BuiltInOptions.js"
-import type * as Command from "../Command.js"
+import type * as Command from "../CommandDescriptor.js"
 import type * as HelpDoc from "../HelpDoc.js"
 import type * as Options from "../Options.js"
 import type * as Usage from "../Usage.js"
