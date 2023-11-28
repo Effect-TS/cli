@@ -33,7 +33,7 @@ const speedOption = Options.integer("speed").pipe(
 )
 
 const shipCommandParent = HandledCommand.makeRequestHelp("ship", {
-  verbose: Options.withDefault(Options.boolean("verbose"), false)
+  verbose: Options.boolean("verbose")
 })
 
 const newShipCommand = HandledCommand.make("new", {
