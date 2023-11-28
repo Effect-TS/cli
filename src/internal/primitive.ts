@@ -554,7 +554,9 @@ const wizardInternal = (self: Instruction, help: HelpDoc.HelpDoc): Prompt.Prompt
     case "Text": {
       const primitiveHelp = InternalHelpDoc.p("Enter some text")
       const message = InternalHelpDoc.sequence(help, primitiveHelp)
-      return InternalTextPrompt.text({ message: InternalHelpDoc.toAnsiText(message).trimEnd() })
+      return InternalTextPrompt.text({
+        message: InternalHelpDoc.toAnsiText(message).trimEnd()
+      })
     }
   }
 }

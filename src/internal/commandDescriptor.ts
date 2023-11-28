@@ -1,5 +1,6 @@
 import type * as FileSystem from "@effect/platform/FileSystem"
 import type * as Terminal from "@effect/platform/Terminal"
+import * as Color from "@effect/printer-ansi/Color"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
 import * as Either from "effect/Either"
@@ -903,7 +904,10 @@ const wizardInternal = (
             const currentCommand = InternalHelpDoc.p(pipe(
               InternalSpan.strong(InternalSpan.code("COMMAND:")),
               InternalSpan.concat(InternalSpan.space),
-              InternalSpan.concat(InternalSpan.code(ReadonlyArray.join(commandLine, " ")))
+              InternalSpan.concat(InternalSpan.highlight(
+                ReadonlyArray.join(commandLine, " "),
+                Color.cyan
+              ))
             ))
             return Console.log(InternalHelpDoc.toAnsiText(currentCommand))
           }))

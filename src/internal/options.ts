@@ -1462,6 +1462,7 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
           { title: "Custom", value: false }
         ]
       }).pipe(
+        Effect.zipLeft(Console.log()),
         Effect.flatMap((useFallback) =>
           useFallback
             ? Effect.succeed(ReadonlyArray.empty())
