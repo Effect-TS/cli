@@ -1,4 +1,5 @@
 import type * as Terminal from "@effect/platform/Terminal"
+import * as Color from "@effect/printer-ansi/Color"
 import * as Console from "effect/Console"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
@@ -285,6 +286,9 @@ const renderWizardArgs = (args: ReadonlyArray<string>) => {
   return InternalHelpDoc.blocks([
     InternalHelpDoc.p(InternalSpan.strong(InternalSpan.code("Wizard Mode Complete!"))),
     InternalHelpDoc.p(executeMsg),
-    InternalHelpDoc.p(InternalSpan.code(`    ${params}`))
+    InternalHelpDoc.p(InternalSpan.concat(
+      InternalSpan.text("    "),
+      InternalSpan.highlight(params, Color.cyan)
+    ))
   ])
 }

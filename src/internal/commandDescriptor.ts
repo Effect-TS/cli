@@ -902,11 +902,11 @@ const wizardInternal = (
         return Effect.gen(function*(_) {
           const logCurrentCommand = Ref.get(commandLineRef).pipe(Effect.flatMap((commandLine) => {
             const currentCommand = InternalHelpDoc.p(pipe(
-              InternalSpan.strong(InternalSpan.code("COMMAND:")),
+              InternalSpan.strong(InternalSpan.highlight("COMMAND:", Color.cyan)),
               InternalSpan.concat(InternalSpan.space),
               InternalSpan.concat(InternalSpan.highlight(
                 ReadonlyArray.join(commandLine, " "),
-                Color.cyan
+                Color.magenta
               ))
             ))
             return Console.log(InternalHelpDoc.toAnsiText(currentCommand))
@@ -916,7 +916,7 @@ const wizardInternal = (
             yield* _(logCurrentCommand)
             // If the command has options, run the wizard for them
             if (!InternalOptions.isEmpty(self.command.options as InternalOptions.Instruction)) {
-              const commandName = InternalSpan.code(self.command.name)
+              const commandName = InternalSpan.highlight(self.command.name, Color.magenta)
               const message = InternalHelpDoc.p(
                 InternalSpan.concat(optionsWizardHeader, commandName)
               )
