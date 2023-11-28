@@ -174,24 +174,6 @@ export const mapOrFail: {
  * @since 1.0.0
  * @category combinators
  */
-export const orElse: {
-  <B>(that: Command<B>): <A>(self: Command<A>) => Command<A | B>
-  <A, B>(self: Command<A>, that: Command<B>): Command<A | B>
-} = Internal.orElse
-
-/**
- * @since 1.0.0
- * @category combinators
- */
-export const orElseEither: {
-  <B>(that: Command<B>): <A>(self: Command<A>) => Command<Either<A, B>>
-  <A, B>(self: Command<A>, that: Command<B>): Command<Either<A, B>>
-} = Internal.orElseEither
-
-/**
- * @since 1.0.0
- * @category combinators
- */
 export const parse: {
   (
     args: ReadonlyArray<string>,
