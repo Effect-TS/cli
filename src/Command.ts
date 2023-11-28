@@ -1,6 +1,8 @@
 /**
  * @since 1.0.0
  */
+import type { FileSystem } from "@effect/platform/FileSystem"
+import type { QuitException, Terminal } from "@effect/platform/Terminal"
 import type { Tag } from "effect/Context"
 import type { Effect } from "effect/Effect"
 import type { HashMap } from "effect/HashMap"
@@ -10,6 +12,7 @@ import { type Pipeable } from "effect/Pipeable"
 import type * as Types from "effect/Types"
 import type { Args } from "./Args.js"
 import type { CliApp } from "./CliApp.js"
+import type { CliConfig } from "./CliConfig.js"
 import type * as Descriptor from "./CommandDescriptor.js"
 import type { HelpDoc } from "./HelpDoc.js"
 import type { Span } from "./HelpDoc/Span.js"
@@ -311,6 +314,24 @@ export const withSubcommands: {
     >
   >
 } = Internal.withSubcommands
+
+/**
+ * @since 1.0.0
+ * @category accessors
+ */
+export const wizard: {
+  (
+    rootCommand: string,
+    config: CliConfig
+  ): <Name extends string, R, E, A>(
+    self: Command<Name, R, E, A>
+  ) => Effect<FileSystem | Terminal, QuitException | ValidationError, ReadonlyArray<string>>
+  <Name extends string, R, E, A>(
+    self: Command<Name, R, E, A>,
+    rootCommand: string,
+    config: CliConfig
+  ): Effect<FileSystem | Terminal, QuitException | ValidationError, ReadonlyArray<string>>
+} = Internal.wizard
 
 /**
  * @since 1.0.0

@@ -1,3 +1,5 @@
+import type { FileSystem } from "@effect/platform/FileSystem"
+import type { QuitException, Terminal } from "@effect/platform/Terminal"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Effectable from "effect/Effectable"
@@ -11,6 +13,7 @@ import * as ReadonlyArray from "effect/ReadonlyArray"
 import type * as Types from "effect/Types"
 import type * as Args from "../Args.js"
 import type * as CliApp from "../CliApp.js"
+import type { CliConfig } from "../CliConfig.js"
 import type * as Command from "../Command.js"
 import type * as Descriptor from "../CommandDescriptor.js"
 import type { HelpDoc } from "../HelpDoc.js"
@@ -396,6 +399,29 @@ export const withSubcommands = dual<
   }
   return makeProto(command as any, handler, self.tag) as any
 })
+
+/** @internal */
+export const wizard = dual<
+  (
+    rootCommand: string,
+    config: CliConfig
+  ) => <Name extends string, R, E, A>(
+    self: Command.Command<Name, R, E, A>
+  ) => Effect.Effect<
+    FileSystem | Terminal,
+    QuitException | ValidationError.ValidationError,
+    ReadonlyArray<string>
+  >,
+  <Name extends string, R, E, A>(
+    self: Command.Command<Name, R, E, A>,
+    rootCommand: string,
+    config: CliConfig
+  ) => Effect.Effect<
+    FileSystem | Terminal,
+    QuitException | ValidationError.ValidationError,
+    ReadonlyArray<string>
+  >
+>(3, (self, rootCommand, config) => InternalDescriptor.wizard(self.descriptor, rootCommand, config))
 
 /** @internal */
 export const run = dual<
