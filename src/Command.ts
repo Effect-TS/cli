@@ -33,12 +33,12 @@ export type TypeId = typeof TypeId
  * @category models
  */
 export interface Command<Name extends string, R, E, A>
-  extends Pipeable, Effect<Descriptor.Command<Name>, never, A>
+  extends Pipeable, Effect<Command.Context<Name>, never, A>
 {
   readonly [TypeId]: TypeId
   readonly descriptor: Descriptor.Command<A>
   readonly handler: (_: A) => Effect<R, E, void>
-  readonly tag: Tag<Descriptor.Command<Name>, A>
+  readonly tag: Tag<Command.Context<Name>, A>
 }
 
 /**
@@ -46,6 +46,15 @@ export interface Command<Name extends string, R, E, A>
  * @category models
  */
 export declare namespace Command {
+  /**
+   * @since 1.0.0
+   * @category models
+   */
+  export interface Context<Name extends string> {
+    readonly _: unique symbol
+    readonly name: Name
+  }
+
   /**
    * @since 1.0.0
    * @category models
@@ -237,7 +246,7 @@ export const withSubcommands: {
   ) => Command<
     Name,
     | R
-    | Exclude<Effect.Context<ReturnType<Subcommand[number]["handler"]>>, Descriptor.Command<Name>>,
+    | Exclude<Effect.Context<ReturnType<Subcommand[number]["handler"]>>, Command.Context<Name>>,
     E | Effect.Error<ReturnType<Subcommand[number]["handler"]>>,
     Descriptor.Command.ComputeParsedType<
       & A
@@ -258,7 +267,7 @@ export const withSubcommands: {
   ): Command<
     Name,
     | R
-    | Exclude<Effect.Context<ReturnType<Subcommand[number]["handler"]>>, Descriptor.Command<Name>>,
+    | Exclude<Effect.Context<ReturnType<Subcommand[number]["handler"]>>, Command.Context<Name>>,
     E | Effect.Error<ReturnType<Subcommand[number]["handler"]>>,
     Descriptor.Command.ComputeParsedType<
       & A

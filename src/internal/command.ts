@@ -131,7 +131,6 @@ const makeProto = <Name extends string, R, E, A>(
   handler: (_: A) => Effect.Effect<R, E, void>,
   tag?: Context.Tag<any, any>
 ): Command.Command<Name, R, E, A> => {
-  console.log("makeProto", descriptor, handler, tag)
   const self = Object.create(Prototype)
   self.descriptor = descriptor
   self.handler = handler
