@@ -445,8 +445,8 @@ export const withAlias: {
  * @category combinators
  */
 export const withDefault: {
-  <A>(fallback: A): (self: Options<A>) => Options<A>
-  <A>(self: Options<A>, fallback: A): Options<A>
+  <const B>(fallback: B): <A>(self: Options<A>) => Options<B | A>
+  <A, const B>(self: Options<A>, fallback: B): Options<A | B>
 } = InternalOptions.withDefault
 
 /**

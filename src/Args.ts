@@ -349,8 +349,8 @@ export const validate: {
  * @category combinators
  */
 export const withDefault: {
-  <A>(fallback: A): (self: Args<A>) => Args<A>
-  <A>(self: Args<A>, fallback: A): Args<A>
+  <const B>(fallback: B): <A>(self: Args<A>) => Args<B | A>
+  <A, const B>(self: Args<A>, fallback: B): Args<A | B>
 } = InternalArgs.withDefault
 
 /**

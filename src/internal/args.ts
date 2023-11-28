@@ -329,8 +329,8 @@ export const validate = dual<
 
 /** @internal */
 export const withDefault = dual<
-  <A>(fallback: A) => (self: Args.Args<A>) => Args.Args<A>,
-  <A>(self: Args.Args<A>, fallback: A) => Args.Args<A>
+  <const B>(fallback: B) => <A>(self: Args.Args<A>) => Args.Args<A | B>,
+  <A, const B>(self: Args.Args<A>, fallback: B) => Args.Args<A | B>
 >(2, (self, fallback) => makeWithDefault(self, fallback))
 
 /** @internal */
@@ -571,10 +571,10 @@ const makeBoth = <A, B>(left: Args.Args<A>, right: Args.Args<B>): Args.Args<[A, 
   return op
 }
 
-const makeWithDefault = <A>(
+const makeWithDefault = <A, const B>(
   self: Args.Args<A>,
-  fallback: A
-): Args.Args<A> => {
+  fallback: B
+): Args.Args<A | B> => {
   const op = Object.create(proto)
   op._tag = "WithDefault"
   op.args = self

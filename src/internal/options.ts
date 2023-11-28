@@ -515,8 +515,8 @@ export const withAlias = dual<
 
 /** @internal */
 export const withDefault = dual<
-  <A>(fallback: A) => (self: Options.Options<A>) => Options.Options<A>,
-  <A>(self: Options.Options<A>, fallback: A) => Options.Options<A>
+  <const B>(fallback: B) => <A>(self: Options.Options<A>) => Options.Options<A | B>,
+  <A, const B>(self: Options.Options<A>, fallback: B) => Options.Options<A | B>
 >(2, (self, fallback) => makeWithDefault(self, fallback))
 
 /** @internal */
@@ -906,7 +906,10 @@ const makeVariadic = <A>(
   return op
 }
 
-const makeWithDefault = <A>(options: Options.Options<A>, fallback: A): Options.Options<A> => {
+const makeWithDefault = <A, const B>(
+  options: Options.Options<A>,
+  fallback: B
+): Options.Options<A | B> => {
   const op = Object.create(proto)
   op._tag = "WithDefault"
   op.options = options
