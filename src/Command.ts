@@ -116,9 +116,18 @@ export declare namespace Command {
  * @category constructors
  */
 export const fromDescriptor: {
+  (): <A extends { readonly name: string }>(
+    command: Descriptor.Command<A>
+  ) => Command<A["name"], never, never, A>
+
   <A extends { readonly name: string }, R, E>(
     handler: (_: A) => Effect<R, E, void>
   ): (command: Descriptor.Command<A>) => Command<A["name"], R, E, A>
+
+  <A extends { readonly name: string }>(
+    descriptor: Descriptor.Command<A>
+  ): Command<A["name"], never, never, A>
+
   <A extends { readonly name: string }, R, E>(
     descriptor: Descriptor.Command<A>,
     handler: (_: A) => Effect<R, E, void>
@@ -129,31 +138,14 @@ export const fromDescriptor: {
  * @since 1.0.0
  * @category constructors
  */
-export const fromDescriptorUnit: <A extends { readonly name: string }>(
-  descriptor: Descriptor.Command<A>
-) => Command<A["name"], never, never, A> = Internal.fromDescriptorUnit
+export const make: {
+  <Name extends string>(name: Name): Command<
+    Name,
+    never,
+    never,
+    {}
+  >
 
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const make: <Name extends string, const Config extends Command.ConfigBase, R, E>(
-  name: Name,
-  config: Config,
-  handler: (_: Types.Simplify<Command.ParseConfig<Config>>) => Effect<R, E, void>
-) => Command<
-  Name,
-  R,
-  E,
-  Types.Simplify<Command.ParseConfig<Config>>
-> = Internal.make
-
-/**
- * @since 1.0.0
- * @category constructors
- */
-export const makeUnit: {
-  <Name extends string>(name: Name): Command<Name, never, never, {}>
   <Name extends string, const Config extends Command.ConfigBase>(
     name: Name,
     config: Config
@@ -161,11 +153,20 @@ export const makeUnit: {
     Name,
     never,
     never,
-    Types.Simplify<
-      Types.Simplify<{ readonly [Key in keyof Config]: Command.ParseConfigValue<Config[Key]> }>
-    >
+    Types.Simplify<Command.ParseConfig<Config>>
   >
-} = Internal.makeUnit
+
+  <Name extends string, const Config extends Command.ConfigBase, R, E>(
+    name: Name,
+    config: Config,
+    handler: (_: Types.Simplify<Command.ParseConfig<Config>>) => Effect<R, E, void>
+  ): Command<
+    Name,
+    R,
+    E,
+    Types.Simplify<Command.ParseConfig<Config>>
+  >
+} = Internal.make
 
 /**
  * @since 1.0.0

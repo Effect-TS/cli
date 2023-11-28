@@ -141,25 +141,34 @@ const makeProto = <Name extends string, R, E, A>(
 
 /** @internal */
 export const fromDescriptor = dual<
-  <A extends { readonly name: string }, R, E>(
-    handler: (_: A) => Effect.Effect<R, E, void>
-  ) => (command: Descriptor.Command<A>) => Command.Command<A["name"], R, E, A>,
-  <A extends { readonly name: string }, R, E>(
-    descriptor: Descriptor.Command<A>,
-    handler: (_: A) => Effect.Effect<R, E, void>
-  ) => Command.Command<A["name"], R, E, A>
->(2, (descriptor, handler) => makeProto(descriptor, handler))
-
-/** @internal */
-export const fromDescriptorUnit = <A extends { readonly name: string }>(
-  descriptor: Descriptor.Command<A>
-): Command.Command<A["name"], never, never, A> => {
-  const self: Command.Command<A["name"], never, ValidationError.ValidationError, A> = makeProto(
-    descriptor,
-    (_) => Effect.failSync(() => ValidationError.helpRequested(getDescriptor(self)))
-  )
-  return self as any
-}
+  {
+    (): <A extends { readonly name: string }>(
+      command: Descriptor.Command<A>
+    ) => Command.Command<A["name"], never, never, A>
+    <A extends { readonly name: string }, R, E>(
+      handler: (_: A) => Effect.Effect<R, E, void>
+    ): (command: Descriptor.Command<A>) => Command.Command<A["name"], R, E, A>
+  },
+  {
+    <A extends { readonly name: string }>(
+      descriptor: Descriptor.Command<A>
+    ): Command.Command<A["name"], never, never, A>
+    <A extends { readonly name: string }, R, E>(
+      descriptor: Descriptor.Command<A>,
+      handler: (_: A) => Effect.Effect<R, E, void>
+    ): Command.Command<A["name"], R, E, A>
+  }
+>(
+  (args) => InternalDescriptor.isCommand(args[0]),
+  (descriptor: Descriptor.Command<any>, handler?: (_: any) => Effect.Effect<any, any, any>) => {
+    const command: Command.Command<any, any, any, any> = makeProto(
+      descriptor,
+      handler ??
+        ((_) => Effect.failSync(() => ValidationError.helpRequested(getDescriptor(command))))
+    )
+    return self as any
+  }
+)
 
 const makeDescriptor = <const Config extends Command.Command.ConfigBase>(
   name: string,
@@ -173,22 +182,14 @@ const makeDescriptor = <const Config extends Command.Command.ConfigBase>(
 }
 
 /** @internal */
-export const make = <Name extends string, const Config extends Command.Command.ConfigBase, R, E>(
-  name: Name,
-  config: Config,
-  handler: (_: Types.Simplify<Command.Command.ParseConfig<Config>>) => Effect.Effect<R, E, void>
-): Command.Command<
-  Name,
-  R,
-  E,
-  Types.Simplify<Command.Command.ParseConfig<Config>>
-> => makeProto(makeDescriptor(name, config), handler)
+export const make: {
+  <Name extends string>(name: Name): Command.Command<
+    Name,
+    never,
+    never,
+    {}
+  >
 
-/** @internal */
-export const makeUnit: {
-  <Name extends string>(
-    name: Name
-  ): Command.Command<Name, never, never, {}>
   <Name extends string, const Config extends Command.Command.ConfigBase>(
     name: Name,
     config: Config
@@ -198,7 +199,22 @@ export const makeUnit: {
     never,
     Types.Simplify<Command.Command.ParseConfig<Config>>
   >
-} = (name: string, config = {}) => fromDescriptorUnit(makeDescriptor(name, config) as any) as any
+
+  <Name extends string, const Config extends Command.Command.ConfigBase, R, E>(
+    name: Name,
+    config: Config,
+    handler: (_: Types.Simplify<Command.Command.ParseConfig<Config>>) => Effect.Effect<R, E, void>
+  ): Command.Command<
+    Name,
+    R,
+    E,
+    Types.Simplify<Command.Command.ParseConfig<Config>>
+  >
+} = (
+  name: string,
+  config: Command.Command.ConfigBase = {},
+  handler?: (_: any) => Effect.Effect<any, any, any>
+) => fromDescriptor(makeDescriptor(name, config) as any, handler as any) as any
 
 /** @internal */
 export const mapDescriptor = dual<
