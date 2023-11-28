@@ -896,6 +896,7 @@ const wizardInternal = (
         )
       }
       case "SubcommandWizard": {
+        console.log(self.parent)
         return Effect.zipWith(
           loop(self.parent),
           loop(self.child),

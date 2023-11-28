@@ -1454,6 +1454,9 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
       )
     }
     case "WithDefault": {
+      if (isBoolInternal(self.options as Instruction)) {
+        return wizardInternal(self.options as Instruction, config)
+      }
       const defaultHelp = InternalHelpDoc.p(`This option is optional - use the default?`)
       const message = pipe(
         wizardHeader,

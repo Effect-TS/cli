@@ -504,12 +504,13 @@ const wizardInternal = (self: Instruction, help: HelpDoc.HelpDoc): Prompt.Prompt
     case "Bool": {
       const primitiveHelp = InternalHelpDoc.p("Select true or false")
       const message = InternalHelpDoc.sequence(help, primitiveHelp)
+      const initial = Option.getOrElse(self.defaultValue, () => false)
       return InternalTogglePrompt.toggle({
         message: InternalHelpDoc.toAnsiText(message).trimEnd(),
-        initial: Option.getOrElse(self.defaultValue, () => false),
+        initial,
         active: "true",
         inactive: "false"
-      }).pipe(InternalPrompt.map((bool) => `${bool}`))
+      }).pipe(InternalPrompt.map((bool) => bool))
     }
     case "Choice": {
       const primitiveHelp = InternalHelpDoc.p("Select one of the following choices")
