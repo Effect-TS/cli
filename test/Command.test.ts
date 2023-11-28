@@ -60,7 +60,7 @@ describe("Command", () => {
         assert.deepStrictEqual(yield* _(messages.messages), [
           "Adding",
           "Adding file",
-          "Adding" // TODO: probably should be "Cloning repo"
+          "Adding" // TODO: probably should be "Adding repo"
         ])
       }).pipe(Effect.provide(EnvLive), Effect.runPromise))
 
@@ -73,7 +73,7 @@ describe("Command", () => {
         assert.deepStrictEqual(yield* _(messages.messages), [
           "Cloning",
           "Cloning repo",
-          "Cloning" // TODO: probably should be "Adding repo"
+          "Cloning" // TODO: probably should be "Cloning repo"
         ])
       }).pipe(Effect.provide(EnvLive), Effect.runPromise))
   })
