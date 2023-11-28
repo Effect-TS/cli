@@ -167,10 +167,10 @@ export const fromDescriptor = dual<
 >(
   (args) => InternalDescriptor.isCommand(args[0]),
   (descriptor: Descriptor.Command<any>, handler?: (_: any) => Effect.Effect<any, any, any>) => {
-    const command: Command.Command<any, any, any, any> = makeProto(
+    const self: Command.Command<any, any, any, any> = makeProto(
       descriptor,
       handler ??
-        ((_) => Effect.failSync(() => ValidationError.helpRequested(getDescriptor(command))))
+        ((_) => Effect.failSync(() => ValidationError.helpRequested(getDescriptor(self))))
     )
     return self as any
   }
