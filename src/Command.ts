@@ -3,6 +3,8 @@
  */
 import type { Tag } from "effect/Context"
 import type { Effect } from "effect/Effect"
+import type { HashMap } from "effect/HashMap"
+import type { HashSet } from "effect/HashSet"
 import type { Option } from "effect/Option"
 import { type Pipeable } from "effect/Pipeable"
 import type * as Types from "effect/Types"
@@ -14,6 +16,7 @@ import type { Span } from "./HelpDoc/Span.js"
 import * as Internal from "./internal/command.js"
 import type { Options } from "./Options.js"
 import type { Prompt } from "./Prompt.js"
+import type { Usage } from "./Usage.js"
 import type { ValidationError } from "./ValidationError.js"
 
 /**
@@ -133,6 +136,63 @@ export const fromDescriptor: {
     handler: (_: A) => Effect<R, E, void>
   ): Command<A["name"], R, E, A>
 } = Internal.fromDescriptor
+
+/**
+ * @since 1.0.0
+ * @category accessors
+ */
+export const getHelp: <Name extends string, R, E, A>(self: Command<Name, R, E, A>) => HelpDoc =
+  Internal.getHelp
+
+/**
+ * @since 1.0.0
+ * @category accessors
+ */
+export const getNames: <Name extends string, R, E, A>(
+  self: Command<Name, R, E, A>
+) => HashSet<string> = Internal.getNames
+
+/**
+ * @since 1.0.0
+ * @category accessors
+ */
+export const getBashCompletions: <Name extends string, R, E, A>(
+  self: Command<Name, R, E, A>,
+  programName: string
+) => Effect<never, never, ReadonlyArray<string>> = Internal.getBashCompletions
+
+/**
+ * @since 1.0.0
+ * @category accessors
+ */
+export const getFishCompletions: <Name extends string, R, E, A>(
+  self: Command<Name, R, E, A>,
+  programName: string
+) => Effect<never, never, ReadonlyArray<string>> = Internal.getFishCompletions
+
+/**
+ * @since 1.0.0
+ * @category accessors
+ */
+export const getZshCompletions: <Name extends string, R, E, A>(
+  self: Command<Name, R, E, A>,
+  programName: string
+) => Effect<never, never, ReadonlyArray<string>> = Internal.getZshCompletions
+
+/**
+ * @since 1.0.0
+ * @category accessors
+ */
+export const getSubcommands: <Name extends string, R, E, A>(
+  self: Command<Name, R, E, A>
+) => HashMap<string, Descriptor.Command<unknown>> = Internal.getSubcommands
+
+/**
+ * @since 1.0.0
+ * @category accessors
+ */
+export const getUsage: <Name extends string, R, E, A>(self: Command<Name, R, E, A>) => Usage =
+  Internal.getUsage
 
 /**
  * @since 1.0.0

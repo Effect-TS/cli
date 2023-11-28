@@ -3,6 +3,8 @@ import * as Effect from "effect/Effect"
 import * as Effectable from "effect/Effectable"
 import { dual } from "effect/Function"
 import { globalValue } from "effect/GlobalValue"
+import type { HashMap } from "effect/HashMap"
+import type { HashSet } from "effect/HashSet"
 import type * as Option from "effect/Option"
 import { pipeArguments } from "effect/Pipeable"
 import * as ReadonlyArray from "effect/ReadonlyArray"
@@ -15,6 +17,7 @@ import type { HelpDoc } from "../HelpDoc.js"
 import type { Span } from "../HelpDoc/Span.js"
 import type * as Options from "../Options.js"
 import type * as Prompt from "../Prompt.js"
+import type { Usage } from "../Usage.js"
 import * as ValidationError from "../ValidationError.js"
 import * as InternalArgs from "./args.js"
 import * as InternalCliApp from "./cliApp.js"
@@ -215,6 +218,48 @@ export const make: {
   config: Command.Command.ConfigBase = {},
   handler?: (_: any) => Effect.Effect<any, any, any>
 ) => fromDescriptor(makeDescriptor(name, config) as any, handler as any) as any
+
+/** @internal */
+export const getHelp = <Name extends string, R, E, A>(
+  self: Command.Command<Name, R, E, A>
+): HelpDoc => InternalDescriptor.getHelp(self.descriptor)
+
+/** @internal */
+export const getNames = <Name extends string, R, E, A>(
+  self: Command.Command<Name, R, E, A>
+): HashSet<string> => InternalDescriptor.getNames(self.descriptor)
+
+/** @internal */
+export const getBashCompletions = <Name extends string, R, E, A>(
+  self: Command.Command<Name, R, E, A>,
+  programName: string
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  InternalDescriptor.getBashCompletions(self.descriptor, programName)
+
+/** @internal */
+export const getFishCompletions = <Name extends string, R, E, A>(
+  self: Command.Command<Name, R, E, A>,
+  programName: string
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  InternalDescriptor.getFishCompletions(self.descriptor, programName)
+
+/** @internal */
+export const getZshCompletions = <Name extends string, R, E, A>(
+  self: Command.Command<Name, R, E, A>,
+  programName: string
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  InternalDescriptor.getZshCompletions(self.descriptor, programName)
+
+/** @internal */
+export const getSubcommands = <Name extends string, R, E, A>(
+  self: Command.Command<Name, R, E, A>
+): HashMap<string, Descriptor.Command<unknown>> =>
+  InternalDescriptor.getSubcommands(self.descriptor)
+
+/** @internal */
+export const getUsage = <Name extends string, R, E, A>(
+  self: Command.Command<Name, R, E, A>
+): Usage => InternalDescriptor.getUsage(self.descriptor)
 
 /** @internal */
 export const mapDescriptor = dual<
