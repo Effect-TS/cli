@@ -914,9 +914,9 @@ const wizardInternal = (
           if (isStandard(self.command)) {
             // Log the current command line arguments
             yield* _(logCurrentCommand)
+            const commandName = InternalSpan.highlight(self.command.name, Color.magenta)
             // If the command has options, run the wizard for them
             if (!InternalOptions.isEmpty(self.command.options as InternalOptions.Instruction)) {
-              const commandName = InternalSpan.highlight(self.command.name, Color.magenta)
               const message = InternalHelpDoc.p(
                 InternalSpan.concat(optionsWizardHeader, commandName)
               )
@@ -925,8 +925,8 @@ const wizardInternal = (
               yield* _(Ref.updateAndGet(commandLineRef, ReadonlyArray.appendAll(options)))
               yield* _(logCurrentCommand)
             }
+            // If the command has args, run the wizard for them
             if (!InternalArgs.isEmpty(self.command.args as InternalArgs.Instruction)) {
-              const commandName = InternalSpan.code(self.command.name)
               const message = InternalHelpDoc.p(
                 InternalSpan.concat(argsWizardHeader, commandName)
               )
