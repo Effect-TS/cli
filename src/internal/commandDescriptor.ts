@@ -294,7 +294,7 @@ export const withDescription = dual<
 /** @internal */
 export const withSubcommands = dual<
   <
-    Subcommands extends ReadonlyArray.NonEmptyReadonlyArray<
+    const Subcommands extends ReadonlyArray.NonEmptyReadonlyArray<
       readonly [id: unknown, command: Descriptor.Command<any>]
     >
   >(
@@ -309,7 +309,7 @@ export const withSubcommands = dual<
   >,
   <
     A,
-    Subcommands extends ReadonlyArray.NonEmptyReadonlyArray<
+    const Subcommands extends ReadonlyArray.NonEmptyReadonlyArray<
       readonly [id: unknown, command: Descriptor.Command<any>]
     >
   >(

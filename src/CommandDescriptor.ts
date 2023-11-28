@@ -223,7 +223,7 @@ export const withDescription: {
  */
 export const withSubcommands: {
   <
-    Subcommands extends readonly [
+    const Subcommands extends readonly [
       readonly [id: unknown, command: Command<any>],
       ...Array<readonly [id: unknown, command: Command<any>]>
     ]
@@ -238,7 +238,7 @@ export const withSubcommands: {
   >
   <
     A,
-    Subcommands extends readonly [
+    const Subcommands extends readonly [
       readonly [id: unknown, command: Command<any>],
       ...Array<readonly [id: unknown, command: Command<any>]>
     ]
