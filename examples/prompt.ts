@@ -1,5 +1,5 @@
 import * as CliApp from "@effect/cli/CliApp"
-import * as Command from "@effect/cli/Command"
+import * as Command from "@effect/cli/CommandDescriptor"
 import * as Prompt from "@effect/cli/Prompt"
 import * as NodeContext from "@effect/platform-node/NodeContext"
 import * as Runtime from "@effect/platform-node/Runtime"

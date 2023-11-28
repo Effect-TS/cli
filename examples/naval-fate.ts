@@ -1,4 +1,4 @@
-import { Args, Command, HandledCommand, Options } from "@effect/cli"
+import { Args, Command, Options } from "@effect/cli"
 import * as KeyValueStore from "@effect/platform-node/KeyValueStore"
 import * as NodeContext from "@effect/platform-node/NodeContext"
 import * as Runtime from "@effect/platform-node/Runtime"
@@ -32,11 +32,11 @@ const speedOption = Options.integer("speed").pipe(
   Options.withDefault(10)
 )
 
-const shipCommandParent = HandledCommand.makeHelp("ship", {
+const shipCommandParent = Command.makeHelp("ship", {
   verbose: Options.boolean("verbose")
 })
 
-const newShipCommand = HandledCommand.make("new", {
+const newShipCommand = Command.make("new", {
   name: nameArg
 }, ({ name }) =>
   Effect.gen(function*(_) {
@@ -48,7 +48,7 @@ const newShipCommand = HandledCommand.make("new", {
     }
   }))
 
-const moveShipCommand = HandledCommand.make("move", {
+const moveShipCommand = Command.make("move", {
   ...nameAndCoordinatesArg,
   speed: speedOption
 }, ({ name, speed, x, y }) =>
@@ -57,7 +57,7 @@ const moveShipCommand = HandledCommand.make("move", {
     yield* _(Console.log(`Moving ship '${name}' to coordinates (${x}, ${y}) at ${speed} knots`))
   }))
 
-const shootShipCommand = HandledCommand.make(
+const shootShipCommand = Command.make(
   "shoot",
   { ...coordinatesArg },
   ({ x, y }) =>
@@ -67,15 +67,15 @@ const shootShipCommand = HandledCommand.make(
     })
 )
 
-const shipCommand = HandledCommand.withSubcommands(shipCommandParent, [
+const shipCommand = Command.withSubcommands(shipCommandParent, [
   newShipCommand,
   moveShipCommand,
   shootShipCommand
 ])
 
-const mineCommandParent = HandledCommand.makeHelp("mine")
+const mineCommandParent = Command.makeHelp("mine")
 
-const setMineCommand = HandledCommand.make("set", {
+const setMineCommand = Command.make("set", {
   ...coordinatesArg,
   moored: mooredOption
 }, ({ moored, x, y }) =>
@@ -86,7 +86,7 @@ const setMineCommand = HandledCommand.make("set", {
     )
   }))
 
-const removeMineCommand = HandledCommand.make("remove", {
+const removeMineCommand = Command.make("remove", {
   ...coordinatesArg
 }, ({ x, y }) =>
   Effect.gen(function*(_) {
@@ -94,16 +94,15 @@ const removeMineCommand = HandledCommand.make("remove", {
     yield* _(Console.log(`Removing mine at coordinates (${x}, ${y}), if present`))
   }))
 
-const mineCommand = HandledCommand.withSubcommands(mineCommandParent, [
+const mineCommand = Command.withSubcommands(mineCommandParent, [
   setMineCommand,
   removeMineCommand
 ])
 
-const run = Command.make("naval_fate").pipe(
+const run = Command.makeHelp("naval_fate").pipe(
   Command.withDescription("An implementation of the Naval Fate CLI application."),
-  HandledCommand.fromCommandHelp,
-  HandledCommand.withSubcommands([shipCommand, mineCommand]),
-  HandledCommand.toAppAndRun({
+  Command.withSubcommands([shipCommand, mineCommand]),
+  Command.run({
     name: "Naval Fate",
     version: "1.0.0"
   })

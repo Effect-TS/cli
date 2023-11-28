@@ -31,12 +31,12 @@ export * as Command from "./Command.js"
 /**
  * @since 1.0.0
  */
-export * as CommandDirective from "./CommandDirective.js"
+export * as CommandDescriptor from "./CommandDescriptor.js"
 
 /**
  * @since 1.0.0
  */
-export * as HandledCommand from "./HandledCommand.js"
+export * as CommandDirective from "./CommandDirective.js"
 
 /**
  * @since 1.0.0
