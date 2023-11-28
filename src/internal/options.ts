@@ -553,12 +553,12 @@ export const withPseudoName = dual<
 export const wizard = dual<
   (config: CliConfig.CliConfig) => <A>(self: Options.Options<A>) => Effect.Effect<
     FileSystem.FileSystem | Terminal.Terminal,
-    ValidationError.ValidationError,
+    Terminal.QuitException | ValidationError.ValidationError,
     ReadonlyArray<string>
   >,
   <A>(self: Options.Options<A>, config: CliConfig.CliConfig) => Effect.Effect<
     FileSystem.FileSystem | Terminal.Terminal,
-    ValidationError.ValidationError,
+    Terminal.QuitException | ValidationError.ValidationError,
     ReadonlyArray<string>
   >
 >(2, (self, config) => wizardInternal(self as Instruction, config))
@@ -1353,11 +1353,9 @@ const parseInternal = (
   }
 }
 
-const wizardHeader = InternalHelpDoc.p("Option Wizard")
-
 const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.Effect<
   FileSystem.FileSystem | Terminal.Terminal,
-  ValidationError.ValidationError,
+  Terminal.QuitException | ValidationError.ValidationError,
   ReadonlyArray<string>
 > => {
   switch (self._tag) {
@@ -1365,31 +1363,29 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
       return Effect.succeed(ReadonlyArray.empty())
     }
     case "Single": {
-      const help = InternalHelpDoc.sequence(wizardHeader, getHelpInternal(self))
-      return Console.log().pipe(
-        Effect.zipRight(
-          InternalPrimitive.wizard(self.primitiveType, help).pipe(Effect.flatMap((input) => {
-            // There will always be at least one name in names
-            const args = ReadonlyArray.make(getNames(self)[0]!, input as string)
-            return parseOptions(self, args, config).pipe(Effect.as(args))
-          }))
-        )
+      const help = getHelpInternal(self)
+      return InternalPrimitive.wizard(self.primitiveType, help).pipe(
+        Effect.flatMap((input) => {
+          // There will always be at least one name in names
+          const args = ReadonlyArray.make(getNames(self)[0]!, input as string)
+          return parseOptions(self, args, config).pipe(Effect.as(args))
+        }),
+        Effect.zipLeft(Console.log())
       )
     }
     case "KeyValueMap": {
-      const optionHelp = InternalHelpDoc.p("Enter `key=value` pairs separated by spaces")
-      const message = InternalHelpDoc.sequence(wizardHeader, optionHelp)
-      return Console.log().pipe(
-        Effect.zipRight(InternalListPrompt.list({
-          message: InternalHelpDoc.toAnsiText(message).trim(),
-          delimiter: " "
-        })),
+      const message = InternalHelpDoc.p("Enter `key=value` pairs separated by spaces")
+      return InternalListPrompt.list({
+        message: InternalHelpDoc.toAnsiText(message).trim(),
+        delimiter: " "
+      }).pipe(
         Effect.flatMap((args) => {
           const identifier = Option.getOrElse(getIdentifierInternal(self), () => "")
           return parseInternal(self, HashMap.make([identifier, args]), config).pipe(
             Effect.as(ReadonlyArray.prepend(args, identifier))
           )
-        })
+        }),
+        Effect.zipLeft(Console.log())
       )
     }
     case "Map": {
@@ -1405,8 +1401,7 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
     case "OrElse": {
       const alternativeHelp = InternalHelpDoc.p("Select which option you would like to use")
       const message = pipe(
-        wizardHeader,
-        InternalHelpDoc.sequence(getHelpInternal(self)),
+        getHelpInternal(self),
         InternalHelpDoc.sequence(alternativeHelp)
       )
       const makeChoice = (title: string, value: Instruction) => ({ title, value })
@@ -1420,29 +1415,24 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
           (title) => makeChoice(title, self.right as Instruction)
         )
       ])
-      return Console.log().pipe(
-        Effect.zipRight(InternalSelectPrompt.select({
-          message: InternalHelpDoc.toAnsiText(message).trimEnd(),
-          choices
-        })),
-        Effect.flatMap((option) => wizardInternal(option, config))
-      )
+      return InternalSelectPrompt.select({
+        message: InternalHelpDoc.toAnsiText(message).trimEnd(),
+        choices
+      }).pipe(Effect.flatMap((option) => wizardInternal(option, config)))
     }
     case "Variadic": {
       const repeatHelp = InternalHelpDoc.p(
         "How many times should this argument should be repeated?"
       )
       const message = pipe(
-        wizardHeader,
-        InternalHelpDoc.sequence(getHelpInternal(self)),
+        getHelpInternal(self),
         InternalHelpDoc.sequence(repeatHelp)
       )
-      return Console.log().pipe(
-        Effect.zipRight(InternalNumberPrompt.integer({
-          message: InternalHelpDoc.toAnsiText(message).trimEnd(),
-          min: getMinSizeInternal(self),
-          max: getMaxSizeInternal(self)
-        })),
+      return InternalNumberPrompt.integer({
+        message: InternalHelpDoc.toAnsiText(message).trimEnd(),
+        min: getMinSizeInternal(self),
+        max: getMaxSizeInternal(self)
+      }).pipe(
         Effect.flatMap((n) =>
           Ref.make(ReadonlyArray.empty<string>()).pipe(
             Effect.flatMap((ref) =>
@@ -1462,18 +1452,16 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
       }
       const defaultHelp = InternalHelpDoc.p(`This option is optional - use the default?`)
       const message = pipe(
-        wizardHeader,
-        InternalHelpDoc.sequence(getHelpInternal(self.options as Instruction)),
+        getHelpInternal(self.options as Instruction),
         InternalHelpDoc.sequence(defaultHelp)
       )
-      return Console.log().pipe(
-        Effect.zipRight(InternalSelectPrompt.select({
-          message: InternalHelpDoc.toAnsiText(message).trimEnd(),
-          choices: [
-            { title: `Default ['${JSON.stringify(self.fallback)}']`, value: true },
-            { title: "Custom", value: false }
-          ]
-        })),
+      return InternalSelectPrompt.select({
+        message: InternalHelpDoc.toAnsiText(message).trimEnd(),
+        choices: [
+          { title: `Default ['${JSON.stringify(self.fallback)}']`, value: true },
+          { title: "Custom", value: false }
+        ]
+      }).pipe(
         Effect.flatMap((useFallback) =>
           useFallback
             ? Effect.succeed(ReadonlyArray.empty())

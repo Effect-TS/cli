@@ -10,6 +10,7 @@ import * as Option from "effect/Option"
 import * as Order from "effect/Order"
 import { pipeArguments } from "effect/Pipeable"
 import * as ReadonlyArray from "effect/ReadonlyArray"
+import * as Ref from "effect/Ref"
 import * as SynchronizedRef from "effect/SynchronizedRef"
 import type * as Args from "../Args.js"
 import type * as CliConfig from "../CliConfig.js"
@@ -340,17 +341,24 @@ export const withSubcommands = dual<
 
 /** @internal */
 export const wizard = dual<
-  (config: CliConfig.CliConfig) => <A>(self: Descriptor.Command<A>) => Effect.Effect<
+  (
+    rootCommand: string,
+    config: CliConfig.CliConfig
+  ) => <A>(self: Descriptor.Command<A>) => Effect.Effect<
     FileSystem.FileSystem | Terminal.Terminal,
-    ValidationError.ValidationError,
+    Terminal.QuitException | ValidationError.ValidationError,
     ReadonlyArray<string>
   >,
-  <A>(self: Descriptor.Command<A>, config: CliConfig.CliConfig) => Effect.Effect<
+  <A>(
+    self: Descriptor.Command<A>,
+    rootCommand: string,
+    config: CliConfig.CliConfig
+  ) => Effect.Effect<
     FileSystem.FileSystem | Terminal.Terminal,
-    ValidationError.ValidationError,
+    Terminal.QuitException | ValidationError.ValidationError,
     ReadonlyArray<string>
   >
->(2, (self, config) => wizardInternal(self as Instruction, config))
+>(3, (self, rootCommand, config) => wizardInternal(self as Instruction, rootCommand, config))
 
 // =============================================================================
 // Internals
@@ -672,6 +680,7 @@ const parseInternal = (
     }
     case "GetUserInput": {
       return InternalPrompt.run(self.prompt).pipe(
+        Effect.catchTag("QuitException", (e) => Effect.die(e)),
         Effect.map((value) =>
           InternalCommandDirective.userDefined(ReadonlyArray.drop(args, 1), {
             name: self.name,
@@ -867,44 +876,70 @@ const withDescriptionInternal = (
   }
 }
 
+const argsWizardHeader = InternalSpan.code("Args Wizard - ")
+const optionsWizardHeader = InternalSpan.code("Options Wizard - ")
+
 const wizardInternal = (
   self: Instruction,
+  rootCommand: string,
   config: CliConfig.CliConfig
 ): Effect.Effect<
   FileSystem.FileSystem | Terminal.Terminal,
-  ValidationError.ValidationError,
+  Terminal.QuitException | ValidationError.ValidationError,
   ReadonlyArray<string>
 > => {
-  const loop = (self: WizardCommandSequence): Effect.Effect<
+  const loop = (
+    self: WizardCommandSequence,
+    commandLineRef: Ref.Ref<ReadonlyArray<string>>
+  ): Effect.Effect<
     FileSystem.FileSystem | Terminal.Terminal,
-    ValidationError.ValidationError,
+    Terminal.QuitException | ValidationError.ValidationError,
     ReadonlyArray<string>
   > => {
     switch (self._tag) {
       case "SingleCommandWizard": {
-        const optionsWizard = isStandard(self.command)
-          ? InternalOptions.wizard(self.command.options, config)
-          : Effect.succeed(ReadonlyArray.empty())
-        const argsWizard = isStandard(self.command)
-          ? InternalArgs.wizard(self.command.args, config)
-          : Effect.succeed(ReadonlyArray.empty())
-        const help = InternalHelpDoc.p(pipe(
-          InternalSpan.text("\n"),
-          InternalSpan.concat(InternalSpan.strong(InternalSpan.code("COMMAND:"))),
-          InternalSpan.concat(InternalSpan.space),
-          InternalSpan.concat(InternalSpan.code(self.command.name))
-        ))
-        const message = InternalHelpDoc.toAnsiText(help)
-        return Console.log(message).pipe(
-          Effect.zipRight(Effect.zipWith(optionsWizard, argsWizard, (options, args) =>
-            pipe(
-              ReadonlyArray.appendAll(options, args),
-              ReadonlyArray.prepend(self.command.name)
-            )))
-        )
+        return Effect.gen(function*(_) {
+          const logCurrentCommand = Ref.get(commandLineRef).pipe(Effect.flatMap((commandLine) => {
+            const currentCommand = InternalHelpDoc.p(pipe(
+              InternalSpan.strong(InternalSpan.code("COMMAND:")),
+              InternalSpan.concat(InternalSpan.space),
+              InternalSpan.concat(InternalSpan.code(ReadonlyArray.join(commandLine, " ")))
+            ))
+            return Console.log(InternalHelpDoc.toAnsiText(currentCommand))
+          }))
+          if (isStandard(self.command)) {
+            // Log the current command line arguments
+            yield* _(logCurrentCommand)
+            // If the command has options, run the wizard for them
+            if (!InternalOptions.isEmpty(self.command.options as InternalOptions.Instruction)) {
+              const commandName = InternalSpan.code(self.command.name)
+              const message = InternalHelpDoc.p(
+                InternalSpan.concat(optionsWizardHeader, commandName)
+              )
+              yield* _(Console.log(InternalHelpDoc.toAnsiText(message)))
+              const options = yield* _(InternalOptions.wizard(self.command.options, config))
+              yield* _(Ref.updateAndGet(commandLineRef, ReadonlyArray.appendAll(options)))
+              yield* _(logCurrentCommand)
+            }
+            if (!InternalArgs.isEmpty(self.command.args as InternalArgs.Instruction)) {
+              const commandName = InternalSpan.code(self.command.name)
+              const message = InternalHelpDoc.p(
+                InternalSpan.concat(argsWizardHeader, commandName)
+              )
+              yield* _(Console.log(InternalHelpDoc.toAnsiText(message)))
+              const options = yield* _(InternalArgs.wizard(self.command.args, config))
+              yield* _(Ref.updateAndGet(commandLineRef, ReadonlyArray.appendAll(options)))
+              yield* _(logCurrentCommand)
+            }
+          }
+          return yield* _(Ref.get(commandLineRef))
+        })
       }
       case "AlternativeCommandWizard": {
-        const makeChoice = (title: string, value: WizardCommandSequence) => ({ title, value })
+        const makeChoice = (title: string, value: WizardCommandSequence) => ({
+          title,
+          value: [title, value] as const
+        })
         const choices = self.alternatives.map((alternative) => {
           switch (alternative._tag) {
             case "SingleCommandWizard": {
@@ -918,19 +953,25 @@ const wizardInternal = (
         const description = InternalHelpDoc.p("Select which command you would like to execute")
         const message = InternalHelpDoc.toAnsiText(description).trimEnd()
         return InternalSelectPrompt.select({ message, choices }).pipe(
-          Effect.flatMap((nextSequence) => loop(nextSequence))
+          Effect.tap(([name]) => Ref.update(commandLineRef, ReadonlyArray.append(name))),
+          Effect.zipLeft(Console.log()),
+          Effect.flatMap(([, nextSequence]) => loop(nextSequence, commandLineRef))
         )
       }
       case "SubcommandWizard": {
-        return Effect.zipWith(
-          loop(self.parent),
-          loop(self.child),
-          (parent, child) => ReadonlyArray.appendAll(parent, child)
+        return loop(self.parent, commandLineRef).pipe(
+          Effect.zipRight(loop(self.child, commandLineRef))
         )
       }
     }
   }
-  return loop(getWizardCommandSequence(self))
+  return Ref.make<ReadonlyArray<string>>(ReadonlyArray.of(rootCommand)).pipe(
+    Effect.flatMap((commandLineRef) =>
+      loop(getWizardCommandSequence(self), commandLineRef).pipe(
+        Effect.zipRight(Ref.get(commandLineRef))
+      )
+    )
+  )
 }
 
 type WizardCommandSequence = SingleCommandWizard | AlternativeCommandWizard | SubcommandWizard

@@ -510,7 +510,7 @@ const wizardInternal = (self: Instruction, help: HelpDoc.HelpDoc): Prompt.Prompt
         initial,
         active: "true",
         inactive: "false"
-      }).pipe(InternalPrompt.map((bool) => bool))
+      }).pipe(InternalPrompt.map((bool) => `${bool}`))
     }
     case "Choice": {
       const primitiveHelp = InternalHelpDoc.p("Select one of the following choices")

@@ -343,12 +343,12 @@ export const withDescription = dual<
 export const wizard = dual<
   (config: CliConfig.CliConfig) => <A>(self: Args.Args<A>) => Effect.Effect<
     FileSystem.FileSystem | Terminal.Terminal,
-    ValidationError.ValidationError,
+    Terminal.QuitException | ValidationError.ValidationError,
     ReadonlyArray<string>
   >,
   <A>(self: Args.Args<A>, config: CliConfig.CliConfig) => Effect.Effect<
     FileSystem.FileSystem | Terminal.Terminal,
-    ValidationError.ValidationError,
+    Terminal.QuitException | ValidationError.ValidationError,
     ReadonlyArray<string>
   >
 >(2, (self, config) => wizardInternal(self as Instruction, config))
@@ -734,11 +734,9 @@ const withDescriptionInternal = (self: Instruction, description: string): Args.A
   }
 }
 
-const wizardHeader = InternalHelpDoc.p("ARG WIZARD")
-
 const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.Effect<
   FileSystem.FileSystem | Terminal.Terminal,
-  ValidationError.ValidationError,
+  Terminal.QuitException | ValidationError.ValidationError,
   ReadonlyArray<string>
 > => {
   switch (self._tag) {
@@ -746,14 +744,13 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
       return Effect.succeed(ReadonlyArray.empty())
     }
     case "Single": {
-      const help = InternalHelpDoc.sequence(wizardHeader, getHelpInternal(self))
-      return Console.log().pipe(
-        Effect.zipRight(
-          InternalPrimitive.wizard(self.primitiveType, help).pipe(Effect.flatMap((input) => {
-            const args = ReadonlyArray.of(input as string)
-            return validateInternal(self, args, config).pipe(Effect.as(args))
-          }))
-        )
+      const help = getHelpInternal(self)
+      return InternalPrimitive.wizard(self.primitiveType, help).pipe(
+        Effect.zipLeft(Console.log()),
+        Effect.flatMap((input) => {
+          const args = ReadonlyArray.of(input as string)
+          return validateInternal(self, args, config).pipe(Effect.as(args))
+        })
       )
     }
     case "Map": {
@@ -773,16 +770,15 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
         "How many times should this argument should be repeated?"
       )
       const message = pipe(
-        wizardHeader,
-        InternalHelpDoc.sequence(getHelpInternal(self)),
+        getHelpInternal(self),
         InternalHelpDoc.sequence(repeatHelp)
       )
-      return Console.log().pipe(
-        Effect.zipRight(InternalNumberPrompt.integer({
-          message: InternalHelpDoc.toAnsiText(message).trimEnd(),
-          min: getMinSizeInternal(self),
-          max: getMaxSizeInternal(self)
-        })),
+      return InternalNumberPrompt.integer({
+        message: InternalHelpDoc.toAnsiText(message).trimEnd(),
+        min: getMinSizeInternal(self),
+        max: getMaxSizeInternal(self)
+      }).pipe(
+        Effect.zipLeft(Console.log()),
         Effect.flatMap((n) =>
           Ref.make(ReadonlyArray.empty<string>()).pipe(
             Effect.flatMap((ref) =>
@@ -800,20 +796,17 @@ const wizardInternal = (self: Instruction, config: CliConfig.CliConfig): Effect.
     case "WithDefault": {
       const defaultHelp = InternalHelpDoc.p(`This argument is optional - use the default?`)
       const message = pipe(
-        wizardHeader,
-        InternalHelpDoc.sequence(getHelpInternal(self.args as Instruction)),
+        getHelpInternal(self.args as Instruction),
         InternalHelpDoc.sequence(defaultHelp)
       )
-      return Console.log().pipe(
-        Effect.zipRight(
-          InternalSelectPrompt.select({
-            message: InternalHelpDoc.toAnsiText(message).trimEnd(),
-            choices: [
-              { title: `Default ['${JSON.stringify(self.fallback)}']`, value: true },
-              { title: "Custom", value: false }
-            ]
-          })
-        ),
+      return InternalSelectPrompt.select({
+        message: InternalHelpDoc.toAnsiText(message).trimEnd(),
+        choices: [
+          { title: `Default ['${JSON.stringify(self.fallback)}']`, value: true },
+          { title: "Custom", value: false }
+        ]
+      }).pipe(
+        Effect.zipLeft(Console.log()),
         Effect.flatMap((useFallback) =>
           useFallback
             ? Effect.succeed(ReadonlyArray.empty())
