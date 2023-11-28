@@ -32,7 +32,7 @@ const speedOption = Options.integer("speed").pipe(
   Options.withDefault(10)
 )
 
-const shipCommandParent = Command.make("ship", {
+const shipCommand = Command.make("ship", {
   verbose: Options.boolean("verbose")
 })
 
@@ -40,7 +40,7 @@ const newShipCommand = Command.make("new", {
   name: nameArg
 }, ({ name }) =>
   Effect.gen(function*(_) {
-    const { verbose } = yield* _(shipCommandParent)
+    const { verbose } = yield* _(shipCommand)
     yield* _(createShip(name))
     yield* _(Console.log(`Created ship: '${name}'`))
     if (verbose) {
@@ -67,13 +67,7 @@ const shootShipCommand = Command.make(
     })
 )
 
-const shipCommand = Command.withSubcommands(shipCommandParent, [
-  newShipCommand,
-  moveShipCommand,
-  shootShipCommand
-])
-
-const mineCommandParent = Command.make("mine")
+const mineCommand = Command.make("mine")
 
 const setMineCommand = Command.make("set", {
   ...coordinatesArg,
@@ -94,14 +88,12 @@ const removeMineCommand = Command.make("remove", {
     yield* _(Console.log(`Removing mine at coordinates (${x}, ${y}), if present`))
   }))
 
-const mineCommand = Command.withSubcommands(mineCommandParent, [
-  setMineCommand,
-  removeMineCommand
-])
-
 const run = Command.make("naval_fate").pipe(
   Command.withDescription("An implementation of the Naval Fate CLI application."),
-  Command.withSubcommands([shipCommand, mineCommand]),
+  Command.withSubcommands([
+    Command.withSubcommands(shipCommand, [newShipCommand, moveShipCommand, shootShipCommand]),
+    Command.withSubcommands(mineCommand, [setMineCommand, removeMineCommand])
+  ]),
   Command.run({
     name: "Naval Fate",
     version: "1.0.0"
