@@ -129,14 +129,6 @@ export const fromDescriptor: {
  * @since 1.0.0
  * @category constructors
  */
-export const fromDescriptorHelp: <A extends { readonly name: string }>(
-  descriptor: Descriptor.Command<A>
-) => Command<A["name"], never, ValidationError, A> = Internal.fromDescriptorHelp
-
-/**
- * @since 1.0.0
- * @category constructors
- */
 export const fromDescriptorUnit: <A extends { readonly name: string }>(
   descriptor: Descriptor.Command<A>
 ) => Command<A["name"], never, never, A> = Internal.fromDescriptorUnit
@@ -160,27 +152,8 @@ export const make: <Name extends string, const Config extends Command.ConfigBase
  * @since 1.0.0
  * @category constructors
  */
-export const makeHelp: {
-  <Name extends string>(name: Name): Command<Name, never, ValidationError, {}>
-  <Name extends string, const Config extends Command.ConfigBase>(
-    name: Name,
-    config: Config
-  ): Command<
-    Name,
-    never,
-    ValidationError,
-    Types.Simplify<
-      Types.Simplify<{ readonly [Key in keyof Config]: Command.ParseConfigValue<Config[Key]> }>
-    >
-  >
-} = Internal.makeHelp
-
-/**
- * @since 1.0.0
- * @category constructors
- */
 export const makeUnit: {
-  <Name extends string>(name: Name): Command<Name, {}, never, never>
+  <Name extends string>(name: Name): Command<Name, never, never, {}>
   <Name extends string, const Config extends Command.ConfigBase>(
     name: Name,
     config: Config

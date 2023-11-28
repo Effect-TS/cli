@@ -153,17 +153,12 @@ export const fromDescriptor = dual<
 /** @internal */
 export const fromDescriptorUnit = <A extends { readonly name: string }>(
   descriptor: Descriptor.Command<A>
-): Command.Command<A["name"], never, never, A> => makeProto(descriptor, (_) => Effect.unit)
-
-/** @internal */
-export const fromDescriptorHelp = <A extends { readonly name: string }>(
-  descriptor: Descriptor.Command<A>
-): Command.Command<A["name"], never, ValidationError.ValidationError, A> => {
+): Command.Command<A["name"], never, never, A> => {
   const self: Command.Command<A["name"], never, ValidationError.ValidationError, A> = makeProto(
     descriptor,
-    (_) => Effect.fail(ValidationError.helpRequested(getDescriptor(self)))
+    (_) => Effect.failSync(() => ValidationError.helpRequested(getDescriptor(self)))
   )
-  return self
+  return self as any
 }
 
 const makeDescriptor = <const Config extends Command.Command.ConfigBase>(
@@ -193,7 +188,7 @@ export const make = <Name extends string, const Config extends Command.Command.C
 export const makeUnit: {
   <Name extends string>(
     name: Name
-  ): Command.Command<Name, {}, never, never>
+  ): Command.Command<Name, never, never, {}>
   <Name extends string, const Config extends Command.Command.ConfigBase>(
     name: Name,
     config: Config
@@ -204,22 +199,6 @@ export const makeUnit: {
     Types.Simplify<Command.Command.ParseConfig<Config>>
   >
 } = (name: string, config = {}) => fromDescriptorUnit(makeDescriptor(name, config) as any) as any
-
-/** @internal */
-export const makeHelp: {
-  <Name extends string>(
-    name: Name
-  ): Command.Command<Name, never, ValidationError.ValidationError, {}>
-  <Name extends string, const Config extends Command.Command.ConfigBase>(
-    name: Name,
-    config: Config
-  ): Command.Command<
-    Name,
-    never,
-    ValidationError.ValidationError,
-    Types.Simplify<Command.Command.ParseConfig<Config>>
-  >
-} = (name: string, config = {}) => fromDescriptorHelp(makeDescriptor(name, config) as any) as any
 
 /** @internal */
 export const mapDescriptor = dual<
