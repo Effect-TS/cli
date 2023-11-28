@@ -18,9 +18,9 @@ const { createShip, moveShip, removeMine, setMine, shoot } = Effect.serviceFunct
 // naval_fate mine set <x> <y> [--moored]
 // naval_fate mine remove <x> <y> [--moored]
 
-const nameArg = Args.text({ name: "name" })
-const xArg = Args.integer({ name: "x" })
-const yArg = Args.integer({ name: "y" })
+const nameArg = Args.text({ name: "name" }).pipe(Args.withDescription("The name of the ship"))
+const xArg = Args.integer({ name: "x" }).pipe(Args.withDescription("The x coordinate"))
+const yArg = Args.integer({ name: "y" }).pipe(Args.withDescription("The y coordinate"))
 const coordinatesArg = { x: xArg, y: yArg }
 const nameAndCoordinatesArg = { name: nameArg, ...coordinatesArg }
 
