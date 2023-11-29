@@ -130,7 +130,13 @@ export const isTextType = (self: Instruction): self is Text => self._tag === "Te
 export const trueValues = Schema.literal("true", "1", "y", "yes", "on")
 
 /** @internal */
+export const isTrueValue = Schema.is(trueValues)
+
+/** @internal */
 export const falseValues = Schema.literal("false", "0", "n", "no", "off")
+
+/** @internal */
+export const isFalseValue = Schema.is(falseValues)
 
 /** @internal */
 export const boolean = (defaultValue: Option.Option<boolean>): Primitive.Primitive<boolean> => {
@@ -367,9 +373,9 @@ const validateInternal = (
               () => `Missing default value for boolean parameter`
             ),
           onSome: (value) =>
-            Schema.is(trueValues)(value)
+            isTrueValue(value)
               ? Effect.succeed(true)
-              : Schema.is(falseValues)(value)
+              : isFalseValue(value)
               ? Effect.succeed(false)
               : Effect.fail(`Unable to recognize '${value}' as a valid boolean`)
         })

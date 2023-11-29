@@ -593,14 +593,15 @@ const parseInternal = (
             const help = getHelpInternal(self)
             const usage = getUsageInternal(self)
             const options = InternalBuiltInOptions.builtInOptions(self, usage, help)
-            return InternalOptions.validate(options, ReadonlyArray.drop(args, 1), config).pipe(
-              Effect.flatMap((tuple) => tuple[2]),
-              Effect.catchTag("NoSuchElementException", () => {
-                const error = InternalHelpDoc.p("No built-in option was matched")
-                return Effect.fail(InternalValidationError.noBuiltInMatch(error))
-              }),
-              Effect.map(InternalCommandDirective.builtIn)
-            )
+            return InternalOptions.processCommandLine(options, ReadonlyArray.drop(args, 1), config)
+              .pipe(
+                Effect.flatMap((tuple) => tuple[2]),
+                Effect.catchTag("NoSuchElementException", () => {
+                  const error = InternalHelpDoc.p("No built-in option was matched")
+                  return Effect.fail(InternalValidationError.noBuiltInMatch(error))
+                }),
+                Effect.map(InternalCommandDirective.builtIn)
+              )
           }
         }
         const error = InternalHelpDoc.p(`Missing command name: '${self.name}'`)
@@ -615,7 +616,7 @@ const parseInternal = (
       > =>
         parseCommandLine(args).pipe(Effect.flatMap((commandOptionsAndArgs) => {
           const [optionsAndArgs, forcedCommandArgs] = splitForcedArgs(commandOptionsAndArgs)
-          return InternalOptions.validate(self.options, optionsAndArgs, config).pipe(
+          return InternalOptions.processCommandLine(self.options, optionsAndArgs, config).pipe(
             Effect.flatMap(([error, commandArgs, optionsType]) =>
               InternalArgs.validate(
                 self.args,

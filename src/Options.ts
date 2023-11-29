@@ -398,18 +398,20 @@ export const parse: {
 export const repeated: <A>(self: Options<A>) => Options<ReadonlyArray<A>> = InternalOptions.repeated
 
 /**
- * Parses the provided command-line arguments looking for the specified options,
- * and returns an `Option<ValidationError>`, any leftover arguments, and the
+ * Processes the provided command-line arguments, searching for the specified
+ * `Options`.
+ *
+ * Returns an `Option<ValidationError>`, any leftover arguments, and the
  * constructed value of type `A`. The possible error inside
  * `Option<ValidationError>` would only be triggered if there is an error when
  * parsing the command-line arguments. This is because `ValidationError`s are
  * also used internally to control the end of the command-line arguments (i.e.
- * the command-line symbol `-`) corresponding to options.
+ * the command-line symbol `--`) corresponding to options.
  *
  * @since 1.0.0
  * @category combinators
  */
-export const validate: {
+export const processCommandLine: {
   (
     args: ReadonlyArray<string>,
     config: CliConfig
@@ -429,7 +431,7 @@ export const validate: {
     ValidationError,
     [Option<ValidationError>, ReadonlyArray<string>, A]
   >
-} = InternalOptions.validate
+} = InternalOptions.processCommandLine
 
 /**
  * @since 1.0.0
