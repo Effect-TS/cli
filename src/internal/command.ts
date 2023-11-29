@@ -124,13 +124,13 @@ const Prototype = {
   }
 }
 
-const modifiedCommands = globalValue(
-  "@effect/cli/Command/modifiedCommands",
+const registeredDescriptors = globalValue(
+  "@effect/cli/Command/registeredDescriptors",
   () => new WeakMap<Context.Tag<any, any>, Descriptor.Command<any>>()
 )
 
 const getDescriptor = <Name extends string, R, E, A>(self: Command.Command<Name, R, E, A>) =>
-  modifiedCommands.get(self.tag) ?? self.descriptor
+  registeredDescriptors.get(self.tag) ?? self.descriptor
 
 const makeProto = <Name extends string, R, E, A>(
   descriptor: Descriptor.Command<A>,
@@ -141,7 +141,6 @@ const makeProto = <Name extends string, R, E, A>(
   self.descriptor = descriptor
   self.handler = handler
   self.tag = tag ?? Context.Tag()
-  modifiedCommands.set(self.tag, self.descriptor)
   return self
 }
 
@@ -359,9 +358,10 @@ export const withSubcommands = dual<
   )
   const handlers = ReadonlyArray.reduce(
     subcommands,
-    new Map<Context.Tag<any, any>, (_: any) => Effect.Effect<any, any, void>>(),
+    new Map<Context.Tag<any, any>, Command.Command<any, any, any, any>>(),
     (handlers, subcommand) => {
-      handlers.set(subcommand.tag, subcommand.handler)
+      handlers.set(subcommand.tag, subcommand)
+      registeredDescriptors.set(subcommand.tag, subcommand.descriptor)
       return handlers
     }
   )
@@ -373,8 +373,9 @@ export const withSubcommands = dual<
   ) {
     if (args.subcommand._tag === "Some") {
       const [tag, value] = args.subcommand.value
+      const subcommand = handlers.get(tag)!
       return Effect.provideService(
-        handlers.get(tag)!(value),
+        subcommand.handler(value),
         self.tag,
         args as any
       )
@@ -432,5 +433,6 @@ export const run = dual<
     ...config,
     command: self.descriptor
   })
+  registeredDescriptors.set(self.tag, self.descriptor)
   return (args) => InternalCliApp.run(app, args, self.handler)
 })
