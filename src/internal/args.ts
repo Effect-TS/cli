@@ -872,3 +872,47 @@ export const getFishCompletions = (self: Instruction): ReadonlyArray<string> => 
     }
   }
 }
+
+interface ZshCompletionState {
+  readonly multiple: boolean
+  readonly optional: boolean
+}
+
+export const getZshCompletions = (
+  self: Instruction,
+  state: ZshCompletionState = { multiple: false, optional: false }
+): ReadonlyArray<string> => {
+  switch (self._tag) {
+    case "Empty": {
+      return ReadonlyArray.empty()
+    }
+    case "Single": {
+      const multiple = state.multiple ? "*" : ""
+      const optional = state.optional ? "::" : ":"
+      const shortDescription = getShortDescription(self)
+      const description = shortDescription.length > 0 ? ` -- ${shortDescription}` : ""
+      const possibleValues = InternalPrimitive.getZshCompletions(
+        self.primitiveType as InternalPrimitive.Instruction
+      )
+      return possibleValues.length === 0
+        ? ReadonlyArray.empty()
+        : ReadonlyArray.of(`${multiple}${optional}${self.name}${description}${possibleValues}`)
+    }
+    case "Map": {
+      return getZshCompletions(self.args as Instruction, state)
+    }
+    case "Both": {
+      const left = getZshCompletions(self.left as Instruction, state)
+      const right = getZshCompletions(self.right as Instruction, state)
+      return ReadonlyArray.appendAll(left, right)
+    }
+    case "Variadic": {
+      return Option.isSome(self.max) && self.max.value > 1
+        ? getZshCompletions(self.args as Instruction, { ...state, multiple: true })
+        : getZshCompletions(self.args as Instruction, state)
+    }
+    case "WithDefault": {
+      return getZshCompletions(self.args as Instruction, { ...state, optional: true })
+    }
+  }
+}
