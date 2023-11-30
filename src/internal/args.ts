@@ -610,37 +610,39 @@ const validateInternal = (
     }
     case "Single": {
       return Effect.suspend(() => {
-        if (ReadonlyArray.isNonEmptyReadonlyArray(args)) {
-          const head = ReadonlyArray.headNonEmpty(args)
-          const tail = ReadonlyArray.tailNonEmpty(args)
-          return InternalPrimitive.validate(self.primitiveType, Option.some(head), config).pipe(
-            Effect.mapBoth({
-              onFailure: (text) => InternalValidationError.invalidArgument(InternalHelpDoc.p(text)),
-              onSuccess: (a) => [tail, a] as [ReadonlyArray<string>, any]
-            })
-          )
-        }
-        const choices = InternalPrimitive.getChoices(self.primitiveType)
-        if (Option.isSome(self.pseudoName) && Option.isSome(choices)) {
-          return Effect.fail(InternalValidationError.missingValue(InternalHelpDoc.p(
-            `Missing argument <${self.pseudoName.value}> with choices ${choices.value}`
-          )))
-        }
-        if (Option.isSome(self.pseudoName)) {
-          return Effect.fail(InternalValidationError.missingValue(InternalHelpDoc.p(
-            `Missing argument <${self.pseudoName.value}>`
-          )))
-        }
-        if (Option.isSome(choices)) {
-          return Effect.fail(InternalValidationError.missingValue(InternalHelpDoc.p(
-            `Missing argument ${
-              InternalPrimitive.getTypeName(self.primitiveType)
-            } with choices ${choices.value}`
-          )))
-        }
-        return Effect.fail(InternalValidationError.missingValue(InternalHelpDoc.p(
-          `Missing argument ${InternalPrimitive.getTypeName(self.primitiveType)}`
-        )))
+        return ReadonlyArray.matchLeft(args, {
+          onEmpty: () => {
+            const choices = InternalPrimitive.getChoices(self.primitiveType)
+            if (Option.isSome(self.pseudoName) && Option.isSome(choices)) {
+              return Effect.fail(InternalValidationError.missingValue(InternalHelpDoc.p(
+                `Missing argument <${self.pseudoName.value}> with choices ${choices.value}`
+              )))
+            }
+            if (Option.isSome(self.pseudoName)) {
+              return Effect.fail(InternalValidationError.missingValue(InternalHelpDoc.p(
+                `Missing argument <${self.pseudoName.value}>`
+              )))
+            }
+            if (Option.isSome(choices)) {
+              return Effect.fail(InternalValidationError.missingValue(InternalHelpDoc.p(
+                `Missing argument ${
+                  InternalPrimitive.getTypeName(self.primitiveType)
+                } with choices ${choices.value}`
+              )))
+            }
+            return Effect.fail(InternalValidationError.missingValue(InternalHelpDoc.p(
+              `Missing argument ${InternalPrimitive.getTypeName(self.primitiveType)}`
+            )))
+          },
+          onNonEmpty: (head, tail) =>
+            InternalPrimitive.validate(self.primitiveType, Option.some(head), config).pipe(
+              Effect.mapBoth({
+                onFailure: (text) =>
+                  InternalValidationError.invalidArgument(InternalHelpDoc.p(text)),
+                onSuccess: (a) => [tail, a] as [ReadonlyArray<string>, any]
+              })
+            )
+        })
       })
     }
     case "Map": {
