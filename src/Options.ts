@@ -3,6 +3,7 @@
  */
 import type { FileSystem } from "@effect/platform/FileSystem"
 import type { QuitException, Terminal } from "@effect/platform/Terminal"
+import type { Config } from "effect/Config"
 import type { Effect } from "effect/Effect"
 import type { Either } from "effect/Either"
 import type { HashMap } from "effect/HashMap"
@@ -56,6 +57,7 @@ export declare namespace Options {
     readonly ifPresent?: boolean
     readonly negationNames?: NonEmptyReadonlyArray<string>
     readonly aliases?: NonEmptyReadonlyArray<string>
+    readonly fallbackConfig?: Config<boolean>
   }
 
   /**
@@ -450,6 +452,15 @@ export const withDefault: {
   <const B>(fallback: B): <A>(self: Options<A>) => Options<B | A>
   <A, const B>(self: Options<A>, fallback: B): Options<A | B>
 } = InternalOptions.withDefault
+
+/**
+ * @since 1.0.0
+ * @category combinators
+ */
+export const withFallbackConfig: {
+  <B>(config: Config<B>): <A>(self: Options<A>) => Options<B | A>
+  <A, B>(self: Options<A>, config: Config<B>): Options<A | B>
+} = InternalOptions.withFallbackConfig
 
 /**
  * @since 1.0.0
