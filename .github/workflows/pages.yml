@@ -23,7 +23,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - run: pnpm docgen
+      - run: nix develop --command -- pnpm docgen
       - name: Build pages Jekyll
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/jekyll-build-pages@v1

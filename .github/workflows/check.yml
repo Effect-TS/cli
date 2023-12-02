@@ -21,5 +21,9 @@ jobs:
         uses: ./.github/actions/setup
         with:
           cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - run: pnpm check
-      - run: pnpm lint
+      - name: Check flake.lock
+        uses: DeterminateSystems/flake-checker-action@main
+        with:
+          fail-mode: true
+      - run: nix develop --command -- pnpm check
+      - run: nix develop --command -- pnpm lint
