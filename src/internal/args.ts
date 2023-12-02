@@ -117,6 +117,9 @@ export const isArgs = (u: unknown): u is Args.Args<unknown> =>
   typeof u === "object" && u != null && ArgsTypeId in u
 
 /** @internal */
+export const isInstruction = <_>(self: Args.Args<_>): self is Instruction => self as any
+
+/** @internal */
 export const isEmpty = (self: Instruction): self is Empty => self._tag === "Empty"
 
 /** @internal */
@@ -130,6 +133,13 @@ export const isMap = (self: Instruction): self is Map => self._tag === "Map"
 
 /** @internal */
 export const isVariadic = (self: Instruction): self is Variadic => self._tag === "Variadic"
+
+/** @internal */
+export const isWithDefault = (self: Instruction): self is WithDefault => self._tag === "WithDefault"
+
+/** @internal */
+export const isWithFallbackConfig = (self: Instruction): self is WithFallbackConfig =>
+  self._tag === "WithFallbackConfig"
 
 // =============================================================================
 // Constructors
@@ -351,11 +361,10 @@ export const withFallbackConfig: {
   <B>(config: Config.Config<B>) => <A>(self: Args.Args<A>) => Args.Args<A | B>,
   <A, B>(self: Args.Args<A>, config: Config.Config<B>) => Args.Args<A | B>
 >(2, (self, config) => {
-  if ((self as Instruction)._tag === "WithDefault") {
-    const withDefault = self as WithDefault
+  if (isInstruction(self) && isWithDefault(self)) {
     return makeWithDefault(
-      withFallbackConfig(withDefault.args, config),
-      withDefault.fallback as any
+      withFallbackConfig(self.args, config),
+      self.fallback as any
     )
   }
   return makeWithFallbackConfig(self, config)

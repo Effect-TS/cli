@@ -145,6 +145,9 @@ export const isOptions = (u: unknown): u is Options.Options<unknown> =>
   typeof u === "object" && u != null && OptionsTypeId in u
 
 /** @internal */
+export const isInstruction = <_>(self: Options.Options<_>): self is Instruction => self as any
+
+/** @internal */
 export const isEmpty = (self: Instruction): self is Empty => self._tag === "Empty"
 
 /** @internal */
@@ -164,6 +167,10 @@ export const isOrElse = (self: Instruction): self is OrElse => self._tag === "Or
 
 /** @internal */
 export const isWithDefault = (self: Instruction): self is WithDefault => self._tag === "WithDefault"
+
+/** @internal */
+export const isWithFallbackConfig = (self: Instruction): self is WithFallbackConfig =>
+  self._tag === "WithFallbackConfig"
 
 // =============================================================================
 // Constructors
@@ -540,11 +547,10 @@ export const withFallbackConfig: {
   <B>(config: Config.Config<B>) => <A>(self: Options.Options<A>) => Options.Options<A | B>,
   <A, B>(self: Options.Options<A>, config: Config.Config<B>) => Options.Options<A | B>
 >(2, (self, config) => {
-  if ((self as Instruction)._tag === "WithDefault") {
-    const withDefault = self as WithDefault
+  if (isInstruction(self) && isWithDefault(self)) {
     return makeWithDefault(
-      withFallbackConfig(withDefault.options, config),
-      withDefault.fallback as any
+      withFallbackConfig(self.options, config),
+      self.fallback as any
     )
   }
   return makeWithFallbackConfig(self, config)
