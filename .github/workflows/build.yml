@@ -23,15 +23,15 @@ jobs:
         uses: ./.github/actions/setup
         with:
           cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - run: pnpm build
+      - run: nix develop --command -- pnpm build
       - name: Check source state
-        run: git add src && git diff-index --cached HEAD --exit-code src
-      - run: pnpm circular
+        run: nix develop --command -- git add src && git diff-index --cached HEAD --exit-code src
+      - run: nix develop --command -- pnpm circular
       - name: Create Release Pull Request or Publish
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: changesets/action@v1
         with:
-          publish: pnpm changeset publish
+          publish: nix develop --command -- pnpm changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
