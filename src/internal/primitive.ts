@@ -85,11 +85,7 @@ export interface Path extends
 {}
 
 /** @internal */
-export interface Secret extends
-  Op<"Secret", {
-    readonly secret: ConfigSecret.ConfigSecret
-  }>
-{}
+export interface Secret extends Op<"Secret", {}> {}
 
 /** @internal */
 export interface Text extends Op<"Text", {}> {}
@@ -193,6 +189,13 @@ export const path = (
   op.pathExists = pathExists
   return op
 }
+
+/** @internal */
+export const secret: Primitive.Primitive<ConfigSecret.ConfigSecret> = (() => {
+  const op = Object.create(proto)
+  op._tag = "Secret"
+  return op
+})()
 
 /** @internal */
 export const text: Primitive.Primitive<string> = (() => {
