@@ -468,7 +468,7 @@ const getHelpInternal = (self: Instruction): HelpDoc.HelpDoc => {
           InternalHelpDoc.sequence(
             block,
             InternalHelpDoc.p(
-              "This setting is optional. Defaults to loading from environment variables."
+              "This argument can be set from environment variables."
             )
           )
         ]
