@@ -351,7 +351,6 @@ export const withFallbackConfig: {
   <B>(config: Config.Config<B>) => <A>(self: Args.Args<A>) => Args.Args<A | B>,
   <A, B>(self: Args.Args<A>, config: Config.Config<B>) => Args.Args<A | B>
 >(2, (self, config) => {
-  console.log(self)
   if ((self as Instruction)._tag === "WithDefault") {
     const withDefault = self as WithDefault
     return makeWithDefault(
