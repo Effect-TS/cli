@@ -351,6 +351,7 @@ export const withFallbackConfig: {
   <B>(config: Config.Config<B>) => <A>(self: Args.Args<A>) => Args.Args<A | B>,
   <A, B>(self: Args.Args<A>, config: Config.Config<B>) => Args.Args<A | B>
 >(2, (self, config) => {
+  console.log(self)
   if ((self as Instruction)._tag === "WithDefault") {
     const withDefault = self as WithDefault
     return makeWithDefault(
@@ -629,12 +630,12 @@ const makeWithDefault = <A, const B>(
 }
 
 const makeWithFallbackConfig = <A, B>(
-  options: Args.Args<A>,
+  args: Args.Args<A>,
   config: Config.Config<B>
 ): Args.Args<A | B> => {
   const op = Object.create(proto)
   op._tag = "WithFallbackConfig"
-  op.options = options
+  op.args = args
   op.config = config
   return op
 }
