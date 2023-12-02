@@ -1,9 +1,6 @@
 import * as FileSystem from "@effect/platform/FileSystem"
-// import * as AnsiRender from "@effect/printer-ansi/AnsiRender"
-// import * as AnsiStyle from "@effect/printer-ansi/AnsiStyle"
-// import * as Color from "@effect/printer-ansi/Color"
-// import * as Doc from "@effect/printer/Doc"
 import * as Schema from "@effect/schema/Schema"
+import * as ConfigSecret from "effect/ConfigSecret"
 import * as Effect from "effect/Effect"
 import { dual, pipe } from "effect/Function"
 import * as Option from "effect/Option"
@@ -53,6 +50,7 @@ export type Instruction =
   | Float
   | Integer
   | Path
+  | Secret
   | Text
 
 /** @internal */
@@ -83,6 +81,13 @@ export interface Path extends
   Op<"Path", {
     readonly pathType: Primitive.Primitive.PathType
     readonly pathExists: Primitive.Primitive.PathExists
+  }>
+{}
+
+/** @internal */
+export interface Secret extends
+  Op<"Secret", {
+    readonly secret: ConfigSecret.ConfigSecret
   }>
 {}
 
@@ -261,6 +266,7 @@ const getChoicesInternal = (self: Instruction): Option.Option<string> => {
     case "Float":
     case "Integer":
     case "Path":
+    case "Secret":
     case "Text": {
       return Option.none()
     }
@@ -323,6 +329,9 @@ const getHelpInternal = (self: Instruction): Span.Span => {
           `('${self.pathType}') and path existence ('${self.pathExists}')`
       )
     }
+    case "Secret": {
+      return InternalSpan.text("A user-defined piece of text that is confidential.")
+    }
     case "Text": {
       return InternalSpan.text("A user-defined piece of text.")
     }
@@ -351,6 +360,9 @@ const getTypeNameInternal = (self: Instruction): string => {
         return "path"
       }
       return self.pathType
+    }
+    case "Secret": {
+      return "secret"
     }
     case "Text": {
       return "text"
@@ -431,6 +443,11 @@ const validateInternal = (
           )
         )
       })
+    }
+    case "Secret": {
+      return attempt(value, getTypeNameInternal(self), Schema.parse(Schema.string)).pipe(
+        Effect.map((value) => ConfigSecret.fromString(value))
+      )
     }
     case "Text": {
       return attempt(value, getTypeNameInternal(self), Schema.parse(Schema.string))
@@ -553,6 +570,14 @@ const wizardInternal = (self: Instruction, help: HelpDoc.HelpDoc): Prompt.Prompt
         message: InternalHelpDoc.toAnsiText(message).trimEnd()
       })
     }
+    case "Secret": {
+      const primitiveHelp = InternalHelpDoc.p("Enter some text (value will be hidden)")
+      const message = InternalHelpDoc.sequence(help, primitiveHelp)
+      return InternalTextPrompt.text({
+        type: "password",
+        message: InternalHelpDoc.toAnsiText(message).trimEnd()
+      }).pipe(InternalPrompt.map((value) => ConfigSecret.fromString(value)))
+    }
     case "Text": {
       const primitiveHelp = InternalHelpDoc.p("Enter some text")
       const message = InternalHelpDoc.sequence(help, primitiveHelp)
@@ -576,6 +601,7 @@ export const getBashCompletions = (self: Instruction): string => {
     case "DateTime":
     case "Float":
     case "Integer":
+    case "Secret":
     case "Text": {
       return "$(compgen -f \"${cur}\")"
     }
@@ -617,6 +643,7 @@ export const getFishCompletions = (self: Instruction): ReadonlyArray<string> => 
     case "DateTime":
     case "Float":
     case "Integer":
+    case "Secret":
     case "Text": {
       return ReadonlyArray.make("-r", "-f")
     }
@@ -695,6 +722,7 @@ export const getZshCompletions = (self: Instruction): string => {
         }
       }
     }
+    case "Secret":
     case "Text": {
       return ""
     }
