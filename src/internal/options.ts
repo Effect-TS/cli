@@ -225,17 +225,11 @@ export const boolean = (
       InternalPrimitive.boolean(Option.some(!ifPresent))
     )
     return withDefault(
-      orElse(
-        options.fallbackConfig ? withFallbackConfig(option, options.fallbackConfig) : option,
-        negationOption
-      ),
+      orElse(option, negationOption),
       !ifPresent
     )
   }
-  return withDefault(
-    options.fallbackConfig ? withFallbackConfig(option, options.fallbackConfig) : option,
-    !ifPresent
-  )
+  return withDefault(option, !ifPresent)
 }
 
 /** @internal */
@@ -539,10 +533,22 @@ export const withDefault = dual<
 >(2, (self, fallback) => makeWithDefault(self, fallback))
 
 /** @internal */
-export const withFallbackConfig = dual<
+export const withFallbackConfig: {
+  <B>(config: Config.Config<B>): <A>(self: Options.Options<A>) => Options.Options<B | A>
+  <A, B>(self: Options.Options<A>, config: Config.Config<B>): Options.Options<A | B>
+} = dual<
   <B>(config: Config.Config<B>) => <A>(self: Options.Options<A>) => Options.Options<A | B>,
   <A, B>(self: Options.Options<A>, config: Config.Config<B>) => Options.Options<A | B>
->(2, (self, config) => makeWithFallbackConfig(self, config))
+>(2, (self, config) => {
+  if ((self as Instruction)._tag === "WithDefault") {
+    const withDefault = self as WithDefault
+    return makeWithDefault(
+      withFallbackConfig(withDefault.options, config),
+      withDefault.fallback as any
+    )
+  }
+  return makeWithFallbackConfig(self, config)
+})
 
 /** @internal */
 export const withDescription = dual<

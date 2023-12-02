@@ -17,10 +17,9 @@ const minigit = Command.make("minigit", { configs }, ({ configs }) =>
 
 // minigit add   [-v | --verbose] [--] [<pathspec>...]
 const pathspec = Args.text({ name: "pathspec" }).pipe(Args.repeated)
-const verbose = Options.boolean("verbose", {
-  fallbackConfig: Config.boolean("VERBOSE")
-}).pipe(
-  Options.withAlias("v")
+const verbose = Options.boolean("verbose").pipe(
+  Options.withAlias("v"),
+  Options.withFallbackConfig(Config.boolean("VERBOSE"))
 )
 const minigitAdd = Command.make("add", { pathspec, verbose }, ({ pathspec, verbose }) => {
   const paths = ReadonlyArray.match(pathspec, {

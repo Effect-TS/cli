@@ -57,7 +57,6 @@ export declare namespace Options {
     readonly ifPresent?: boolean
     readonly negationNames?: NonEmptyReadonlyArray<string>
     readonly aliases?: NonEmptyReadonlyArray<string>
-    readonly fallbackConfig?: Config<boolean>
   }
 
   /**

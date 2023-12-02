@@ -344,10 +344,22 @@ export const withDefault = dual<
 >(2, (self, fallback) => makeWithDefault(self, fallback))
 
 /** @internal */
-export const withFallbackConfig = dual<
+export const withFallbackConfig: {
+  <B>(config: Config.Config<B>): <A>(self: Args.Args<A>) => Args.Args<B | A>
+  <A, B>(self: Args.Args<A>, config: Config.Config<B>): Args.Args<A | B>
+} = dual<
   <B>(config: Config.Config<B>) => <A>(self: Args.Args<A>) => Args.Args<A | B>,
   <A, B>(self: Args.Args<A>, config: Config.Config<B>) => Args.Args<A | B>
->(2, (self, config) => makeWithFallbackConfig(self, config))
+>(2, (self, config) => {
+  if ((self as Instruction)._tag === "WithDefault") {
+    const withDefault = self as WithDefault
+    return makeWithDefault(
+      withFallbackConfig(withDefault.args, config),
+      withDefault.fallback as any
+    )
+  }
+  return makeWithFallbackConfig(self, config)
+})
 
 /** @internal */
 export const withDescription = dual<
