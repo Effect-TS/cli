@@ -121,6 +121,9 @@ export const isIntegerType = (self: Instruction): self is Integer => self._tag =
 export const isPathType = (self: Instruction): self is Path => self._tag === "Path"
 
 /** @internal */
+export const isSecretType = (self: Instruction): self is Path => self._tag === "Path"
+
+/** @internal */
 export const isTextType = (self: Instruction): self is Text => self._tag === "Text"
 
 // =============================================================================

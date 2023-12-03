@@ -4,6 +4,7 @@
 import type { FileSystem } from "@effect/platform/FileSystem"
 import type { QuitException, Terminal } from "@effect/platform/Terminal"
 import type { Config } from "effect/Config"
+import type { ConfigSecret } from "effect/ConfigSecret"
 import type { Effect } from "effect/Effect"
 import type { Either } from "effect/Either"
 import type { HashMap } from "effect/HashMap"
@@ -265,6 +266,12 @@ export const keyValueMap: (option: string | Options<string>) => Options<HashMap<
  * @category constructors
  */
 export const none: Options<void> = InternalOptions.none
+
+/**
+ * @since 1.0.0
+ * @category constructors
+ */
+export const secret: (name: string) => Options<ConfigSecret> = InternalOptions.secret
 
 /**
  * @since 1.0.0

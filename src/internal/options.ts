@@ -1,6 +1,7 @@
 import type * as FileSystem from "@effect/platform/FileSystem"
 import type * as Terminal from "@effect/platform/Terminal"
 import type * as Config from "effect/Config"
+import type * as ConfigSecret from "effect/ConfigSecret"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
 import * as Either from "effect/Either"
@@ -330,6 +331,10 @@ export const none: Options.Options<void> = (() => {
   op._tag = "Empty"
   return op
 })()
+
+/** @internal */
+export const secret = (name: string): Options.Options<ConfigSecret.ConfigSecret> =>
+  makeSingle(name, ReadonlyArray.empty(), InternalPrimitive.secret)
 
 /** @internal */
 export const text = (name: string): Options.Options<string> =>

@@ -1,6 +1,7 @@
 import type * as FileSystem from "@effect/platform/FileSystem"
 import type * as Terminal from "@effect/platform/Terminal"
 import type * as Config from "effect/Config"
+import type * as ConfigSecret from "effect/ConfigSecret"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
 import * as Either from "effect/Either"
@@ -222,6 +223,12 @@ export const path = (config: Args.Args.PathArgsConfig = {}): Args.Args<string> =
     Option.fromNullable(config.name),
     InternalPrimitive.path("either", config.exists || "either")
   )
+
+/** @internal */
+export const secret = (
+  config: Args.Args.BaseArgsConfig = {}
+): Args.Args<ConfigSecret.ConfigSecret> =>
+  makeSingle(Option.fromNullable(config.name), InternalPrimitive.secret)
 
 /** @internal */
 export const text = (config: Args.Args.BaseArgsConfig = {}): Args.Args<string> =>

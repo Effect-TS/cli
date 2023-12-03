@@ -4,6 +4,7 @@
 import type { FileSystem } from "@effect/platform/FileSystem"
 import type { QuitException, Terminal } from "@effect/platform/Terminal"
 import type { Config } from "effect/Config"
+import type { ConfigSecret } from "effect/ConfigSecret"
 import type { Effect } from "effect/Effect"
 import type { Either } from "effect/Either"
 import type { Option } from "effect/Option"
@@ -318,6 +319,16 @@ export const path: (config?: Args.PathArgsConfig) => Args<string> = InternalArgs
  * @category combinators
  */
 export const repeated: <A>(self: Args<A>) => Args<ReadonlyArray<A>> = InternalArgs.repeated
+
+/**
+ * Creates a text argument.
+ *
+ * Can optionally provide a custom argument name (defaults to `"secret"`).
+ *
+ * @since 1.0.0
+ * @category constructors
+ */
+export const secret: (config?: Args.BaseArgsConfig) => Args<ConfigSecret> = InternalArgs.secret
 
 /**
  * Creates a text argument.
