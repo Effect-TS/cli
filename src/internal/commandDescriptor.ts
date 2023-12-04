@@ -452,7 +452,7 @@ const getSubcommandsInternal = (
         // Ensure that we only traverse the subcommands one level deep from the
         // parent command
         return isSubcommand
-          ? loop(self.parent, true)
+          ? loop(self.parent, false)
           : ReadonlyArray.flatMap(self.children, (child) => loop(child, true))
       }
     }
