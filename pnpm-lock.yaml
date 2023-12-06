@@ -24,11 +24,11 @@ devDependencies:
     specifier: ^2.27.1
     version: 2.27.1
   '@effect/build-utils':
-    specifier: ^0.5.1
-    version: 0.5.1
+    specifier: ^0.7.0
+    version: 0.7.0
   '@effect/docgen':
-    specifier: ^0.3.6
-    version: 0.3.6(tsx@4.6.2)(typescript@5.3.2)
+    specifier: ^0.3.7
+    version: 0.3.7(tsx@4.6.2)(typescript@5.3.2)
   '@effect/eslint-plugin':
     specifier: ^0.1.2
     version: 0.1.2
@@ -111,8 +111,8 @@ devDependencies:
     specifier: ^5.3.2
     version: 5.3.2
   vite:
-    specifier: ^5.0.5
-    version: 5.0.5(@types/node@20.10.3)
+    specifier: ^5.0.6
+    version: 5.0.6(@types/node@20.10.3)
   vitest:
     specifier: ^1.0.1
     version: 1.0.1(@types/node@20.10.3)
@@ -648,14 +648,14 @@ packages:
     resolution: {integrity: sha512-rPwwm/RrFIolz6xHa8Kzpshuwpe+xu/XcEw9iUmRF2tnyIwxxaW7XoFKaQ+GfPju81cKpH4vJeq7/2IizKvyjg==}
     dev: true
 
-  /@effect/build-utils@0.5.1:
-    resolution: {integrity: sha512-OZRkW8KLZyimwd+nFFPMA3dNTFmowBOlwUtudsb0gRezBlXNnyfD2dyLtbASuBT0l+javcLQCDvgfZKMcUDT+w==}
+  /@effect/build-utils@0.7.0:
+    resolution: {integrity: sha512-yYM6txQ0QgiQ1keUJwfuAWjoejiq0rB7H+pWyEnWDXNhfK8ZUn24G53jQDOB4btD7kbo4mfgdDBndm/DOIDZNA==}
     engines: {node: '>=16.17.1'}
     hasBin: true
     dev: true
 
-  /@effect/docgen@0.3.6(tsx@4.6.2)(typescript@5.3.2):
-    resolution: {integrity: sha512-GjEL+DWb/ttzPNvJ1GplOh5hCVVukqpTuZVVImaWkWMcYEphMKyPgw3HcXcEv7Jl/lLWzrjfuz9ClXN2+Zgxiw==}
+  /@effect/docgen@0.3.7(tsx@4.6.2)(typescript@5.3.2):
+    resolution: {integrity: sha512-xsbk1Y4VnupNZPWxNOS1OjnXgCDqKpn5Y/+oDiv8PeORGlKwm1ULqvho3hDUD2enk6K+ppW5vh7hAyn2CFNdyw==}
     engines: {node: '>=16.17.1'}
     hasBin: true
     peerDependencies:
@@ -2601,7 +2601,7 @@ packages:
     dependencies:
       debug: 4.3.4
       is-url: 1.2.4
-      postcss: 8.4.31
+      postcss: 8.4.32
       postcss-values-parser: 2.0.1
     transitivePeerDependencies:
       - supports-color
@@ -4461,8 +4461,8 @@ packages:
       get-func-name: 2.0.2
     dev: true
 
-  /lru-cache@10.0.3:
-    resolution: {integrity: sha512-B7gr+F6MkqB3uzINHXNctGieGsRTMwIBgxkp0yq/5BwcuDzD4A8wQpHQW6vDAm1uKSLQghmRdD9sKqf2vJ1cEg==}
+  /lru-cache@10.1.0:
+    resolution: {integrity: sha512-/1clY/ui8CzjKFyjdvwPWJUYKiFVXG2I2cY0ssG7h4+hwk+XOIX7ZSG9Q7TW8TW3Kp3BUSqgFWBLgL4PJ+Blag==}
     engines: {node: 14 || >=16.14}
     dev: true
 
@@ -5046,7 +5046,7 @@ packages:
     resolution: {integrity: sha512-MkhCqzzBEpPvxxQ71Md0b1Kk51W01lrYvlMzSUaIzNsODdd7mqhiimSZlr+VegAz5Z6Vzt9Xg2ttE//XBhH3EQ==}
     engines: {node: '>=16 || 14 >=14.17'}
     dependencies:
-      lru-cache: 10.0.3
+      lru-cache: 10.1.0
       minipass: 7.0.4
     dev: true
 
@@ -6233,7 +6233,7 @@ packages:
       debug: 4.3.4
       pathe: 1.1.1
       picocolors: 1.0.0
-      vite: 5.0.5(@types/node@20.10.3)
+      vite: 5.0.6(@types/node@20.10.3)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6245,8 +6245,8 @@ packages:
       - terser
     dev: true
 
-  /vite@5.0.5(@types/node@20.10.3):
-    resolution: {integrity: sha512-OekeWqR9Ls56f3zd4CaxzbbS11gqYkEiBtnWFFgYR2WV8oPJRRKq0mpskYy/XaoCL3L7VINDhqqOMNDiYdGvGg==}
+  /vite@5.0.6(@types/node@20.10.3):
+    resolution: {integrity: sha512-MD3joyAEBtV7QZPl2JVVUai6zHms3YOmLR+BpMzLlX2Yzjfcc4gTgNi09d/Rua3F4EtC8zdwPU8eQYyib4vVMQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -6325,7 +6325,7 @@ packages:
       strip-literal: 1.3.0
       tinybench: 2.5.1
       tinypool: 0.8.1
-      vite: 5.0.5(@types/node@20.10.3)
+      vite: 5.0.6(@types/node@20.10.3)
       vite-node: 1.0.1(@types/node@20.10.3)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
