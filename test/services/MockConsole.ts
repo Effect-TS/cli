@@ -5,7 +5,11 @@ import * as ReadonlyArray from "effect/ReadonlyArray"
 import * as Ref from "effect/Ref"
 
 export interface MockConsole extends Console.Console {
-  readonly getLines: (stripAnsi?: boolean) => Effect.Effect<never, never, ReadonlyArray<string>>
+  readonly getLines: (
+    params?: Partial<{
+      readonly stripAnsi: boolean
+    }>
+  ) => Effect.Effect<never, never, ReadonlyArray<string>>
 }
 
 export const MockConsole = Context.Tag<Console.Console, MockConsole>(
@@ -24,11 +28,11 @@ const stripAnsi = (str: string) => str.replace(pattern, "")
 export const make = Effect.gen(function*(_) {
   const lines = yield* _(Ref.make(ReadonlyArray.empty<string>()))
 
-  const getLines: MockConsole["getLines"] = (shouldStripAnsi = false) =>
+  const getLines: MockConsole["getLines"] = (params = {}) =>
     Ref.get(lines).pipe(Effect.map((lines) =>
-      shouldStripAnsi
-        ? ReadonlyArray.map(lines, stripAnsi) :
-        lines
+      params.stripAnsi || false
+        ? ReadonlyArray.map(lines, stripAnsi)
+        : lines
     ))
 
   const log: MockConsole["log"] = (...args) => Ref.update(lines, ReadonlyArray.appendAll(args))
@@ -58,5 +62,9 @@ export const make = Effect.gen(function*(_) {
   })
 })
 
-export const getLines = (stripAnsi?: boolean): Effect.Effect<never, never, ReadonlyArray<string>> =>
-  Effect.consoleWith((console) => (console as MockConsole).getLines(stripAnsi))
+export const getLines = (
+  params?: Partial<{
+    readonly stripAnsi?: boolean
+  }>
+): Effect.Effect<never, never, ReadonlyArray<string>> =>
+  Effect.consoleWith((console) => (console as MockConsole).getLines(params))

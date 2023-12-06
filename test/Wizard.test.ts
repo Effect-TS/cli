@@ -9,7 +9,7 @@ import { Effect, ReadonlyArray } from "effect"
 import * as Console from "effect/Console"
 import * as Fiber from "effect/Fiber"
 import * as Layer from "effect/Layer"
-import { describe, it } from "vitest"
+import { describe, expect, it } from "vitest"
 
 const MainLive = Effect.gen(function*(_) {
   const console = yield* _(MockConsole.make)
@@ -28,19 +28,15 @@ const runEffect = <E, A>(
 describe("Wizard", () => {
   it("should quit the wizard when CTRL+C is entered", () =>
     Effect.gen(function*(_) {
-      const cli = Command.run(Command.make("foo", { message: Options.text("message") }), {
-        name: "Test",
-        version: "1.0.0"
-      })
+      const cli = Command.make("foo", { message: Options.text("message") }).pipe(
+        Command.run({ name: "Test", version: "1.0.0" })
+      )
       const args = ReadonlyArray.make("--wizard")
-      const cliFiber = yield* _(Effect.fork(cli(args)))
-      yield* _(MockTerminal.inputText("Hello, World!"))
-      yield* _(MockTerminal.inputKey("enter"))
-      yield* _(MockTerminal.inputKey("0"))
-      yield* _(MockTerminal.inputKey("enter"))
-      yield* _(Fiber.join(cliFiber))
-      const result = yield* _(MockConsole.getLines())
-      console.log({ result })
-      // take snapshot or check that lines contain expected output
+      const fiber = yield* _(Effect.fork(cli(args)))
+      yield* _(MockTerminal.inputKey("c", { ctrl: true }))
+      yield* _(Fiber.join(fiber))
+      const lines = yield* _(MockConsole.getLines({ stripAnsi: true }))
+      const result = ReadonlyArray.some(lines, (line) => line.includes("Quitting wizard mode..."))
+      expect(result).toBe(true)
     }).pipe(runEffect))
 })
