@@ -15,23 +15,24 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Install dependencies
         uses: ./.github/actions/setup
-        with:
-          cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - run: nix develop --command -- pnpm build
+      - run: pnpm build
       - name: Check source state
-        run: nix develop --command -- git add src && git diff-index --cached HEAD --exit-code src
-      - run: nix develop --command -- pnpm circular
+        run: git add src && git diff-index --cached HEAD --exit-code src
+      - run: pnpm circular
       - name: Create Release Pull Request or Publish
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: changesets
         uses: changesets/action@v1
         with:
-          publish: nix develop --command -- pnpm changeset publish
+          version: pnpm update-version
+          publish: pnpm changeset publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

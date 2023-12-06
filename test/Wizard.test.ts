@@ -9,7 +9,7 @@ import { Effect, ReadonlyArray } from "effect"
 import * as Console from "effect/Console"
 import * as Fiber from "effect/Fiber"
 import * as Layer from "effect/Layer"
-import { describe, expect, it } from "vitest"
+import { describe, it } from "vitest"
 
 const MainLive = Effect.gen(function*(_) {
   const console = yield* _(MockConsole.make)
