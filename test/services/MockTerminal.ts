@@ -12,8 +12,8 @@ import * as ReadonlyArray from "effect/ReadonlyArray"
 // =============================================================================
 
 export interface MockTerminal extends Terminal.Terminal {
-  readonly enterText: (text: string) => Effect.Effect<never, never, void>
-  readonly enterKey: (
+  readonly inputText: (text: string) => Effect.Effect<never, never, void>
+  readonly inputKey: (
     key: string,
     modifiers?: Partial<MockTerminal.Modifiers>
   ) => Effect.Effect<never, never, void>
@@ -45,12 +45,12 @@ export const make = Effect.gen(function*(_) {
     Queue.shutdown
   ))
 
-  const enterText: MockTerminal["enterText"] = (text: string) => {
+  const inputText: MockTerminal["inputText"] = (text: string) => {
     const inputs = ReadonlyArray.map(text.split(""), (key) => toUserInput(key))
     return Queue.offerAll(queue, inputs).pipe(Effect.asUnit)
   }
 
-  const enterKey: MockTerminal["enterKey"] = (
+  const inputKey: MockTerminal["inputKey"] = (
     key: string,
     modifiers?: Partial<MockTerminal.Modifiers>
   ) => {
@@ -73,8 +73,8 @@ export const make = Effect.gen(function*(_) {
     display,
     readInput,
     readLine: Effect.succeed(""),
-    enterKey,
-    enterText
+    inputKey,
+    inputText
   })
 })
 
@@ -89,7 +89,7 @@ export const layer = Layer.scoped(MockTerminal, make)
 // =============================================================================
 
 export const { columns, readInput, readLine } = Effect.serviceConstants(MockTerminal)
-export const { enterKey, enterText } = Effect.serviceFunctions(MockTerminal)
+export const { inputKey, inputText } = Effect.serviceFunctions(MockTerminal)
 
 // =============================================================================
 // Utilities
