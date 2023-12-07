@@ -4,13 +4,13 @@
 import type { FileSystem } from "@effect/platform/FileSystem"
 import type { QuitException, Terminal } from "@effect/platform/Terminal"
 import type { Config } from "effect/Config"
-import type { ConfigSecret } from "effect/ConfigSecret"
 import type { Effect } from "effect/Effect"
 import type { Either } from "effect/Either"
 import type { HashMap } from "effect/HashMap"
 import type { Option } from "effect/Option"
 import type { Pipeable } from "effect/Pipeable"
 import type { NonEmptyReadonlyArray } from "effect/ReadonlyArray"
+import type { Secret } from "effect/Secret"
 import type { CliConfig } from "./CliConfig.js"
 import type { HelpDoc } from "./HelpDoc.js"
 import * as InternalOptions from "./internal/options.js"
@@ -271,7 +271,7 @@ export const none: Options<void> = InternalOptions.none
  * @since 1.0.0
  * @category constructors
  */
-export const secret: (name: string) => Options<ConfigSecret> = InternalOptions.secret
+export const secret: (name: string) => Options<Secret> = InternalOptions.secret
 
 /**
  * @since 1.0.0

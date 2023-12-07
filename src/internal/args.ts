@@ -1,7 +1,6 @@
 import type * as FileSystem from "@effect/platform/FileSystem"
 import type * as Terminal from "@effect/platform/Terminal"
 import type * as Config from "effect/Config"
-import type * as ConfigSecret from "effect/ConfigSecret"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
 import * as Either from "effect/Either"
@@ -10,6 +9,7 @@ import * as Option from "effect/Option"
 import { pipeArguments } from "effect/Pipeable"
 import * as ReadonlyArray from "effect/ReadonlyArray"
 import * as Ref from "effect/Ref"
+import type * as Secret from "effect/Secret"
 import type * as Args from "../Args.js"
 import type * as CliConfig from "../CliConfig.js"
 import type * as HelpDoc from "../HelpDoc.js"
@@ -227,7 +227,7 @@ export const path = (config: Args.Args.PathArgsConfig = {}): Args.Args<string> =
 /** @internal */
 export const secret = (
   config: Args.Args.BaseArgsConfig = {}
-): Args.Args<ConfigSecret.ConfigSecret> =>
+): Args.Args<Secret.Secret> =>
   makeSingle(Option.fromNullable(config.name), InternalPrimitive.secret)
 
 /** @internal */

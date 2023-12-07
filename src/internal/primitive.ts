@@ -1,11 +1,11 @@
 import * as FileSystem from "@effect/platform/FileSystem"
 import * as Schema from "@effect/schema/Schema"
-import * as ConfigSecret from "effect/ConfigSecret"
 import * as Effect from "effect/Effect"
 import { dual, pipe } from "effect/Function"
 import * as Option from "effect/Option"
 import { pipeArguments } from "effect/Pipeable"
 import * as ReadonlyArray from "effect/ReadonlyArray"
+import * as EffectSecret from "effect/Secret"
 import type * as CliConfig from "../CliConfig.js"
 import type * as HelpDoc from "../HelpDoc.js"
 import type * as Span from "../HelpDoc/Span.js"
@@ -194,7 +194,7 @@ export const path = (
 }
 
 /** @internal */
-export const secret: Primitive.Primitive<ConfigSecret.ConfigSecret> = (() => {
+export const secret: Primitive.Primitive<EffectSecret.Secret> = (() => {
   const op = Object.create(proto)
   op._tag = "Secret"
   return op
@@ -452,7 +452,7 @@ const validateInternal = (
     }
     case "Secret": {
       return attempt(value, getTypeNameInternal(self), Schema.parse(Schema.string)).pipe(
-        Effect.map((value) => ConfigSecret.fromString(value))
+        Effect.map((value) => EffectSecret.fromString(value))
       )
     }
     case "Text": {
@@ -579,10 +579,9 @@ const wizardInternal = (self: Instruction, help: HelpDoc.HelpDoc): Prompt.Prompt
     case "Secret": {
       const primitiveHelp = InternalHelpDoc.p("Enter some text (value will be hidden)")
       const message = InternalHelpDoc.sequence(help, primitiveHelp)
-      return InternalTextPrompt.text({
-        type: "password",
+      return InternalTextPrompt.hidden({
         message: InternalHelpDoc.toAnsiText(message).trimEnd()
-      }).pipe(InternalPrompt.map((value) => ConfigSecret.fromString(value)))
+      })
     }
     case "Text": {
       const primitiveHelp = InternalHelpDoc.p("Enter some text")

@@ -1,7 +1,6 @@
 import type * as FileSystem from "@effect/platform/FileSystem"
 import type * as Terminal from "@effect/platform/Terminal"
 import type * as Config from "effect/Config"
-import type * as ConfigSecret from "effect/ConfigSecret"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
 import * as Either from "effect/Either"
@@ -12,6 +11,7 @@ import * as Order from "effect/Order"
 import { pipeArguments } from "effect/Pipeable"
 import * as ReadonlyArray from "effect/ReadonlyArray"
 import * as Ref from "effect/Ref"
+import type * as Secret from "effect/Secret"
 import type * as CliConfig from "../CliConfig.js"
 import type * as HelpDoc from "../HelpDoc.js"
 import type * as Options from "../Options.js"
@@ -333,7 +333,7 @@ export const none: Options.Options<void> = (() => {
 })()
 
 /** @internal */
-export const secret = (name: string): Options.Options<ConfigSecret.ConfigSecret> =>
+export const secret = (name: string): Options.Options<Secret.Secret> =>
   makeSingle(name, ReadonlyArray.empty(), InternalPrimitive.secret)
 
 /** @internal */
