@@ -15,10 +15,9 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
         uses: ./.github/actions/setup
-        with:
-          cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - run: nix develop --command -- pnpm vitest
+      - run: pnpm vitest

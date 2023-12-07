@@ -15,15 +15,10 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
         uses: ./.github/actions/setup
-        with:
-          cachixAuthToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-      - name: Check flake.lock
-        uses: DeterminateSystems/flake-checker-action@main
-        with:
-          fail-mode: true
-      - run: nix develop --command -- pnpm check
-      - run: nix develop --command -- pnpm lint
+      - run: pnpm check
+      - run: pnpm lint
