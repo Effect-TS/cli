@@ -1,5 +1,14 @@
+# ⚠️ @effect/cli has moved
+
+This repository has been deprecated following the consolidation of its codebase into the [`effect` monorepo](https://github.com/Effect-TS/effect).
+
+You can find `@effect/cli` here: https://github.com/effect-ts/effect/tree/main/packages/cli
+
+---
+
 # Effect CLI
 
+- [⚠️ @effect/cli has moved](#️-effectcli-has-moved)
 - [Effect CLI](#effect-cli)
   - [Installation](#installation)
   - [Built-In Options](#built-in-options)
